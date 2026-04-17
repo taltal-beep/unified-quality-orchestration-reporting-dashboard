@@ -18,7 +18,15 @@ from engine.sandbox_api import (
     stop_sandbox_if_managed,
 )
 from engine.metrics import list_run_history, parse_allure_results_dir, push_influxdb, write_metrics_json
-from engine.report_generator import default_report_paths, generate_allure_html, make_report_zip, start_report_server
+from engine.report_generator import (
+    default_report_paths,
+    generate_allure_html,
+    make_report_zip,
+    read_single_file_html,
+    start_static_server,
+    url_for,
+    start_report_server,
+)
 
 
 def _init_state() -> None:
@@ -30,6 +38,8 @@ def _init_state() -> None:
     st.session_state.setdefault("last_result", None)  # type: ignore[assignment]
     st.session_state.setdefault("sandbox_mode", False)
     st.session_state.setdefault("report_server", None)  # type: ignore[assignment]
+    st.session_state.setdefault("static_server", None)  # type: ignore[assignment]
+    st.session_state.setdefault("last_test_type", None)  # type: ignore[assignment]
 
 
 def _append_line(line: str) -> None:
@@ -225,6 +235,7 @@ if run_clicked:
             test_type=TestType(test_type),
             target_repo=target_repo,
             shared_allure_results_dir=Path("artifacts/allure-results"),
+            artifacts_root=Path("artifacts"),
             pytest_args=argv_extra if test_type == TestType.PYTEST.value else (),
             behavex_args=argv_extra if test_type == TestType.BEHAVEX.value else (),
             locust_args=argv_extra if test_type == TestType.LOCUST.value else (),
@@ -234,6 +245,7 @@ if run_clicked:
             locust_run_time=str(locust_run_time),
             locust_only_summary=bool(locust_only_summary),
         )
+        st.session_state["last_test_type"] = test_type
         _append_line(f"Starting run: {cfg.test_type.value} in {cfg.target_repo}")
         _start_worker(cfg)
 
@@ -289,22 +301,18 @@ with rep_col1:
         else:
             st.error(msg_gen)
 
-    view_clicked = st.button("View Report (embedded)", disabled=bool(st.session_state.running))
+    view_clicked = st.button("Prepare Fullscreen Viewer", disabled=bool(st.session_state.running))
     if view_clicked:
         try:
-            # Stop any old server
-            srv = st.session_state.get("report_server")
-            if srv is not None:
-                try:
-                    srv.stop()
-                except Exception:
-                    pass
-            st.session_state["report_server"] = start_report_server(report_dir=paths.report_dir)
-            st.toast("Report server started.", icon="✅")
+            srv = st.session_state.get("static_server")
+            if srv is None:
+                root = Path(__file__).resolve().parent
+                st.session_state["static_server"] = start_static_server(root_dir=root)
+            st.toast("Static report server ready.", icon="✅")
         except Exception as exc:
             st.error(f"Unable to start report server: {exc}")
 
-    stop_view_clicked = st.button("Stop Report Viewer", disabled=bool(st.session_state.running))
+    stop_view_clicked = st.button("Stop Viewer", disabled=bool(st.session_state.running))
     if stop_view_clicked:
         srv = st.session_state.get("report_server")
         if srv is not None:
@@ -337,6 +345,18 @@ with rep_col2:
                 mime="application/zip",
             )
 
+    st.markdown("**Single-file HTML**")
+    ok_html, msg_html, html_bytes = read_single_file_html(report_dir=paths.report_dir)
+    if ok_html and html_bytes:
+        st.download_button(
+            "Download index.html",
+            data=html_bytes,
+            file_name="allure-report.html",
+            mime="text/html",
+        )
+    else:
+        st.caption(msg_html)
+
     st.markdown("**Metrics (JSON)**")
     metrics_clicked = st.button("Generate metrics.json", disabled=bool(st.session_state.running))
     if metrics_clicked:
@@ -348,11 +368,29 @@ with rep_col2:
             st.error(f"Metrics generation failed: {exc}")
 
 with rep_col3:
-    srv = st.session_state.get("report_server")
-    if srv is not None:
+    srv = st.session_state.get("static_server")
+    rr: RunResult | None = st.session_state.get("last_result")
+    last_type = st.session_state.get("last_test_type")
+    show_view = rr is not None and int(rr.returncode) == 0
+
+    if srv is not None and show_view:
         st.markdown("**Report Viewer**")
         st.caption(f"Serving: `{srv.root_dir}`")
-        st.components.v1.iframe(srv.url, height=650, scrolling=True)
+
+        # Unified Allure single-file entry point (generated into artifacts/allure-report/index.html)
+        allure_url = url_for(srv, relative_path="artifacts/allure-report/index.html")
+        st.link_button("🌐 Open Full Allure Report in New Tab", allure_url)
+
+        # Per-run / per-tool fullscreen links
+        if last_type == TestType.BEHAVEX.value:
+            run_id = rr.command.env.get("UQO_RUN_ID", "latest")
+            behavex_url = url_for(srv, relative_path=f"static_reports/behavex/report_{run_id}.html")
+            st.link_button("View Native BehaveX Report", behavex_url)
+
+        if last_type == TestType.LOCUST.value:
+            run_id = rr.command.env.get("UQO_RUN_ID", "latest")
+            locust_url = url_for(srv, relative_path=f"artifacts/reports/locust_report_{run_id}.html")
+            st.link_button("View Locust Performance Report", locust_url)
     else:
         st.markdown("**History**")
         archive_root = artifacts_root / "allure-results-archive"

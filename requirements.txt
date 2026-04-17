@@ -19,3 +19,7 @@ matplotlib>=3.10.0
 
 # Phase 4: Grafana/Influx integration
 influxdb-client>=1.48.0
+
+# Phase 4.5: advanced sandbox auth + uploads
+pyjwt>=2.9.0
+python-multipart>=0.0.9

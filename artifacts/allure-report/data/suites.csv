@@ -1,3 +1,0 @@
-"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
-"","2","test_error_route_returns_500","sample_target_repo.tests","2026-04-17","passed","2026-04-17","","test_api","",""
-"","7","test_root_returns_200_ok","sample_target_repo.tests","2026-04-17","passed","2026-04-17","","test_api","",""
