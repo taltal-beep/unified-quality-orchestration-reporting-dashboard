@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import queue
 import subprocess
+import sys
 import threading
 import time
 import uuid
@@ -79,12 +80,23 @@ def run_streaming(
         pythonpath_parts.append(existing_pp)
     cmd.env["PYTHONPATH"] = os.pathsep.join(pythonpath_parts)
 
+    # BehaveX can be sensitive to environment/module resolution; explicitly add the
+    # current interpreter's site-packages to PYTHONPATH to avoid missing imports.
+    if cfg.test_type.value == "behavex":
+        site_packages = _current_site_packages()
+        if site_packages:
+            cmd.env["PYTHONPATH"] = os.pathsep.join([site_packages, cmd.env.get("PYTHONPATH", "")]).strip(os.pathsep)
+
     # Pytest: load plugin module even if target repo doesn't include it.
+    # Use pytest_custom (not "pytest") so PYTHONPATH does not shadow site-packages `pytest`.
     if cfg.test_type.value == "pytest":
         existing = cmd.env.get("PYTEST_ADDOPTS", "")
-        injection = "-p drop_in_hooks.pytest.conftest"
+        injection = "-p drop_in_hooks.pytest_custom.conftest"
         if injection not in existing:
             cmd.env["PYTEST_ADDOPTS"] = (existing + " " + injection).strip()
+
+    # Unbuffered stdio for Python-based CLIs (pytest, behave/behavex, locust, etc.).
+    cmd.env["PYTHONUNBUFFERED"] = "1"
 
     q: queue.Queue[LogEvent | None] = queue.Queue()
 
@@ -94,6 +106,7 @@ def run_streaming(
     emit("meta", f"$ UQO_RUN_ID={run_id}\n")
     emit("meta", f"$ (cwd={cmd.cwd}) {' '.join(cmd.argv)}\n")
 
+    # `cwd` is the target repo (e.g. sample_target_repo/) so pytest/behave/locust find tests naturally.
     proc = subprocess.Popen(
         cmd.argv,
         cwd=str(cmd.cwd),
@@ -152,6 +165,28 @@ def run_streaming(
                 finished_at=finished_at,
                 command=cmd,
             )
+
+
+def _current_site_packages() -> str | None:
+    """
+    Best-effort: return a site-packages path for the current interpreter (Py 3.13).
+    """
+    try:
+        import site
+
+        for p in site.getsitepackages():
+            if p and Path(p).name == "site-packages":
+                return str(Path(p).resolve())
+    except Exception:
+        pass
+
+    # Fallback: scan sys.path
+    for p in sys.path:
+        if not p:
+            continue
+        if "site-packages" in p:
+            return str(Path(p).resolve())
+    return None
 
 
 def validate_target_repo(path: Path) -> tuple[bool, str]:

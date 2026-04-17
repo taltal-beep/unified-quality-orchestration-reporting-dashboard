@@ -1,10 +1,21 @@
 streamlit>=1.36.0
 
-# Phase 3: runners + Allure + Locust hooks
+# Explicit core stack (sandbox + runners)
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+requests>=2.32.0
 pytest>=9.0.0
+behave==1.2.6
+locust>=2.43.0
+
+# Orchestrator CLI (BehaveX mode)
+behavex>=3.0.0
+
+# Allure + hooks
 allure-pytest>=2.15.0
 allure-behave>=2.15.0
 allure-python-commons>=2.15.0
-locust>=2.43.0
 matplotlib>=3.10.0
 
+# Phase 4: Grafana/Influx integration
+influxdb-client>=1.48.0
