@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import contextlib
 import os
 import queue
+import shutil
 import subprocess
 import sys
 import threading
 import time
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Generator, Mapping, Optional
 
@@ -15,8 +17,28 @@ from .command_builders import BuiltCommand, RunConfig, build_command
 from .report_generator import (
     collect_behavex_native_report,
     publish_locust_html_to_static,
+    sync_all_reports_to_static,
 )
 from .result_management import prepare_allure_results_dir
+
+# Emitted immediately before returning ``RunResult`` so the UI can stop polling
+# even if the ``RunResult`` object is delayed or dropped.
+UQO_DONE_MARKER = "[UQO_DONE]"
+
+
+def _resolve_subprocess_argv(argv: list[str]) -> None:
+    """Ensure the spawned executable is findable when PATH is incomplete (e.g. Streamlit worker)."""
+    if not argv:
+        return
+    base_cmd = argv[0]
+    # Leave explicit relative/absolute paths to the OS / subprocess cwd resolution.
+    if os.path.dirname(base_cmd):
+        return
+    resolved_cmd = shutil.which(base_cmd)
+    if resolved_cmd:
+        argv[0] = resolved_cmd
+    else:
+        argv[:] = [sys.executable, "-m", base_cmd] + argv[1:]
 
 
 @dataclass(frozen=True)
@@ -41,10 +63,12 @@ def run_streaming(
     artifacts_root: Path | None = None,
 ) -> Generator[LogEvent, None, RunResult]:
     """
-    Execute a test runner subprocess and stream logs as LogEvent objects.
+    Run a test subprocess and yield log lines in real time.
 
-    This is designed to be consumed by a UI loop that polls the generator.
-    It uses background reader threads + a Queue so the UI doesn't freeze.
+    Uses ``subprocess.Popen`` with line-buffered text mode, merges stderr into stdout
+    (single stream) so interleaved output is readable, and reads via a background thread
+    into a queue so the generator can still apply heartbeat/timeout logic without
+    blocking the Streamlit main thread (when consumed from a worker thread).
     """
     started_at = time.time()
 
@@ -57,52 +81,45 @@ def run_streaming(
     merged_extra = dict(cfg.extra_env or {})
     merged_extra.setdefault("UQO_RUN_ID", run_id)
 
-    cfg = RunConfig(
-        test_type=cfg.test_type,
-        target_repo=cfg.target_repo,
+    cfg = replace(
+        cfg,
         shared_allure_results_dir=shared_allure_dir,
         artifacts_root=artifacts_root,
-        pytest_args=cfg.pytest_args,
-        behavex_args=cfg.behavex_args,
-        locust_args=cfg.locust_args,
-        locustfile=cfg.locustfile,
         extra_env=merged_extra,
         run_id=run_id,
-        behavex_parallel_processes=cfg.behavex_parallel_processes,
-        behavex_parallel_scheme=cfg.behavex_parallel_scheme,
     )
 
     cmd = build_command(cfg, parent_env=parent_env or os.environ)
 
-    # Injection logic (zero-touch)
     orchestrator_root = Path(__file__).resolve().parents[1]
     drop_in_root = orchestrator_root / "drop_in_hooks"
 
-    # Ensure subprocess can import drop-in modules regardless of cwd.
-    pythonpath_parts = []
+    pythonpath_parts = [str(orchestrator_root), str(drop_in_root)]
     existing_pp = cmd.env.get("PYTHONPATH")
-    pythonpath_parts.append(str(orchestrator_root))
-    pythonpath_parts.append(str(drop_in_root))
     if existing_pp:
         pythonpath_parts.append(existing_pp)
     cmd.env["PYTHONPATH"] = os.pathsep.join(pythonpath_parts)
 
-    # BehaveX can be sensitive to environment/module resolution; explicitly add the
-    # current interpreter's site-packages to PYTHONPATH to avoid missing imports.
     if cfg.test_type.value == "behavex":
         site_packages = _current_site_packages()
         if site_packages:
             cmd.env["PYTHONPATH"] = os.pathsep.join([site_packages, cmd.env.get("PYTHONPATH", "")]).strip(os.pathsep)
 
-    # Pytest: load plugin module even if target repo doesn't include it.
-    # Use pytest_custom (not "pytest") so PYTHONPATH does not shadow site-packages `pytest`.
     if cfg.test_type.value == "pytest":
         existing = cmd.env.get("PYTEST_ADDOPTS", "")
         injection = "-p drop_in_hooks.pytest_custom.conftest"
         if injection not in existing:
             cmd.env["PYTEST_ADDOPTS"] = (existing + " " + injection).strip()
+        opts = cmd.env.get("PYTEST_ADDOPTS", "")
+        padded = f" {opts} "
+        extra = []
+        if " -s " not in padded and "--capture=no" not in opts:
+            extra.append("-s")
+        if "--color=yes" not in opts and "--color=no" not in opts:
+            extra.append("--color=yes")
+        if extra:
+            cmd.env["PYTEST_ADDOPTS"] = (opts + " " + " ".join(extra)).strip()
 
-    # Unbuffered stdio for Python-based CLIs (pytest, behave/behavex, locust, etc.).
     cmd.env["PYTHONUNBUFFERED"] = "1"
 
     q: queue.Queue[LogEvent | None] = queue.Queue()
@@ -111,47 +128,83 @@ def run_streaming(
         q.put(LogEvent(ts=time.time(), stream=stream, line=line))
 
     emit("meta", f"$ UQO_RUN_ID={run_id}\n")
+    _resolve_subprocess_argv(cmd.argv)
     emit("meta", f"$ (cwd={cmd.cwd}) {' '.join(cmd.argv)}\n")
 
-    # `cwd` is the target repo (e.g. sample_target_repo/) so pytest/behave/locust find tests naturally.
     proc = subprocess.Popen(
         cmd.argv,
         cwd=str(cmd.cwd),
         env=cmd.env,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
         text=True,
-        bufsize=1,  # line-buffered (best-effort)
-        universal_newlines=True,
+        bufsize=1,
     )
 
-    def reader_thread(stream_name: str, fh) -> None:
+    def reader_thread() -> None:
+        fh = proc.stdout
+        if fh is None:
+            return
         try:
             for line in iter(fh.readline, ""):
-                emit(stream_name, line)
+                emit("stdout", line)
         finally:
-            try:
+            with contextlib.suppress(Exception):
                 fh.close()
-            except Exception:
-                pass
 
-    t_out = threading.Thread(target=reader_thread, args=("stdout", proc.stdout), daemon=True)
-    t_err = threading.Thread(target=reader_thread, args=("stderr", proc.stderr), daemon=True)
+    t_out = threading.Thread(target=reader_thread, daemon=True)
     t_out.start()
-    t_err.start()
 
-    # Loop until process ends and both reader threads drained.
+    last_output_ts = time.time()
+
     while True:
         try:
             item = q.get(timeout=0.1)
             if item is not None:
+                last_output_ts = time.time()
                 yield item
         except queue.Empty:
             pass
 
+        now = time.time()
+        if float(cfg.heartbeat_s) > 0 and (now - last_output_ts) >= float(cfg.heartbeat_s):
+            last_output_ts = now
+            yield LogEvent(ts=now, stream="meta", line="[still running...]\n")
+
+        if cfg.timeout_s is not None and (now - started_at) >= float(cfg.timeout_s):
+            yield LogEvent(ts=now, stream="meta", line=f"[timeout after {cfg.timeout_s}s] terminating...\n")
+            with contextlib.suppress(Exception):
+                proc.terminate()
+            try:
+                proc.wait(timeout=5.0)
+            except Exception:
+                with contextlib.suppress(Exception):
+                    proc.kill()
+            with contextlib.suppress(Exception):
+                proc.wait(timeout=30.0)
+            rc = proc.poll()
+            finished_at = time.time()
+            yield LogEvent(ts=finished_at, stream="meta", line=f"\n[exit code {rc if rc is not None else 124}]\n")
+            yield LogEvent(
+                ts=time.time(),
+                stream="meta",
+                line=f"{UQO_DONE_MARKER} returncode={int(rc if rc is not None else 124)}\n",
+            )
+            yield LogEvent(
+                ts=time.time(),
+                stream="meta",
+                line="[report sync] copying artifacts into ./static/ …\n",
+            )
+            sync_all_reports_to_static(artifacts_root=artifacts_root, run_id=run_id)
+            return RunResult(
+                returncode=int(rc if rc is not None else 124),
+                started_at=started_at,
+                finished_at=finished_at,
+                command=cmd,
+            )
+
         rc = proc.poll()
         if rc is not None:
-            # Drain remaining lines for a short window.
             drain_deadline = time.time() + 2.0
             while time.time() < drain_deadline:
                 try:
@@ -161,13 +214,18 @@ def run_streaming(
                 except queue.Empty:
                     break
 
-            # Ensure threads get a chance to exit.
-            t_out.join(timeout=1.0)
-            t_err.join(timeout=1.0)
+            t_out.join(timeout=2.0)
+            with contextlib.suppress(Exception):
+                proc.wait(timeout=30.0)
+
             finished_at = time.time()
             yield LogEvent(ts=finished_at, stream="meta", line=f"\n[exit code {rc}]\n")
+            yield LogEvent(
+                ts=time.time(),
+                stream="meta",
+                line=f"{UQO_DONE_MARKER} returncode={int(rc)}\n",
+            )
 
-            # Post-process: mirror BehaveX + Locust HTML into ./static/ for Streamlit links.
             if cfg.test_type.value == "behavex":
                 try:
                     dest = collect_behavex_native_report(
@@ -182,14 +240,27 @@ def run_streaming(
 
             if cfg.test_type.value == "locust":
                 try:
-                    lp = publish_locust_html_to_static(
-                        artifacts_root=artifacts_root,
-                        run_id=run_id,
-                    )
+                    lp = publish_locust_html_to_static(artifacts_root=artifacts_root)
                     if lp:
                         yield LogEvent(ts=time.time(), stream="meta", line=f"[locust html mirror] {lp}\n")
                 except Exception:
                     pass
+
+            try:
+                yield LogEvent(
+                    ts=time.time(),
+                    stream="meta",
+                    line="[report sync] copying artifacts into ./static/ …\n",
+                )
+                synced = sync_all_reports_to_static(artifacts_root=artifacts_root, run_id=run_id)
+                if any(synced.values()):
+                    yield LogEvent(
+                        ts=time.time(),
+                        stream="meta",
+                        line=f"[static sync] { {k: str(v) for k, v in synced.items() if v} }\n",
+                    )
+            except Exception:
+                pass
 
             return RunResult(
                 returncode=int(rc),
@@ -200,9 +271,6 @@ def run_streaming(
 
 
 def _current_site_packages() -> str | None:
-    """
-    Best-effort: return a site-packages path for the current interpreter (Py 3.13).
-    """
     try:
         import site
 
@@ -212,7 +280,6 @@ def _current_site_packages() -> str | None:
     except Exception:
         pass
 
-    # Fallback: scan sys.path
     for p in sys.path:
         if not p:
             continue
@@ -232,4 +299,3 @@ def validate_target_repo(path: Path) -> tuple[bool, str]:
 
 def default_artifacts_root() -> Path:
     return Path("artifacts")
-

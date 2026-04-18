@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import queue
 import threading
 import time
@@ -9,7 +10,14 @@ from typing import Optional
 import streamlit as st
 
 from engine.command_builders import RunConfig, TestType, coerce_path
-from engine.runners import LogEvent, RunResult, default_artifacts_root, run_streaming, validate_target_repo
+from engine.runners import (
+    UQO_DONE_MARKER,
+    LogEvent,
+    RunResult,
+    default_artifacts_root,
+    run_streaming,
+    validate_target_repo,
+)
 from engine.sandbox_api import (
     MOCK_BASE_URL,
     is_managed_process_alive,
@@ -25,12 +33,10 @@ from engine.report_generator import (
     default_report_paths,
     generate_allure_html,
     make_report_zip,
-    publish_allure_index_to_static,
     read_single_file_html,
     start_static_server,
     url_for,
 )
-
 
 def _init_state() -> None:
     st.session_state.setdefault("running", False)
@@ -42,12 +48,13 @@ def _init_state() -> None:
     st.session_state.setdefault("sandbox_mode", False)
     st.session_state.setdefault("report_server", None)  # type: ignore[assignment]
     st.session_state.setdefault("static_server", None)  # type: ignore[assignment]
-    st.session_state.setdefault("last_test_type", None)  # type: ignore[assignment]
+    st.session_state.setdefault("last_run_id", None)  # type: ignore[assignment]
+    st.session_state.setdefault("target_repo", str(Path(".").resolve()))
 
 
 def _append_line(line: str) -> None:
     st.session_state.log_lines.append(line)
-    max_lines = int(st.session_state.log_max_lines)
+    max_lines = int(st.session_state.get("log_max_lines", 2000))
     if len(st.session_state.log_lines) > max_lines:
         st.session_state.log_lines = st.session_state.log_lines[-max_lines:]
 
@@ -56,21 +63,35 @@ def _start_worker(cfg: RunConfig) -> None:
     events_q: queue.Queue[LogEvent | RunResult] = queue.Queue()
 
     def worker() -> None:
-        gen = run_streaming(cfg, artifacts_root=default_artifacts_root())
         try:
+            gen = run_streaming(cfg, artifacts_root=default_artifacts_root())
             while True:
-                ev = next(gen)
-                events_q.put(ev)
-        except StopIteration as e:
-            result = e.value
-            if result is not None:
-                events_q.put(result)
+                try:
+                    ev = next(gen)
+                    events_q.put(ev)
+                except StopIteration as e:
+                    if e.value is not None:
+                        events_q.put(e.value)
+                    break
+        except Exception as exc:
+            import traceback
+
+            events_q.put(
+                LogEvent(
+                    ts=time.time(),
+                    stream="meta",
+                    line=f"[orchestrator worker error] {exc}\n{traceback.format_exc()}\n",
+                )
+            )
+            events_q.put(LogEvent(ts=time.time(), stream="meta", line=f"{UQO_DONE_MARKER} returncode=-1\n"))
 
     t = threading.Thread(target=worker, daemon=True)
     st.session_state.events_q = events_q
     st.session_state.worker = t
     st.session_state.running = True
     st.session_state.last_result = None
+    st.session_state.run_completed = False
+    st.session_state.last_run_id = None
     t.start()
 
 
@@ -88,7 +109,13 @@ def _drain_events() -> None:
         if isinstance(item, RunResult):
             st.session_state.last_result = item
             st.session_state.running = False
+            st.session_state.run_completed = True
+            st.session_state.last_run_id = item.command.env.get("UQO_RUN_ID")
             continue
+
+        done_sentinel = isinstance(item, LogEvent) and UQO_DONE_MARKER in item.line
+        if done_sentinel:
+            st.session_state.running = False
 
         prefix = ""
         if item.stream == "stderr":
@@ -96,6 +123,9 @@ def _drain_events() -> None:
         elif item.stream == "meta":
             prefix = ""
         _append_line(prefix + item.line.rstrip("\n"))
+
+        if done_sentinel:
+            st.session_state.run_completed = True
 
 
 def _on_sandbox_toggle() -> None:
@@ -117,12 +147,31 @@ def _streamlit_origin() -> str:
     return f"http://{host}:{port}"
 
 
+def get_base_url() -> str:
+    """Streamlit origin (scheme + host + port) for static report URLs."""
+    return _streamlit_origin()
+
+
 def _streamlit_static_url(relative_under_static: str) -> str:
     rel = relative_under_static.lstrip("/")
     return f"{_streamlit_origin()}/app/static/{rel}"
 
 
+def _static_paths_exist() -> tuple[bool, bool]:
+    # Deterministic paths under ./static (orchestrator root)
+    return (
+        os.path.exists(STATIC_ALLURE_HTML),
+        os.path.exists(STATIC_LOCUST_HTML),
+    )
+
+
 st.set_page_config(page_title="Unified Quality Orchestration", layout="wide")
+
+if "run_completed" not in st.session_state:
+    st.session_state.run_completed = False
+if "last_test_type" not in st.session_state:
+    st.session_state.last_test_type = None
+
 _init_state()
 
 st.title("Unified Quality Orchestration & Reporting Dashboard")
@@ -132,14 +181,12 @@ sandbox_path = str(sample_target_repo().resolve())
 
 with st.sidebar:
     st.subheader("Sandbox")
-
     st.checkbox(
         "🧪 Load Sandbox Mode",
         key="sandbox_mode",
         on_change=_on_sandbox_toggle,
         disabled=bool(st.session_state.running),
     )
-
     if st.session_state.sandbox_mode:
         st.session_state["target_repo"] = sandbox_path
         ok_api, api_msg = start_sandbox_if_needed()
@@ -147,19 +194,26 @@ with st.sidebar:
             st.error(api_msg)
         else:
             st.caption(api_msg)
-
         st.caption(f"Mock API base: `{MOCK_BASE_URL}`")
-
         col_stop, _ = st.columns([1, 1])
         with col_stop:
             if st.button("Stop Sandbox API", disabled=bool(st.session_state.running)):
                 stop_sandbox_if_managed()
                 st.toast("Sandbox API stopped.", icon="🛑")
                 st.rerun()
-
         if is_managed_process_alive():
             st.caption("Orchestrator is managing the uvicorn process for this session.")
 
+_drain_events()
+
+tab_exec, tab_analytics, tab_history, tab_integrations = st.tabs(
+    ["🚀 Execution", "📊 Analytics", "📜 History", "⚙️ Integrations"]
+)
+
+artifacts_root = default_artifacts_root().expanduser().resolve()
+paths = default_report_paths(artifacts_root=artifacts_root)
+
+with tab_exec:
     st.subheader("Run configuration")
 
     target_repo_str = st.text_input(
@@ -181,13 +235,12 @@ with st.sidebar:
         disabled=bool(st.session_state.running),
     )
 
-    # Locust headless controls (used by command builder)
     locust_users = 10
     locust_spawn_rate = 2
     locust_run_time = "1m"
     locust_only_summary = True
     if test_type == TestType.LOCUST.value:
-        st.subheader("Locust (headless)")
+        st.markdown("**Locust (headless)**")
         locust_users = int(
             st.slider("Users (-u)", min_value=1, max_value=500, value=int(st.session_state.get("locust_users", 10)))
         )
@@ -228,7 +281,6 @@ with st.sidebar:
         "Console buffer (lines)",
         min_value=200,
         max_value=20000,
-        value=int(st.session_state.log_max_lines),
         step=200,
         key="log_max_lines",
         disabled=bool(st.session_state.running),
@@ -240,117 +292,125 @@ with st.sidebar:
     with col_b:
         clear_clicked = st.button("Clear console", disabled=bool(st.session_state.running))
 
-if clear_clicked:
-    st.session_state.log_lines = []
+    if clear_clicked:
+        st.session_state.log_lines = []
 
-target_repo = coerce_path(target_repo_str) if target_repo_str else Path(".")
-ok, msg = validate_target_repo(target_repo)
-if not ok:
-    st.warning(f"Target repo: {msg}")
-
-if run_clicked:
+    target_repo = coerce_path(target_repo_str) if target_repo_str else Path(".")
+    ok, msg = validate_target_repo(target_repo)
     if not ok:
-        st.error(f"Cannot run: {msg}")
-    else:
-        argv_extra = [a for a in extra_args.split() if a.strip()]
-        cfg = RunConfig(
-            test_type=TestType(test_type),
-            target_repo=target_repo,
-            shared_allure_results_dir=Path("artifacts/allure-results"),
-            artifacts_root=Path("artifacts"),
-            pytest_args=argv_extra if test_type == TestType.PYTEST.value else (),
-            behavex_args=argv_extra if test_type == TestType.BEHAVEX.value else (),
-            locust_args=argv_extra if test_type == TestType.LOCUST.value else (),
-            locust_headless=True,
-            locust_users=int(locust_users),
-            locust_spawn_rate=int(locust_spawn_rate),
-            locust_run_time=str(locust_run_time),
-            locust_only_summary=bool(locust_only_summary),
-        )
-        st.session_state["last_test_type"] = test_type
-        _append_line(f"Starting run: {cfg.test_type.value} in {cfg.target_repo}")
-        _start_worker(cfg)
+        st.warning(f"Target repo: {msg}")
 
-_drain_events()
+    if run_clicked:
+        if not ok:
+            st.error(f"Cannot run: {msg}")
+        else:
+            argv_extra = [a for a in extra_args.split() if a.strip()]
+            cfg = RunConfig(
+                test_type=TestType(test_type),
+                target_repo=target_repo,
+                shared_allure_results_dir=Path("artifacts/allure-results"),
+                artifacts_root=Path("artifacts"),
+                pytest_args=argv_extra if test_type == TestType.PYTEST.value else (),
+                behavex_args=argv_extra if test_type == TestType.BEHAVEX.value else (),
+                locust_args=argv_extra if test_type == TestType.LOCUST.value else (),
+                locust_headless=True,
+                locust_users=int(locust_users),
+                locust_spawn_rate=int(locust_spawn_rate),
+                locust_run_time=str(locust_run_time),
+                locust_only_summary=bool(locust_only_summary),
+                last_test_type=test_type,
+            )
+            st.session_state["last_test_type"] = test_type
+            _append_line(f"Starting run: {cfg.test_type.value} in {cfg.target_repo}")
+            _start_worker(cfg)
 
-col1, col2 = st.columns([2, 1], gap="large")
+    st.divider()
+    col_out, col_stat = st.columns([2, 1], gap="large")
 
-with col1:
-    st.subheader("Live output")
-    console_text = "\n".join(st.session_state.log_lines)
-    st.code(console_text or "(no output yet)", language="text")
+    with col_out:
+        st.subheader("Live output")
+        console_text = "\n".join(st.session_state.log_lines)
+        if st.session_state.running:
+            with st.status("Running tests…", expanded=True):
+                st.caption(
+                    "When the subprocess exits, the orchestrator runs **report sync** "
+                    "(copying HTML into `./static/`). Expect a short pause before the run is marked complete."
+                )
+                st.code(console_text or "(starting…)", language="text")
+        else:
+            st.code(console_text or "(no output yet)", language="text")
 
-with col2:
-    st.subheader("Run status")
-    st.write(f"**Running:** {bool(st.session_state.running)}")
-    st.write(f"**Artifacts:** `{default_artifacts_root()}`")
+    with col_stat:
+        st.subheader("Run status")
+        st.write(f"**Running:** {bool(st.session_state.running)}")
+        st.write(f"**Artifacts:** `{default_artifacts_root()}`")
 
-    if st.session_state.last_result is not None:
-        rr: RunResult = st.session_state.last_result
-        st.success(f"Finished with exit code {rr.returncode}")
-        st.json(
-            {
-                "returncode": rr.returncode,
-                "duration_s": round(rr.finished_at - rr.started_at, 3),
-                "cwd": str(rr.command.cwd),
-                "argv": rr.command.argv,
-                "allure_results_dir": str(rr.command.env.get("UQO_SHARED_ALLURE_RESULTS_DIR", "")),
-            }
-        )
-    elif st.session_state.running:
-        st.info("Process is running. Logs will stream below.")
+        if st.session_state.last_result is not None:
+            rr: RunResult = st.session_state.last_result
+            st.success(f"Finished with exit code {rr.returncode}")
+            st.json(
+                {
+                    "returncode": rr.returncode,
+                    "duration_s": round(rr.finished_at - rr.started_at, 3),
+                    "cwd": str(rr.command.cwd),
+                    "argv": rr.command.argv,
+                    "allure_results_dir": str(rr.command.env.get("UQO_SHARED_ALLURE_RESULTS_DIR", "")),
+                }
+            )
+        elif st.session_state.running:
+            st.info("Process is running. Logs update live above.")
 
-# -----------------------------
-# Analytics & Reporting (Phase 4)
-# -----------------------------
-st.divider()
-st.subheader("📊 Analytics & Reporting")
-
-artifacts_root = default_artifacts_root().expanduser().resolve()
-paths = default_report_paths(artifacts_root=artifacts_root)
-
-with st.expander("📊 Available Reports", expanded=True):
+with tab_analytics:
+    st.subheader("📊 Available Reports")
     st.caption(
-        "Opens files mirrored under `./static/` (Streamlit static serving). "
-        "If a browser shows plain text for HTML, use “Optional HTTP viewer” below."
+        "After a run completes, native HTML is mirrored under `./static/` for Streamlit static serving. "
+        "If a report renders as plain text, use the optional HTTP viewer below."
     )
-    report_entries: list[tuple[str, str, Path]] = [
-        ("Allure — single-file HTML", "allure_report.html", STATIC_ALLURE_HTML),
-        ("Locust — HTML summary", "locust_report.html", STATIC_LOCUST_HTML),
-        ("BehaveX — native HTML", "behave/index.html", STATIC_BEHAVE_INDEX),
-    ]
-    any_link = False
-    for label, rel, p in report_entries:
-        if p.is_file():
-            any_link = True
-            st.link_button(label, _streamlit_static_url(rel), type="primary", use_container_width=True)
-    if not any_link:
-        st.info("No mirrored reports yet. Run tests and/or generate Allure HTML.")
+
+    has_allure, has_locust = _static_paths_exist()
+    last_tt = st.session_state.get("last_test_type")
+
+    if st.session_state.get("run_completed"):
+        st.success("✅ Last run finished (see Execution tab for exit code).")
+        if last_tt == "behavex" and os.path.exists("./static/behave/index.html"):
+            st.link_button(
+                "🟢 Open BehaveX Native Report",
+                f"{get_base_url()}/app/static/behave/index.html",
+                width="stretch",
+            )
+        if last_tt == "locust" and has_locust:
+            st.link_button(
+                "📈 Open Locust Performance Report",
+                _streamlit_static_url("locust_report.html"),
+                width="stretch",
+            )
+        if has_allure:
+            st.link_button(
+                "🌐 Open Allure (Unified) Report",
+                _streamlit_static_url("allure_report.html"),
+                type="primary",
+                width="stretch",
+            )
 
     srv_http = st.session_state.get("static_server")
-    rr_for_links: RunResult | None = st.session_state.get("last_result")
     if srv_http is not None:
         st.markdown("**Optional HTTP viewer** (full HTML/CSS)")
         st.caption(f"Serving: `{srv_http.root_dir}`")
-        allure_http = url_for(srv_http, relative_path="artifacts/allure-report/index.html")
-        st.link_button("Open Allure (HTTP server)", allure_http)
+        st.link_button("Open Allure (HTTP server)", url_for(srv_http, relative_path="artifacts/allure-report/index.html"))
+        rr_for_links: RunResult | None = st.session_state.get("last_result")
         if rr_for_links is not None:
-            last_type = st.session_state.get("last_test_type")
-            rid = rr_for_links.command.env.get("UQO_RUN_ID", "latest")
-            if last_type == TestType.BEHAVEX.value:
+            if st.session_state.get("last_test_type") == TestType.BEHAVEX.value:
                 st.link_button(
-                    "Open BehaveX copy (HTTP server)",
-                    url_for(srv_http, relative_path=f"static_reports/behavex/report_{rid}.html"),
+                    "Open BehaveX (HTTP server)",
+                    url_for(srv_http, relative_path="static/behave/index.html"),
                 )
-            if last_type == TestType.LOCUST.value:
+            if st.session_state.get("last_test_type") == TestType.LOCUST.value:
                 st.link_button(
                     "Open Locust (HTTP server)",
-                    url_for(srv_http, relative_path=f"artifacts/reports/locust_report_{rid}.html"),
+                    url_for(srv_http, relative_path="artifacts/locust_report.html"),
                 )
 
-rep_col1, rep_col2, rep_col3 = st.columns([1, 1, 2], gap="large")
-
-with rep_col1:
+    st.divider()
     st.markdown("**Allure HTML**")
     st.caption("Requires Allure CLI installed (e.g. `brew install allure`).")
 
@@ -359,9 +419,8 @@ with rep_col1:
         ok_gen, msg_gen = generate_allure_html(results_dir=paths.results_dir, report_dir=paths.report_dir)
         if ok_gen:
             st.success(msg_gen)
-            pub = publish_allure_index_to_static(report_dir=paths.report_dir)
-            if pub:
-                st.caption(f"Mirrored for static links: `{pub}`")
+            if STATIC_ALLURE_HTML.is_file():
+                st.caption(f"Mirrored for static links: `{STATIC_ALLURE_HTML}`")
         else:
             st.error(msg_gen)
 
@@ -387,39 +446,41 @@ with rep_col1:
         st.session_state["static_server"] = None
         st.toast("Report server stopped.", icon="🛑")
 
-with rep_col2:
-    st.markdown("**Export**")
-    zip_clicked = st.button("Build ZIP", disabled=bool(st.session_state.running))
-    if zip_clicked:
-        try:
-            zip_path = make_report_zip(report_dir=paths.report_dir, out_dir=artifacts_root, base_name="allure-report")
-            st.session_state["report_zip_path"] = str(zip_path)
-            st.success(f"ZIP created: {zip_path.name}")
-        except Exception as exc:
-            st.error(f"ZIP creation failed: {exc}")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("**Export**")
+        zip_clicked = st.button("Build ZIP", disabled=bool(st.session_state.running))
+        if zip_clicked:
+            try:
+                zip_path = make_report_zip(report_dir=paths.report_dir, out_dir=artifacts_root, base_name="allure-report")
+                st.session_state["report_zip_path"] = str(zip_path)
+                st.success(f"ZIP created: {zip_path.name}")
+            except Exception as exc:
+                st.error(f"ZIP creation failed: {exc}")
 
-    zip_path_str = st.session_state.get("report_zip_path")
-    if zip_path_str:
-        zp = Path(zip_path_str)
-        if zp.exists():
+        zip_path_str = st.session_state.get("report_zip_path")
+        if zip_path_str:
+            zp = Path(zip_path_str)
+            if zp.exists():
+                st.download_button(
+                    "Download ZIP",
+                    data=zp.read_bytes(),
+                    file_name=zp.name,
+                    mime="application/zip",
+                )
+
+    with c2:
+        st.markdown("**Single-file HTML**")
+        ok_html, msg_html, html_bytes = read_single_file_html(report_dir=paths.report_dir)
+        if ok_html and html_bytes:
             st.download_button(
-                "Download ZIP",
-                data=zp.read_bytes(),
-                file_name=zp.name,
-                mime="application/zip",
+                "Download index.html",
+                data=html_bytes,
+                file_name="allure-report.html",
+                mime="text/html",
             )
-
-    st.markdown("**Single-file HTML**")
-    ok_html, msg_html, html_bytes = read_single_file_html(report_dir=paths.report_dir)
-    if ok_html and html_bytes:
-        st.download_button(
-            "Download index.html",
-            data=html_bytes,
-            file_name="allure-report.html",
-            mime="text/html",
-        )
-    else:
-        st.caption(msg_html)
+        else:
+            st.caption(msg_html)
 
     st.markdown("**Metrics (JSON)**")
     metrics_clicked = st.button("Generate metrics.json", disabled=bool(st.session_state.running))
@@ -431,8 +492,8 @@ with rep_col2:
         except Exception as exc:
             st.error(f"Metrics generation failed: {exc}")
 
-with rep_col3:
-    st.markdown("**History**")
+with tab_history:
+    st.subheader("Allure run history")
     archive_root = artifacts_root / "allure-results-archive"
     history = list_run_history(archive_root=archive_root, current_results_dir=paths.results_dir)
     if history:
@@ -452,11 +513,12 @@ with rep_col3:
                     "duration_ms": m.duration_ms,
                 }
             )
-        st.dataframe(rows, use_container_width=True, height=320)
+        st.dataframe(rows, width="stretch", height=420)
     else:
         st.info("No Allure results found yet.")
 
-    st.markdown("**Grafana / InfluxDB live sync**")
+with tab_integrations:
+    st.subheader("Grafana / InfluxDB live sync")
     influx_url = st.text_input("InfluxDB URL", value=str(st.session_state.get("influx_url", "")))
     influx_org = st.text_input("Org", value=str(st.session_state.get("influx_org", "")))
     influx_bucket = st.text_input("Bucket", value=str(st.session_state.get("influx_bucket", "")))

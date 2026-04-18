@@ -14,7 +14,8 @@ ORCHESTRATOR_ROOT = Path(__file__).resolve().parents[1]
 STATIC_DIR = ORCHESTRATOR_ROOT / "static"
 STATIC_ALLURE_HTML = STATIC_DIR / "allure_report.html"
 STATIC_LOCUST_HTML = STATIC_DIR / "locust_report.html"
-STATIC_BEHAVE_INDEX = STATIC_DIR / "behave" / "index.html"
+STATIC_BEHAVE_DIR = STATIC_DIR / "behave"
+STATIC_BEHAVE_INDEX = STATIC_BEHAVE_DIR / "index.html"
 
 
 @dataclass(frozen=True)
@@ -51,6 +52,7 @@ def generate_allure_html(*, results_dir: Path, report_dir: Path) -> tuple[bool, 
         err = (p.stderr or p.stdout or "").strip()
         return False, f"Allure generation failed (exit {p.returncode}). {err[:2000]}"
 
+    publish_allure_index_to_static(report_dir=report_dir)
     return True, f"Allure report generated at {report_dir}"
 
 
@@ -124,7 +126,7 @@ def start_static_server(*, root_dir: Path, port: int | None = None) -> ReportSer
     """
     Serve a broader directory tree (e.g. orchestrator root), so we can open:
       - artifacts/allure-report/index.html
-      - artifacts/reports/locust_report_*.html
+      - artifacts/locust_report.html
       - static_reports/behavex/*.html
     """
     root_dir = root_dir.expanduser().resolve()
@@ -140,7 +142,69 @@ def start_static_server(*, root_dir: Path, port: int | None = None) -> ReportSer
 
 def _ensure_static_dirs() -> None:
     STATIC_DIR.mkdir(parents=True, exist_ok=True)
-    (STATIC_DIR / "behave").mkdir(parents=True, exist_ok=True)
+
+
+def _chmod_tree(path: Path, *, dirmode: int = 0o755, filemode: int = 0o644) -> None:
+    for root, dirs, files in os.walk(path):
+        for name in files:
+            fp = Path(root) / name
+            try:
+                os.chmod(fp, filemode)
+            except OSError:
+                pass
+        for name in dirs:
+            dp = Path(root) / name
+            try:
+                os.chmod(dp, dirmode)
+            except OSError:
+                pass
+    try:
+        os.chmod(path, dirmode)
+    except OSError:
+        pass
+
+
+def _mirror_behavex_output_tree_to_static(src_dir: Path) -> Path | None:
+    """
+    Copy the full BehaveX output directory (HTML, ``outputs/``, assets) into ``static/behave/``,
+    then copy ``report.html`` to ``index.html`` so Streamlit serves ``/app/static/behave/index.html``.
+    """
+    src_dir = src_dir.expanduser().resolve()
+    report = src_dir / "report.html"
+    if not src_dir.is_dir() or not report.is_file():
+        return None
+
+    STATIC_DIR.mkdir(parents=True, exist_ok=True)
+    if STATIC_BEHAVE_DIR.exists():
+        shutil.rmtree(STATIC_BEHAVE_DIR)
+    shutil.copytree(src_dir, STATIC_BEHAVE_DIR)
+    shutil.copy2(STATIC_BEHAVE_DIR / "report.html", STATIC_BEHAVE_INDEX)
+    _chmod_tree(STATIC_BEHAVE_DIR)
+    try:
+        os.chmod(STATIC_BEHAVE_INDEX, 0o644)
+    except OSError:
+        pass
+    return STATIC_BEHAVE_INDEX if STATIC_BEHAVE_INDEX.is_file() else None
+
+
+def _resolve_behavex_artifacts_output_dir(artifacts_root: Path) -> Path | None:
+    """BehaveX ``-o`` directory under artifacts (prefers ``behave_reports``, then legacy ``behavex-output``)."""
+    artifacts_root = artifacts_root.expanduser().resolve()
+    for sub in ("behave_reports", "behavex-output"):
+        d = artifacts_root / sub
+        if d.is_dir() and (d / "report.html").is_file():
+            return d
+    return None
+
+
+def _mirror_file_readable(src: Path, dst: Path) -> None:
+    """Copy HTML into static/ and set permissive mode so Streamlit can serve it."""
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src, dst)
+    try:
+        os.chmod(dst, 0o644)
+    except OSError:
+        pass
 
 
 def publish_allure_index_to_static(*, report_dir: Path) -> Path | None:
@@ -152,16 +216,16 @@ def publish_allure_index_to_static(*, report_dir: Path) -> Path | None:
     if not src.exists():
         return None
     _ensure_static_dirs()
-    shutil.copy2(src, STATIC_ALLURE_HTML)
+    _mirror_file_readable(src, STATIC_ALLURE_HTML)
     return STATIC_ALLURE_HTML
 
 
-def publish_locust_html_to_static(*, artifacts_root: Path, run_id: str) -> Path | None:
-    src = (artifacts_root / "reports" / f"locust_report_{run_id}.html").expanduser().resolve()
+def publish_locust_html_to_static(*, artifacts_root: Path) -> Path | None:
+    src = (artifacts_root / "locust_report.html").expanduser().resolve()
     if not src.exists():
         return None
     _ensure_static_dirs()
-    shutil.copy2(src, STATIC_LOCUST_HTML)
+    _mirror_file_readable(src, STATIC_LOCUST_HTML)
     return STATIC_LOCUST_HTML
 
 
@@ -174,15 +238,17 @@ def collect_behavex_native_report(
     """
     BehaveX writes report.html at OUTPUT/report.html (see `-o`).
 
-    Primary: <artifacts>/behavex-output/report.html
-    Legacy:   <target_repo>/output/report.html
+    Primary: <artifacts>/behave_reports/report.html
+    Legacy:   <artifacts>/behavex-output/report.html, <target_repo>/output/report.html
 
-    Copies to static/behave/index.html and to static_reports/behavex/report_<run_id>.html.
+    Mirrors the full BehaveX output dir to ``static/behave/`` (assets preserved), sets ``index.html``
+    from ``report.html``, and copies ``report.html`` to ``static_reports/behavex/report_<run_id>.html``.
     """
     target_repo = target_repo.expanduser().resolve()
     candidates: list[Path] = []
     if artifacts_root is not None:
         ar = artifacts_root.expanduser().resolve()
+        candidates.append(ar / "behave_reports" / "report.html")
         candidates.append(ar / "behavex-output" / "report.html")
     candidates.append(target_repo / "output" / "report.html")
 
@@ -195,14 +261,47 @@ def collect_behavex_native_report(
         return None
 
     root = ORCHESTRATOR_ROOT
-    _ensure_static_dirs()
-    shutil.copy2(src, STATIC_BEHAVE_INDEX)
+    mirrored = _mirror_behavex_output_tree_to_static(src.parent)
+    if mirrored is None:
+        return None
 
     dest_dir = (root / "static_reports" / "behavex").resolve()
     dest_dir.mkdir(parents=True, exist_ok=True)
     dest = dest_dir / f"report_{run_id}.html"
-    shutil.copy2(src, dest)
+    _mirror_file_readable(src, dest)
     return dest
+
+
+def sync_all_reports_to_static(*, artifacts_root: Path, run_id: str | None = None) -> dict[str, Path | None]:
+    """
+    Copy the latest known report HTML artifacts into ``./static/`` for Streamlit static serving.
+
+    - Allure: ``<artifacts>/allure-report/index.html`` → ``static/allure_report.html``
+    - Locust: ``<artifacts>/locust_report.html``
+    - BehaveX: full ``<artifacts>/behave_reports/`` tree (legacy: ``behavex-output/``) → ``static/behave/``,
+      with ``report.html`` copied to ``static/behave/index.html``
+    """
+    _ = run_id  # retained for callers; Locust uses fixed ``locust_report.html``
+    artifacts_root = artifacts_root.expanduser().resolve()
+    out: dict[str, Path | None] = {"allure": None, "locust": None, "behavex": None}
+
+    allure_index = artifacts_root / "allure-report" / "index.html"
+    if allure_index.is_file():
+        _ensure_static_dirs()
+        _mirror_file_readable(allure_index, STATIC_ALLURE_HTML)
+        out["allure"] = STATIC_ALLURE_HTML
+
+    loc = artifacts_root / "locust_report.html"
+    if loc.is_file():
+        _ensure_static_dirs()
+        _mirror_file_readable(loc, STATIC_LOCUST_HTML)
+        out["locust"] = STATIC_LOCUST_HTML
+
+    behave_dir = _resolve_behavex_artifacts_output_dir(artifacts_root)
+    if behave_dir is not None:
+        out["behavex"] = _mirror_behavex_output_tree_to_static(behave_dir)
+
+    return out
 
 
 def url_for(server: ReportServer, *, relative_path: str) -> str:

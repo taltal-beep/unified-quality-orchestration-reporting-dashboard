@@ -41,9 +41,18 @@ class RunConfig:
     # Optional stable run identifier (used for metadata + result isolation)
     run_id: str | None = None
 
+    # Denormalized test type string for UI (defaults to ``test_type.value`` via env if omitted)
+    last_test_type: str | None = None
+
     # BehaveX parallel defaults (orchestrator injects unless CLI overrides)
     behavex_parallel_processes: int = 4
     behavex_parallel_scheme: str = "feature"
+
+    # Execution safety
+    # - timeout_s: hard stop to prevent silent hangs (None = no timeout)
+    # - heartbeat_s: emit a "still running" line if no output is seen
+    timeout_s: float | None = None
+    heartbeat_s: float = 10.0
 
 
 @dataclass(frozen=True)
@@ -69,6 +78,7 @@ def build_command(cfg: RunConfig, *, parent_env: Mapping[str, str]) -> BuiltComm
     env.update(_base_env(shared_allure_results_dir=shared_dir, extra_env=cfg.extra_env))
     if cfg.run_id:
         env["UQO_RUN_ID"] = str(cfg.run_id)
+    env["UQO_LAST_TEST_TYPE"] = cfg.last_test_type or cfg.test_type.value
 
     if cfg.test_type == TestType.PYTEST:
         argv = _build_pytest(cfg, shared_dir)
@@ -117,15 +127,15 @@ def _argv_has_formatter(argv: list[str]) -> bool:
 
 def _build_behavex(cfg: RunConfig, shared_dir: Path) -> list[str]:
     """
-    BehaveX 4.x runs Allure via a custom formatter that implements `launch_json_formatter`
-    (see `drop_in_hooks/behavex_allure.py`). The stock `allure_behave` formatter is not
-    compatible with BehaveX's no-arg formatter contract.
+    BehaveX runs in parallel and writes native HTML under ``-o`` (see ``report.html``).
 
-    Output is staged under `<artifacts>/behavex-output/`; Allure JSON is written to
-    `shared_dir` using UQO_SHARED_ALLURE_RESULTS_DIR inside the exporter.
+    For Allure JSON, BehaveX 4.x requires a formatter implementing ``launch_json_formatter``.
+    The stock ``allure_behave`` formatter is incompatible with BehaveX's no-arg formatter
+    contract, so we default to ``drop_in_hooks.behavex_allure:BehavexAllureExporter`` unless
+    the user supplies their own ``-f`` / ``--formatter``.
     """
     artifacts_root = (cfg.artifacts_root or Path("artifacts")).expanduser().resolve()
-    behavex_out = artifacts_root / "behavex-output"
+    behavex_out = artifacts_root / "behave_reports"
     behavex_out.mkdir(parents=True, exist_ok=True)
 
     shared_resolved = shared_dir.expanduser().resolve()
@@ -178,13 +188,11 @@ def _build_locust(cfg: RunConfig, shared_dir: Path) -> list[str]:
     if "-t" not in argv and "--run-time" not in argv:
         argv.extend(["-t", str(cfg.locust_run_time)])
 
-    # Headless HTML report (deterministic mirror: static/locust_report.html via runners)
-    if "--html" not in argv:
+    # Headless HTML report → artifacts/locust_report.html (mirrored to static/ by runners)
+    if cfg.locust_headless and "--html" not in argv:
         artifacts_root = (cfg.artifacts_root or Path("artifacts")).expanduser().resolve()
-        reports_dir = artifacts_root / "reports"
-        reports_dir.mkdir(parents=True, exist_ok=True)
-        run_id = cfg.run_id or "latest"
-        html_path = (reports_dir / f"locust_report_{run_id}.html").resolve()
+        artifacts_root.mkdir(parents=True, exist_ok=True)
+        html_path = (artifacts_root / "locust_report.html").resolve()
         argv.extend(["--html", str(html_path)])
 
     # Encourage headless mode default if not provided; user can override.
