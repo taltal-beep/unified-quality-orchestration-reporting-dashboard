@@ -1,0 +1,5 @@
+request_type=GET
+name=GET /slow
+response_time_ms=2003.291834029369
+response_length=32
+exception=
