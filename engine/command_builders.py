@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -17,6 +18,7 @@ class RunConfig:
     test_type: TestType
     target_repo: Path
     shared_allure_results_dir: Path
+    artifacts_root: Path | None = None
 
     # Optional knobs (kept minimal for Phase 2 bootstrap)
     pytest_args: Sequence[str] = ()
@@ -38,6 +40,10 @@ class RunConfig:
 
     # Optional stable run identifier (used for metadata + result isolation)
     run_id: str | None = None
+
+    # BehaveX parallel defaults (orchestrator injects unless CLI overrides)
+    behavex_parallel_processes: int = 4
+    behavex_parallel_scheme: str = "feature"
 
 
 @dataclass(frozen=True)
@@ -83,17 +89,65 @@ def _build_pytest(cfg: RunConfig, shared_dir: Path) -> list[str]:
     return argv
 
 
+def _strip_behavex_output_folder_args(args: Sequence[str]) -> list[str]:
+    """Remove `-o` / `--output-folder` so the orchestrator controls BehaveX output location."""
+    out: list[str] = []
+    i = 0
+    a = list(args)
+    while i < len(a):
+        if a[i] in ("-o", "--output-folder"):
+            i += 2
+            continue
+        out.append(a[i])
+        i += 1
+    return out
+
+
+def _argv_contains_parallel_processes(argv: list[str]) -> bool:
+    return "--parallel-processes" in argv
+
+
+def _argv_contains_parallel_scheme(argv: list[str]) -> bool:
+    return "--parallel-scheme" in argv
+
+
+def _argv_has_formatter(argv: list[str]) -> bool:
+    return "-f" in argv or "--formatter" in argv
+
+
 def _build_behavex(cfg: RunConfig, shared_dir: Path) -> list[str]:
-    # behavex does NOT support `--allure-dir`. Use the Allure behave formatter.
-    out_dir = str(shared_dir.resolve())
+    """
+    BehaveX 4.x runs Allure via a custom formatter that implements `launch_json_formatter`
+    (see `drop_in_hooks/behavex_allure.py`). The stock `allure_behave` formatter is not
+    compatible with BehaveX's no-arg formatter contract.
 
-    argv: list[str] = ["behavex"]
-    argv.extend(list(cfg.behavex_args))
+    Output is staged under `<artifacts>/behavex-output/`; Allure JSON is written to
+    `shared_dir` using UQO_SHARED_ALLURE_RESULTS_DIR inside the exporter.
+    """
+    artifacts_root = (cfg.artifacts_root or Path("artifacts")).expanduser().resolve()
+    behavex_out = artifacts_root / "behavex-output"
+    behavex_out.mkdir(parents=True, exist_ok=True)
 
-    # Only inject formatter if user didn't already specify a formatter/output.
-    # (Simple heuristic: any '-f'/'--format' or '-o'/'--outfile' means caller is overriding.)
-    if "-f" not in argv and "--format" not in argv and "-o" not in argv and "--outfile" not in argv:
-        argv.extend(["-f", "allure_behave.formatter:AllureFormatter", "-o", out_dir])
+    shared_resolved = shared_dir.expanduser().resolve()
+    rel_allure = os.path.relpath(shared_resolved, behavex_out.resolve())
+
+    argv: list[str] = ["behavex", "-o", str(behavex_out)]
+    argv.extend(_strip_behavex_output_folder_args(cfg.behavex_args))
+
+    if not _argv_contains_parallel_processes(argv):
+        argv.extend(["--parallel-processes", str(int(cfg.behavex_parallel_processes))])
+    if not _argv_contains_parallel_scheme(argv):
+        argv.extend(["--parallel-scheme", str(cfg.behavex_parallel_scheme)])
+
+    if not _argv_has_formatter(argv):
+        argv.extend(
+            [
+                "-f",
+                "drop_in_hooks.behavex_allure:BehavexAllureExporter",
+                "-fo",
+                rel_allure,
+            ]
+        )
     return argv
 
 
@@ -123,6 +177,15 @@ def _build_locust(cfg: RunConfig, shared_dir: Path) -> list[str]:
         argv.extend(["-r", str(int(cfg.locust_spawn_rate))])
     if "-t" not in argv and "--run-time" not in argv:
         argv.extend(["-t", str(cfg.locust_run_time)])
+
+    # Headless HTML report (deterministic mirror: static/locust_report.html via runners)
+    if "--html" not in argv:
+        artifacts_root = (cfg.artifacts_root or Path("artifacts")).expanduser().resolve()
+        reports_dir = artifacts_root / "reports"
+        reports_dir.mkdir(parents=True, exist_ok=True)
+        run_id = cfg.run_id or "latest"
+        html_path = (reports_dir / f"locust_report_{run_id}.html").resolve()
+        argv.extend(["--html", str(html_path)])
 
     # Encourage headless mode default if not provided; user can override.
     if "-H" not in argv and "--host" not in argv:

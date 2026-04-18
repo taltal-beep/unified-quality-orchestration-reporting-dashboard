@@ -4,3 +4,8 @@ __pycache__/
 .venv/
 venv/
 
+# Mirrored report HTML for Streamlit static serving
+static/allure_report.html
+static/locust_report.html
+static/behave/
+

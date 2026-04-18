@@ -12,6 +12,10 @@ from pathlib import Path
 from typing import Generator, Mapping, Optional
 
 from .command_builders import BuiltCommand, RunConfig, build_command
+from .report_generator import (
+    collect_behavex_native_report,
+    publish_locust_html_to_static,
+)
 from .result_management import prepare_allure_results_dir
 
 
@@ -57,12 +61,15 @@ def run_streaming(
         test_type=cfg.test_type,
         target_repo=cfg.target_repo,
         shared_allure_results_dir=shared_allure_dir,
+        artifacts_root=artifacts_root,
         pytest_args=cfg.pytest_args,
         behavex_args=cfg.behavex_args,
         locust_args=cfg.locust_args,
         locustfile=cfg.locustfile,
         extra_env=merged_extra,
         run_id=run_id,
+        behavex_parallel_processes=cfg.behavex_parallel_processes,
+        behavex_parallel_scheme=cfg.behavex_parallel_scheme,
     )
 
     cmd = build_command(cfg, parent_env=parent_env or os.environ)
@@ -159,6 +166,31 @@ def run_streaming(
             t_err.join(timeout=1.0)
             finished_at = time.time()
             yield LogEvent(ts=finished_at, stream="meta", line=f"\n[exit code {rc}]\n")
+
+            # Post-process: mirror BehaveX + Locust HTML into ./static/ for Streamlit links.
+            if cfg.test_type.value == "behavex":
+                try:
+                    dest = collect_behavex_native_report(
+                        target_repo=cmd.cwd,
+                        run_id=run_id,
+                        artifacts_root=artifacts_root,
+                    )
+                    if dest:
+                        yield LogEvent(ts=time.time(), stream="meta", line=f"[behavex native report] {dest}\n")
+                except Exception:
+                    pass
+
+            if cfg.test_type.value == "locust":
+                try:
+                    lp = publish_locust_html_to_static(
+                        artifacts_root=artifacts_root,
+                        run_id=run_id,
+                    )
+                    if lp:
+                        yield LogEvent(ts=time.time(), stream="meta", line=f"[locust html mirror] {lp}\n")
+                except Exception:
+                    pass
+
             return RunResult(
                 returncode=int(rc),
                 started_at=started_at,

@@ -19,13 +19,16 @@ from engine.sandbox_api import (
 )
 from engine.metrics import list_run_history, parse_allure_results_dir, push_influxdb, write_metrics_json
 from engine.report_generator import (
+    STATIC_ALLURE_HTML,
+    STATIC_BEHAVE_INDEX,
+    STATIC_LOCUST_HTML,
     default_report_paths,
     generate_allure_html,
     make_report_zip,
+    publish_allure_index_to_static,
     read_single_file_html,
     start_static_server,
     url_for,
-    start_report_server,
 )
 
 
@@ -98,6 +101,25 @@ def _drain_events() -> None:
 def _on_sandbox_toggle() -> None:
     if not st.session_state.get("sandbox_mode", False):
         stop_sandbox_if_managed()
+
+
+def _streamlit_origin() -> str:
+    u = getattr(st.context, "url", None)
+    if u:
+        from urllib.parse import urlparse
+
+        p = urlparse(str(u))
+        return f"{p.scheme}://{p.netloc}"
+    host = st.get_option("server.address") or "localhost"
+    if host in ("0.0.0.0", "::", "[::]"):
+        host = "localhost"
+    port = int(st.get_option("server.port") or 8501)
+    return f"http://{host}:{port}"
+
+
+def _streamlit_static_url(relative_under_static: str) -> str:
+    rel = relative_under_static.lstrip("/")
+    return f"{_streamlit_origin()}/app/static/{rel}"
 
 
 st.set_page_config(page_title="Unified Quality Orchestration", layout="wide")
@@ -287,6 +309,45 @@ st.subheader("📊 Analytics & Reporting")
 artifacts_root = default_artifacts_root().expanduser().resolve()
 paths = default_report_paths(artifacts_root=artifacts_root)
 
+with st.expander("📊 Available Reports", expanded=True):
+    st.caption(
+        "Opens files mirrored under `./static/` (Streamlit static serving). "
+        "If a browser shows plain text for HTML, use “Optional HTTP viewer” below."
+    )
+    report_entries: list[tuple[str, str, Path]] = [
+        ("Allure — single-file HTML", "allure_report.html", STATIC_ALLURE_HTML),
+        ("Locust — HTML summary", "locust_report.html", STATIC_LOCUST_HTML),
+        ("BehaveX — native HTML", "behave/index.html", STATIC_BEHAVE_INDEX),
+    ]
+    any_link = False
+    for label, rel, p in report_entries:
+        if p.is_file():
+            any_link = True
+            st.link_button(label, _streamlit_static_url(rel), type="primary", use_container_width=True)
+    if not any_link:
+        st.info("No mirrored reports yet. Run tests and/or generate Allure HTML.")
+
+    srv_http = st.session_state.get("static_server")
+    rr_for_links: RunResult | None = st.session_state.get("last_result")
+    if srv_http is not None:
+        st.markdown("**Optional HTTP viewer** (full HTML/CSS)")
+        st.caption(f"Serving: `{srv_http.root_dir}`")
+        allure_http = url_for(srv_http, relative_path="artifacts/allure-report/index.html")
+        st.link_button("Open Allure (HTTP server)", allure_http)
+        if rr_for_links is not None:
+            last_type = st.session_state.get("last_test_type")
+            rid = rr_for_links.command.env.get("UQO_RUN_ID", "latest")
+            if last_type == TestType.BEHAVEX.value:
+                st.link_button(
+                    "Open BehaveX copy (HTTP server)",
+                    url_for(srv_http, relative_path=f"static_reports/behavex/report_{rid}.html"),
+                )
+            if last_type == TestType.LOCUST.value:
+                st.link_button(
+                    "Open Locust (HTTP server)",
+                    url_for(srv_http, relative_path=f"artifacts/reports/locust_report_{rid}.html"),
+                )
+
 rep_col1, rep_col2, rep_col3 = st.columns([1, 1, 2], gap="large")
 
 with rep_col1:
@@ -298,6 +359,9 @@ with rep_col1:
         ok_gen, msg_gen = generate_allure_html(results_dir=paths.results_dir, report_dir=paths.report_dir)
         if ok_gen:
             st.success(msg_gen)
+            pub = publish_allure_index_to_static(report_dir=paths.report_dir)
+            if pub:
+                st.caption(f"Mirrored for static links: `{pub}`")
         else:
             st.error(msg_gen)
 
@@ -314,13 +378,13 @@ with rep_col1:
 
     stop_view_clicked = st.button("Stop Viewer", disabled=bool(st.session_state.running))
     if stop_view_clicked:
-        srv = st.session_state.get("report_server")
-        if srv is not None:
+        srv_stop = st.session_state.get("static_server")
+        if srv_stop is not None:
             try:
-                srv.stop()
+                srv_stop.stop()
             except Exception:
                 pass
-        st.session_state["report_server"] = None
+        st.session_state["static_server"] = None
         st.toast("Report server stopped.", icon="🛑")
 
 with rep_col2:
@@ -368,81 +432,57 @@ with rep_col2:
             st.error(f"Metrics generation failed: {exc}")
 
 with rep_col3:
-    srv = st.session_state.get("static_server")
-    rr: RunResult | None = st.session_state.get("last_result")
-    last_type = st.session_state.get("last_test_type")
-    show_view = rr is not None and int(rr.returncode) == 0
-
-    if srv is not None and show_view:
-        st.markdown("**Report Viewer**")
-        st.caption(f"Serving: `{srv.root_dir}`")
-
-        # Unified Allure single-file entry point (generated into artifacts/allure-report/index.html)
-        allure_url = url_for(srv, relative_path="artifacts/allure-report/index.html")
-        st.link_button("🌐 Open Full Allure Report in New Tab", allure_url)
-
-        # Per-run / per-tool fullscreen links
-        if last_type == TestType.BEHAVEX.value:
-            run_id = rr.command.env.get("UQO_RUN_ID", "latest")
-            behavex_url = url_for(srv, relative_path=f"static_reports/behavex/report_{run_id}.html")
-            st.link_button("View Native BehaveX Report", behavex_url)
-
-        if last_type == TestType.LOCUST.value:
-            run_id = rr.command.env.get("UQO_RUN_ID", "latest")
-            locust_url = url_for(srv, relative_path=f"artifacts/reports/locust_report_{run_id}.html")
-            st.link_button("View Locust Performance Report", locust_url)
+    st.markdown("**History**")
+    archive_root = artifacts_root / "allure-results-archive"
+    history = list_run_history(archive_root=archive_root, current_results_dir=paths.results_dir)
+    if history:
+        rows = []
+        for m in history:
+            rate = (m.passed / m.total_tests) if m.total_tests else 0.0
+            rows.append(
+                {
+                    "timestamp": m.timestamp,
+                    "run_id": m.run_id or "",
+                    "total": m.total_tests,
+                    "passed": m.passed,
+                    "failed": m.failed,
+                    "broken": m.broken,
+                    "skipped": m.skipped,
+                    "pass_rate": round(rate * 100.0, 2),
+                    "duration_ms": m.duration_ms,
+                }
+            )
+        st.dataframe(rows, use_container_width=True, height=320)
     else:
-        st.markdown("**History**")
-        archive_root = artifacts_root / "allure-results-archive"
-        history = list_run_history(archive_root=archive_root, current_results_dir=paths.results_dir)
-        if history:
-            rows = []
-            for m in history:
-                rate = (m.passed / m.total_tests) if m.total_tests else 0.0
-                rows.append(
-                    {
-                        "timestamp": m.timestamp,
-                        "run_id": m.run_id or "",
-                        "total": m.total_tests,
-                        "passed": m.passed,
-                        "failed": m.failed,
-                        "broken": m.broken,
-                        "skipped": m.skipped,
-                        "pass_rate": round(rate * 100.0, 2),
-                        "duration_ms": m.duration_ms,
-                    }
-                )
-            st.dataframe(rows, use_container_width=True, height=320)
+        st.info("No Allure results found yet.")
+
+    st.markdown("**Grafana / InfluxDB live sync**")
+    influx_url = st.text_input("InfluxDB URL", value=str(st.session_state.get("influx_url", "")))
+    influx_org = st.text_input("Org", value=str(st.session_state.get("influx_org", "")))
+    influx_bucket = st.text_input("Bucket", value=str(st.session_state.get("influx_bucket", "")))
+    influx_token = st.text_input("Token", value=str(st.session_state.get("influx_token", "")), type="password")
+    st.session_state["influx_url"] = influx_url
+    st.session_state["influx_org"] = influx_org
+    st.session_state["influx_bucket"] = influx_bucket
+    st.session_state["influx_token"] = influx_token
+
+    push_clicked = st.button("Push latest metrics to InfluxDB", disabled=bool(st.session_state.running))
+    if push_clicked:
+        if not (influx_url and influx_org and influx_bucket and influx_token):
+            st.error("Please fill URL, Org, Bucket, and Token.")
         else:
-            st.info("No Allure results found yet.")
-
-        st.markdown("**Grafana / InfluxDB live sync**")
-        influx_url = st.text_input("InfluxDB URL", value=str(st.session_state.get("influx_url", "")))
-        influx_org = st.text_input("Org", value=str(st.session_state.get("influx_org", "")))
-        influx_bucket = st.text_input("Bucket", value=str(st.session_state.get("influx_bucket", "")))
-        influx_token = st.text_input("Token", value=str(st.session_state.get("influx_token", "")), type="password")
-        st.session_state["influx_url"] = influx_url
-        st.session_state["influx_org"] = influx_org
-        st.session_state["influx_bucket"] = influx_bucket
-        st.session_state["influx_token"] = influx_token
-
-        push_clicked = st.button("Push latest metrics to InfluxDB", disabled=bool(st.session_state.running))
-        if push_clicked:
-            if not (influx_url and influx_org and influx_bucket and influx_token):
-                st.error("Please fill URL, Org, Bucket, and Token.")
+            latest = parse_allure_results_dir(paths.results_dir)
+            ok_push, msg_push = push_influxdb(
+                latest,
+                url=influx_url,
+                token=influx_token,
+                org=influx_org,
+                bucket=influx_bucket,
+            )
+            if ok_push:
+                st.success(msg_push)
             else:
-                latest = parse_allure_results_dir(paths.results_dir)
-                ok_push, msg_push = push_influxdb(
-                    latest,
-                    url=influx_url,
-                    token=influx_token,
-                    org=influx_org,
-                    bucket=influx_bucket,
-                )
-                if ok_push:
-                    st.success(msg_push)
-                else:
-                    st.error(msg_push)
+                st.error(msg_push)
 
 if st.session_state.running:
     time.sleep(0.2)
