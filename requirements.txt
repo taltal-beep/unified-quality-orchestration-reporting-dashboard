@@ -1,4 +1,5 @@
 streamlit>=1.36.0
+python-dotenv>=1.0.0
 
 # Explicit core stack (sandbox + runners)
 fastapi>=0.115.0
@@ -20,6 +21,9 @@ matplotlib>=3.10.0
 
 # Phase 4: Grafana/Influx integration
 influxdb-client>=1.48.0
+
+# Orchestrator unit tests
+pytest-cov>=5.0.0
 
 # Phase 4.5: advanced sandbox auth + uploads
 pyjwt>=2.9.0
