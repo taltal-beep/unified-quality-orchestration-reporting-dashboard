@@ -18,6 +18,7 @@ from .paths import default_artifacts_root
 from .metrics_extractor import write_manual_locust_results_json
 from .report_generator import (
     collect_behavex_native_report,
+    compute_system_health_pct,
     default_report_paths,
     generate_allure_html,
     publish_locust_html_to_static,
@@ -93,7 +94,10 @@ def run_streaming(
     run_id = str(cfg.run_id) if cfg.run_id is not None else str(uuid.uuid4())
     artifacts_root = (artifacts_root or Path("artifacts")).expanduser().resolve()
     if prepare_allure:
-        shared_allure_dir = (artifacts_root / "allure-results").resolve()
+        # SOLID firewall: callers provide a framework-scoped Allure results directory.
+        # Never override it with a shared parent dir; only isolate per-run data *within*
+        # the provided directory.
+        shared_allure_dir = cfg.shared_allure_results_dir.expanduser().resolve()
         prepared = prepare_allure_results_dir(shared_allure_dir, mode="archive", run_id=run_id)
         shared_allure_dir = prepared.shared_dir
     else:
@@ -303,6 +307,8 @@ def run_audit_streaming(
     parent_env: Optional[Mapping[str, str]] = None,
     pytest_args: Sequence[str] = (),
     behavex_args: Sequence[str] = (),
+    native_behave_args: Sequence[str] = (),
+    run_native_behave: bool = False,
     locust_args: Sequence[str] = (),
     locust_users: int = 10,
     locust_spawn_rate: int = 2,
@@ -310,8 +316,8 @@ def run_audit_streaming(
     locust_only_summary: bool = True,
 ) -> Generator[LogEvent, None, RunResult]:
     """
-    Run Pytest → BehaveX → Locust into ``allure-results/{pytest,behave,locust}/`` (no overwrite),
-    then build one master Allure HTML report from the parent ``allure-results/`` tree.
+    Run Pytest → BehaveX → Native Behave (optional) → Locust into isolated
+    ``allure-results/{pytest,behavex,behave_native,locust}/`` directories (no overwrite).
     Clears ``artifacts/allure-results/`` exactly once at audit start (no per-phase wipes).
     Emits a single ``[UQO_DONE]`` at the end.
     """
@@ -334,6 +340,11 @@ def run_audit_streaming(
         (TestType.BEHAVEX, "behavex", "BDD Scenarios"),
         (TestType.LOCUST, "locust", "Load Tests"),
     ]
+    enable_native_behave = bool(run_native_behave)
+
+    if enable_native_behave:
+        # Native Behave is executed via its own CLI (not BehaveX).
+        phases.insert(2, (TestType.BEHAVEX, "behave_native", "Behave (native)"))
 
     phase_returncodes: list[int] = []
     last_cmd: BuiltCommand | None = None
@@ -343,45 +354,64 @@ def run_audit_streaming(
         yield LogEvent(
             ts=time.time(),
             stream="meta",
-            line=f"{UQO_AUDIT_PHASE} [{idx}/3] {key} — {title}\n",
+            line=f"{UQO_AUDIT_PHASE} [{idx}/{len(phases)}] {key} — {title}\n",
         )
         extra = {"UQO_AUDIT_MODE": "1", "UQO_AUDIT_RUN_ID": audit_run_id}
         phase_allure = shared_allure / key
-        cfg = RunConfig(
-            test_type=tt,
-            target_repo=target_repo,
-            shared_allure_results_dir=phase_allure,
-            artifacts_root=artifacts_root,
-            pytest_args=tuple(pytest_args),
-            behavex_args=tuple(behavex_args),
-            locust_args=tuple(locust_args),
-            locust_headless=True,
-            locust_users=int(locust_users),
-            locust_spawn_rate=int(locust_spawn_rate),
-            locust_run_time=str(locust_run_time),
-            locust_only_summary=bool(locust_only_summary),
-            run_id=f"{audit_run_id}-{key}",
-            last_test_type=key,
-            extra_env=extra,
-        )
-        gen = run_streaming(
-            cfg,
-            parent_env=parent_env,
-            artifacts_root=artifacts_root,
-            prepare_allure=False,
-            emit_done_marker=False,
-            sync_static=False,
-            run_framework_hooks=False,
-        )
-        try:
-            while True:
-                yield next(gen)
-        except StopIteration as e:
-            rr = e.value
-            if rr is None:
-                raise RuntimeError("audit phase returned no RunResult")
-            phase_returncodes.append(int(rr.returncode))
-            last_cmd = rr.command
+        if key == "behave_native":
+            gen_nb = run_native_behave(
+                target_repo=target_repo,
+                artifacts_root=artifacts_root,
+                parent_env=parent_env,
+                behave_args=native_behave_args,
+                extra_env=extra,
+                run_id=f"{audit_run_id}-{key}",
+            )
+            try:
+                while True:
+                    yield next(gen_nb)
+            except StopIteration as e:
+                rr = e.value
+                if rr is None:
+                    raise RuntimeError("native behave phase returned no RunResult")
+                phase_returncodes.append(int(rr.returncode))
+                last_cmd = rr.command
+        else:
+            cfg = RunConfig(
+                test_type=tt,
+                target_repo=target_repo,
+                shared_allure_results_dir=phase_allure,
+                artifacts_root=artifacts_root,
+                pytest_args=tuple(pytest_args),
+                behavex_args=tuple(behavex_args),
+                locust_args=tuple(locust_args),
+                locust_headless=True,
+                locust_users=int(locust_users),
+                locust_spawn_rate=int(locust_spawn_rate),
+                locust_run_time=str(locust_run_time),
+                locust_only_summary=bool(locust_only_summary),
+                run_id=f"{audit_run_id}-{key}",
+                last_test_type=key,
+                extra_env=extra,
+            )
+            gen = run_streaming(
+                cfg,
+                parent_env=parent_env,
+                artifacts_root=artifacts_root,
+                prepare_allure=False,
+                emit_done_marker=False,
+                sync_static=False,
+                run_framework_hooks=False,
+            )
+            try:
+                while True:
+                    yield next(gen)
+            except StopIteration as e:
+                rr = e.value
+                if rr is None:
+                    raise RuntimeError("audit phase returned no RunResult")
+                phase_returncodes.append(int(rr.returncode))
+                last_cmd = rr.command
 
         if key == "locust":
             try:
@@ -403,7 +433,7 @@ def run_audit_streaming(
     if last_cmd is None:
         raise RuntimeError("audit produced no phases")
 
-    # Native mirrors + master Allure (unified results dir)
+    # Native mirrors (no unified Allure report generation)
     try:
         collect_behavex_native_report(
             target_repo=target_repo,
@@ -417,15 +447,26 @@ def run_audit_streaming(
     except Exception:
         pass
 
-    paths = default_report_paths(artifacts_root=artifacts_root)
-    ok_gen, msg_gen, health_pct = generate_allure_html(
-        results_dir=shared_allure,
-        report_dir=paths.report_dir,
-    )
-    if ok_gen:
-        yield LogEvent(ts=time.time(), stream="meta", line=f"[AUDIT] master Allure HTML: {msg_gen}\n")
-    else:
-        yield LogEvent(ts=time.time(), stream="meta", line=f"[AUDIT] Allure generate failed: {msg_gen}\n")
+    # Generate per-framework Allure HTML (strict isolation).
+    frameworks: list[str] = ["pytest", "behavex"]
+    if enable_native_behave:
+        frameworks.append("behave_native")
+    frameworks.append("locust")
+
+    for fw in frameworks:
+        out_dir = default_report_paths(artifacts_root=artifacts_root).report_dir / fw
+        ok_gen, msg_gen, _ = generate_allure_html(
+            results_dir=(shared_allure / fw),
+            report_dir=out_dir,
+            input_dirs=[shared_allure / fw],
+        )
+        if ok_gen:
+            yield LogEvent(ts=time.time(), stream="meta", line=f"[AUDIT] Allure HTML ({fw}): {msg_gen}\n")
+        else:
+            yield LogEvent(ts=time.time(), stream="meta", line=f"[AUDIT] Allure generate failed ({fw}): {msg_gen}\n")
+
+    # Health score is a metric computed from results JSON across isolated dirs.
+    health_pct = compute_system_health_pct(shared_allure)
 
     if health_pct is not None:
         yield LogEvent(
@@ -498,34 +539,137 @@ def validate_target_repo(path: Path) -> tuple[bool, str]:
     return True, "OK"
 
 
-def run_behave_native_streaming(
+def run_native_behave(
     *,
     target_repo: Path,
     artifacts_root: Path | None = None,
     parent_env: Optional[Mapping[str, str]] = None,
     behave_args: Sequence[str] = (),
+    extra_env: Mapping[str, str] | None = None,
+    run_id: str | None = None,
 ) -> Generator[LogEvent, None, RunResult]:
     """
-    Placeholder: run standard Behave (not BehaveX) with Allure formatter.
+    Run standard Behave (not BehaveX) with Allure formatter.
 
-    Intended output directory:
-      ``artifacts/allure-results/behave_native/``
-
-    Example command shape (when implemented):
-      behave -f allure_behave.formatter:AllureFormatter -o <allure_results_dir> ...
+    Command shape:
+      behave -f allure_behave.formatter:AllureFormatter -o artifacts/allure-results/behave_native ...
     """
-    _ = behave_args
     started = time.time()
     artifacts_root = (artifacts_root or Path("artifacts")).expanduser().resolve()
     out_dir = (artifacts_root / "allure-results" / "behave_native").resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
-    yield LogEvent(
-        ts=time.time(),
-        stream="meta",
-        line=f"[behave_native] not implemented yet; reserved results dir: {out_dir}\n",
-    )
-    finished = time.time()
-    cmd = BuiltCommand(argv=["behave"], cwd=target_repo.expanduser().resolve(), env=dict(parent_env or os.environ))
-    return RunResult(returncode=2, started_at=started, finished_at=finished, command=cmd)
+
+    repo_root = target_repo.expanduser().resolve()
+    features_dir = repo_root / "features"
+    if not features_dir.is_dir():
+        finished = time.time()
+        yield LogEvent(
+            ts=time.time(),
+            stream="meta",
+            line=f"[behave_native] skipping: missing features/ under {repo_root}\n",
+        )
+        cmd = BuiltCommand(argv=["behave"], cwd=repo_root, env=dict(parent_env or os.environ))
+        return RunResult(returncode=0, started_at=started, finished_at=finished, command=cmd)
+
+    argv: list[str] = [
+        "behave",
+        "-f",
+        "allure_behave.formatter:AllureFormatter",
+        "-o",
+        str(out_dir),
+        *list(behave_args),
+    ]
+    _resolve_subprocess_argv(argv)
+
+    env = dict(parent_env or os.environ)
+    if extra_env:
+        env.update({str(k): str(v) for k, v in extra_env.items()})
+    if run_id:
+        env["UQO_RUN_ID"] = str(run_id)
+    env["UQO_LAST_TEST_TYPE"] = "behave_native"
+    env["UQO_SHARED_ALLURE_RESULTS_DIR"] = str(out_dir)
+
+    cmd = BuiltCommand(argv=list(argv), cwd=repo_root, env=env)
+
+    yield LogEvent(ts=time.time(), stream="meta", line=f"[behave_native] running: {' '.join(argv)}\n")
+
+    q: queue.Queue[LogEvent] = queue.Queue()
+
+    def _emit(stream: str, line: str) -> None:
+        q.put(LogEvent(ts=time.time(), stream=stream, line=line))
+
+    try:
+        proc = subprocess.Popen(
+            argv,
+            cwd=str(cmd.cwd),
+            env=cmd.env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+        )
+    except FileNotFoundError:
+        finished = time.time()
+        yield LogEvent(ts=time.time(), stream="stderr", line="[behave_native] behave CLI not found\n")
+        return RunResult(returncode=127, started_at=started, finished_at=finished, command=cmd)
+
+    def _reader() -> None:
+        fh = proc.stdout
+        if fh is None:
+            return
+        try:
+            for line in iter(fh.readline, ""):
+                _emit("stdout", line)
+        finally:
+            with contextlib.suppress(Exception):
+                fh.close()
+
+    t = threading.Thread(target=_reader, daemon=True)
+    t.start()
+
+    timeout_s = 60.0
+    last_output_ts = time.time()
+
+    while True:
+        try:
+            ev = q.get(timeout=0.1)
+            last_output_ts = time.time()
+            yield ev
+        except queue.Empty:
+            pass
+
+        now = time.time()
+        if (now - started) >= timeout_s:
+            yield LogEvent(ts=now, stream="meta", line=f"[behave_native] timeout after {timeout_s:.0f}s; terminating...\n")
+            with contextlib.suppress(Exception):
+                proc.terminate()
+            try:
+                proc.wait(timeout=5.0)
+            except Exception:
+                with contextlib.suppress(Exception):
+                    proc.kill()
+            with contextlib.suppress(Exception):
+                proc.wait(timeout=30.0)
+            finished = time.time()
+            return RunResult(returncode=124, started_at=started, finished_at=finished, command=cmd)
+
+        # Keep UI responsive even if Behave is quiet.
+        if (now - last_output_ts) >= 10.0:
+            last_output_ts = now
+            yield LogEvent(ts=now, stream="meta", line="[behave_native] [still running...]\n")
+
+        rc = proc.poll()
+        if rc is not None:
+            drain_deadline = time.time() + 2.0
+            while time.time() < drain_deadline:
+                try:
+                    yield q.get_nowait()
+                except queue.Empty:
+                    break
+            t.join(timeout=2.0)
+            with contextlib.suppress(Exception):
+                proc.wait(timeout=30.0)
+            finished = time.time()
+            return RunResult(returncode=int(rc), started_at=started, finished_at=finished, command=cmd)
 
 

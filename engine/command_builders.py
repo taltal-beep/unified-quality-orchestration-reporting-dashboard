@@ -8,6 +8,8 @@ from typing import Mapping, Sequence
 
 
 class TestType(str, Enum):
+    # Prevent pytest from attempting to collect this Enum as a test class.
+    __test__ = False
     PYTEST = "pytest"
     BEHAVEX = "behavex"
     LOCUST = "locust"
@@ -122,22 +124,21 @@ def _argv_contains_parallel_scheme(argv: list[str]) -> bool:
 
 
 def _argv_has_formatter(argv: list[str]) -> bool:
-    return "-f" in argv or "--formatter" in argv
+    return "-f" in argv or "--formatter" in argv or any(a.startswith("--formatter=") for a in argv)
 
 
 def _build_behavex(cfg: RunConfig, shared_dir: Path) -> list[str]:
     """
     BehaveX runs in parallel and writes native HTML under ``-o`` (see ``report.html``).
 
-    For Allure JSON, run with the Allure formatter and direct its output to the shared Allure
-    results directory (the orchestrator controls the actual path).
+    For Allure JSON, use BehaveX's own Allure formatter (not ``allure_behave`` directly) and
+    direct its output to the shared Allure results directory (the orchestrator controls the actual path).
     """
     artifacts_root = (cfg.artifacts_root or Path("artifacts")).expanduser().resolve()
     behavex_out = artifacts_root / "behave_reports"
     behavex_out.mkdir(parents=True, exist_ok=True)
 
     shared_resolved = shared_dir.expanduser().resolve()
-    rel_allure = os.path.relpath(shared_resolved, behavex_out.resolve())
 
     argv: list[str] = ["behavex", "-o", str(behavex_out)]
     argv.extend(_strip_behavex_output_folder_args(cfg.behavex_args))
@@ -147,13 +148,14 @@ def _build_behavex(cfg: RunConfig, shared_dir: Path) -> list[str]:
     if not _argv_contains_parallel_scheme(argv):
         argv.extend(["--parallel-scheme", str(cfg.behavex_parallel_scheme)])
 
+    # BehaveX requires its own formatter wrapper; using ``allure_behave.formatter:AllureFormatter``
+    # directly can fail with missing ``stream_opener`` / ``config`` under some versions.
     if not _argv_has_formatter(argv):
         argv.extend(
             [
-                "-f",
-                "allure_behave.formatter:AllureFormatter",
-                "-fo",
-                rel_allure,
+                "--formatter=behavex.outputs.formatters.allure_behavex_formatter:AllureBehaveXFormatter",
+                "--formatter-outdir",
+                str(shared_resolved),
             ]
         )
     return argv

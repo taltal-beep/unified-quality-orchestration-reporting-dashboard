@@ -23,6 +23,7 @@ from engine.runners import (
     UQO_AUDIT_HEALTH,
     UQO_AUDIT_PHASE,
     UQO_DONE_MARKER,
+    LogEvent,
     RunResult,
     default_artifacts_root,
     run_streaming,
@@ -153,6 +154,8 @@ def _start_worker_audit(
     target_repo: Path,
     pytest_args: tuple[str, ...],
     behavex_args: tuple[str, ...],
+    native_behave_args: tuple[str, ...],
+    run_native_behave: bool,
     locust_args: tuple[str, ...],
     locust_users: int,
     locust_spawn_rate: int,
@@ -169,6 +172,8 @@ def _start_worker_audit(
                 parent_env=os.environ,
                 pytest_args=pytest_args,
                 behavex_args=behavex_args,
+                native_behave_args=native_behave_args,
+                run_native_behave=run_native_behave,
                 locust_args=locust_args,
                 locust_users=locust_users,
                 locust_spawn_rate=locust_spawn_rate,
@@ -511,7 +516,7 @@ with tab_exec:
             cfg = RunConfig(
                 test_type=TestType(test_type),
                 target_repo=target_repo,
-                shared_allure_results_dir=Path("artifacts/allure-results"),
+                shared_allure_results_dir=Path(f"artifacts/allure-results/{test_type}"),
                 artifacts_root=Path("artifacts"),
                 pytest_args=argv_extra if test_type == TestType.PYTEST.value else (),
                 behavex_args=argv_extra if test_type == TestType.BEHAVEX.value else (),
@@ -543,6 +548,8 @@ with tab_exec:
                 target_repo=target_repo,
                 pytest_args=tuple(argv_extra),
                 behavex_args=tuple(argv_extra),
+                native_behave_args=tuple(argv_extra),
+                run_native_behave=True,
                 locust_args=tuple(argv_extra),
                 locust_users=int(st.session_state.get("locust_users", locust_users)),
                 locust_spawn_rate=int(st.session_state.get("locust_spawn_rate", locust_spawn_rate)),
@@ -562,7 +569,7 @@ with tab_exec:
                     "When the subprocess exits, the orchestrator runs **report sync** "
                     "(copying HTML into `./static/`). Expect a short pause before the run is marked complete."
                     if not st.session_state.get("is_audit_mode")
-                    else "Audit runs Pytest, then BehaveX, then Locust into one Allure folder, then builds the master report."
+                    else "Audit runs Pytest, BehaveX, Native Behave (optional), then Locust. Each framework writes to its own Allure results folder."
                 )
                 st.code(console_text or "(starting…)", language="text")
         else:
@@ -652,32 +659,25 @@ with tab_analytics:
             "</p>",
             unsafe_allow_html=True,
         )
+        cache_buster = int(time.time())
         top1, top2 = st.columns([1, 1])
-        with top2:
-            cache_buster = int(time.time())
-            if has_allure:
-                st.link_button(
-                    "View Unified Report",
-                    _streamlit_static_url(f"allure-reports/unified/index.html?t={cache_buster}"),
-                    type="primary",
-                )
-            else:
-                st.caption("Generate reports first.")
-
         with top1:
-            gen_unified = st.button(
-                "Generate unified report",
+            gen_all = st.button(
+                "Generate framework reports",
                 type="secondary",
                 disabled=bool(st.session_state.running),
             )
+        with top2:
+            st.caption("Reports are generated per framework (no unified merge).")
 
-        if gen_unified:
-            with st.spinner("Generating unified Allure report..."):
-                ok_gen, msg_gen, _gen_health = _report_svc.generate_unified_allure()
-            if ok_gen:
-                st.success(msg_gen)
+        if gen_all:
+            with st.spinner("Generating Allure reports..."):
+                out = _report_svc.generate_framework_reports()
+            ok_any = any(v[0] for v in out.values())
+            if ok_any:
+                st.success("Allure reports generated.")
             else:
-                st.error(msg_gen)
+                st.error("Allure generation failed. Check logs for details.")
 
         st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
         grid = ReportService.available_allure_reports()
@@ -687,7 +687,7 @@ with tab_analytics:
                 with cols[i % len(cols)]:
                     st.link_button(
                         f"View {fw}",
-                        _streamlit_static_url(f"allure-reports/{fw}/index.html?t={cache_buster}"),
+                        _streamlit_static_url(f"allure_reports/{fw}/index.html?t={cache_buster}"),
                         type="secondary",
                     )
 
@@ -778,39 +778,20 @@ with tab_history:
 
             title = f"{ts} · {s.run_id[:8]}… · {summary}"
             with st.expander(title):
-                c1, c2, c3 = st.columns(3)
                 cache_buster = int(time.time())
 
                 # Only show buttons for reports that exist for this session.
-                if "pytest" in s.links_under_static:
-                    with c1:
-                        st.link_button(
-                            "Open Pytest report",
-                            _streamlit_static_url(f"{s.links_under_static['pytest']}?t={cache_buster}"),
-                            type="secondary",
-                        )
-                if "locust" in s.links_under_static:
-                    with c2:
-                        st.link_button(
-                            "Open Locust report",
-                            _streamlit_static_url(f"{s.links_under_static['locust']}?t={cache_buster}"),
-                            type="secondary",
-                        )
-                if "allure" in s.links_under_static:
-                    with c3:
-                        st.link_button(
-                            "Open unified Allure report",
-                            _streamlit_static_url(f"{s.links_under_static['allure']}?t={cache_buster}"),
-                            type="primary",
-                        )
-
-                if "behavex" in s.links_under_static:
-                    st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
-                    st.link_button(
-                        "Open BehaveX report",
-                        _streamlit_static_url(f"{s.links_under_static['behavex']}?t={cache_buster}"),
-                        type="secondary",
-                    )
+                order = [("pytest", "View Pytest"), ("behave_native", "View Behave"), ("locust", "View Locust"), ("behavex", "View BehaveX")]
+                present = [(k, label) for (k, label) in order if k in s.links_under_static]
+                if present:
+                    cols = st.columns(len(present))
+                    for i, (k, label) in enumerate(present):
+                        with cols[i]:
+                            st.link_button(
+                                label,
+                                _streamlit_static_url(f"{s.links_under_static[k]}?t={cache_buster}"),
+                                type="secondary",
+                            )
 
     st.divider()
     st.subheader("Allure folder history (archives)")

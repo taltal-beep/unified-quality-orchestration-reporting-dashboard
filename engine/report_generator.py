@@ -18,8 +18,6 @@ from .paths import (
     STATIC_ALLURE_INDEX,
     STATIC_ALLURE_REPORT_DIR,
     STATIC_ALLURE_REPORTS_DIR,
-    STATIC_ALLURE_UNIFIED_DIR,
-    STATIC_ALLURE_UNIFIED_INDEX,
     STATIC_BEHAVE_DIR,
     STATIC_BEHAVE_INDEX,
     STATIC_DIR,
@@ -27,6 +25,36 @@ from .paths import (
     allure_report_dir,
     allure_cli_input_directories,
 )
+
+def _flatten_allure_result_json(*, root: Path) -> int:
+    """
+    BehaveX sometimes writes Allure results under a nested folder (e.g. ``behave/allure``).
+    To ensure the Allure CLI always finds JSON without relying on recursive scanning behavior,
+    move any nested ``*-result.json`` files up into ``root``.
+
+    Returns the number of files moved.
+    """
+    root = root.expanduser().resolve()
+    if not root.is_dir():
+        return 0
+
+    moved = 0
+    try:
+        for p in root.rglob("*-result.json"):
+            if p.parent == root:
+                continue
+            dest = root / p.name
+            if dest.exists():
+                # Avoid overwriting; keep the nested copy in place if collision happens.
+                continue
+            try:
+                p.replace(dest)
+                moved += 1
+            except OSError:
+                continue
+    except OSError:
+        return 0
+    return moved
 
 
 @dataclass(frozen=True)
@@ -73,9 +101,7 @@ def generate_allure_html(
     Generate Allure HTML by calling the Allure CLI:
       allure generate <input_dirs...> --clean --single-file -o <report_dir>
 
-    When ``results_dir`` contains ``pytest/``, ``behave/``, and/or ``locust/``, those
-    directories are passed explicitly so the CLI merges them (some versions skip nested JSON
-    under a single parent path).
+    Each report is generated from an isolated framework-specific results directory.
 
     Returns ``(ok, message, health_pct)`` where ``health_pct`` is passed/total from result JSON files.
 
@@ -89,10 +115,18 @@ def generate_allure_html(
     if not results_dir.exists():
         return False, f"Results dir does not exist: {results_dir}", None
 
-    # Individual reports pass a single directory; unified reports pass multiple.
+    # Each report MUST be generated from an isolated input directory.
     use_inputs = [results_dir] if input_dirs is None else [p.expanduser().resolve() for p in input_dirs]
     for d in use_inputs:
         d.mkdir(parents=True, exist_ok=True)
+
+    # BehaveX sanity check + flatten: BehaveX sometimes nests results under a subfolder (e.g. behavex/allure).
+    # Move nested ``*-result.json`` files up into the root of the BehaveX results dir.
+    for d in use_inputs:
+        if d.name == "behavex":
+            moved = _flatten_allure_result_json(root=d)
+            if moved:
+                print(f"[allure] flattened BehaveX results: moved {moved} *-result.json into {d}")
 
     def _count_results(p: Path) -> int:
         try:
@@ -102,11 +136,12 @@ def generate_allure_html(
 
     counts = {p.name: _count_results(p) for p in use_inputs}
     print("[allure] input counts: " + " ".join(f"{k}={v}" for k, v in counts.items()))
-    if "behave" in counts and counts["behave"] == 0:
-        print(f"[allure] WARNING: no BehaveX Allure result files found under {results_dir / 'behave'}")
+    if "behavex" in counts and counts["behavex"] == 0:
+        print(f"[allure] WARNING: no BehaveX Allure result files found under {results_dir / 'behavex'}")
 
     report_dir.mkdir(parents=True, exist_ok=True)
 
+    # Allure CLI can be sensitive to CWD; always pass absolute paths.
     cmd = [
         "allure",
         "generate",
@@ -133,39 +168,22 @@ def generate_allure_html(
 def generate_allure_reports(
     *,
     results_dir: Path,
-    mode: str = "unified",
     frameworks: list[str] | None = None,
     subprocess_run: Callable[..., Any] | None = None,
 ) -> dict[str, tuple[bool, str, float | None]]:
     """
-    Generate Allure HTML reports.
+    Generate per-framework Allure HTML reports (strict isolation).
 
-    - mode="unified": merges all framework subdirs into ``static/allure-reports/unified/``
-    - mode="individual": generates one report per requested framework into ``static/allure-reports/<framework>/``
+    Each framework is generated into its own directory:
+      ``static/allure_reports/<framework>/index.html``
 
     Returns: mapping of ``framework_name`` → ``(ok, message, health_pct)``.
     """
     results_dir = results_dir.expanduser().resolve()
     out: dict[str, tuple[bool, str, float | None]] = {}
 
-    if mode not in {"unified", "individual"}:
-        raise ValueError(f"Unsupported mode: {mode}")
-
-    if mode == "unified":
-        STATIC_ALLURE_UNIFIED_DIR.mkdir(parents=True, exist_ok=True)
-        unified_inputs = [results_dir / fw for fw in ("pytest", "behave", "locust", "behave_native")]
-        ok, msg, hp = generate_allure_html(
-            results_dir=results_dir,
-            report_dir=STATIC_ALLURE_UNIFIED_DIR,
-            input_dirs=unified_inputs,
-            subprocess_run=subprocess_run,
-        )
-        out["unified"] = (ok, msg, hp)
-        return out
-
-    # individual
     if not frameworks:
-        frameworks = ["pytest", "behave", "locust", "behave_native"]
+        frameworks = ["pytest", "behavex", "locust", "behave_native"]
     for fw in frameworks:
         fw_results = results_dir / fw
         fw_results.mkdir(parents=True, exist_ok=True)
@@ -174,6 +192,7 @@ def generate_allure_reports(
         ok, msg, hp = generate_allure_html(
             results_dir=fw_results,
             report_dir=fw_out_dir,
+            input_dirs=[fw_results],
             subprocess_run=subprocess_run,
         )
         out[str(fw)] = (ok, msg, hp)
@@ -411,7 +430,7 @@ def sync_all_reports_to_static(*, artifacts_root: Path, run_id: str | None = Non
     """
     Copy the latest known report HTML artifacts into ``./static/`` for Streamlit static serving.
 
-    - Allure: ``static/allure_report/index.html`` (preferred), else ``<artifacts>/allure-report/index.html`` → ``static/allure_report.html``
+    - Allure: any per-framework HTML under ``static/allure_reports/<framework>/index.html``
     - Locust: ``<artifacts>/locust_report.html``
     - BehaveX: full ``<artifacts>/behave_reports/`` tree (legacy: ``behavex-output/``) → ``static/behave/``,
       with ``report.html`` copied to ``static/behave/index.html``
@@ -420,15 +439,23 @@ def sync_all_reports_to_static(*, artifacts_root: Path, run_id: str | None = Non
     artifacts_root = artifacts_root.expanduser().resolve()
     out: dict[str, Path | None] = {"allure": None, "locust": None, "behavex": None}
 
-    if STATIC_ALLURE_UNIFIED_INDEX.is_file():
+    # Per-framework Allure HTML lives under ``static/allure_reports/``.
+    if STATIC_ALLURE_REPORTS_DIR.is_dir():
         _ensure_static_dirs()
-        _chmod_tree(STATIC_ALLURE_UNIFIED_DIR)
-        out["allure"] = STATIC_ALLURE_UNIFIED_INDEX
-    elif STATIC_ALLURE_INDEX.is_file():
+        _chmod_tree(STATIC_ALLURE_REPORTS_DIR)
+        # Return one representative index so callers can print a stable path.
+        for d in sorted([p for p in STATIC_ALLURE_REPORTS_DIR.iterdir() if p.is_dir()]):
+            idx = d / "index.html"
+            if idx.is_file():
+                out["allure"] = idx
+                break
+    if out["allure"] is None and STATIC_ALLURE_INDEX.is_file():
+        # Back-compat legacy path
         _ensure_static_dirs()
         _chmod_tree(STATIC_ALLURE_REPORT_DIR)
         out["allure"] = STATIC_ALLURE_INDEX
-    else:
+    if out["allure"] is None:
+        # Back-compat artifacts → static single-file
         allure_index = artifacts_root / "allure-report" / "index.html"
         if allure_index.is_file():
             _ensure_static_dirs()
@@ -474,7 +501,7 @@ def _make_handler(root_dir: Path):
 def default_report_paths(*, artifacts_root: Path) -> ReportPaths:
     artifacts_root = artifacts_root.expanduser().resolve()
     results_dir = artifacts_root / "allure-results"
-    report_dir = STATIC_ALLURE_UNIFIED_DIR
+    report_dir = STATIC_ALLURE_REPORTS_DIR
     zip_path = artifacts_root / "allure-report.zip"
     return ReportPaths(results_dir=results_dir, report_dir=report_dir, zip_path=zip_path)
 

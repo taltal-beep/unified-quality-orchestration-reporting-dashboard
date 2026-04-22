@@ -9,10 +9,9 @@ from pathlib import Path
 from typing import Any
 
 from .metrics import parse_allure_results_dir
-from .report_generator import (
+from .paths import (
     STATIC_ALLURE_HTML,
     STATIC_ALLURE_REPORT_DIR,
-    STATIC_ALLURE_UNIFIED_DIR,
     STATIC_BEHAVE_DIR,
     STATIC_LOCUST_HTML,
 )
@@ -87,17 +86,25 @@ def _snapshot_reports(*, run_id: str, artifacts_root: Path) -> Path | None:
         if dest.exists():
             shutil.rmtree(dest)
         dest.mkdir(parents=True, exist_ok=True)
-        if STATIC_ALLURE_UNIFIED_DIR.is_dir() and (STATIC_ALLURE_UNIFIED_DIR / "index.html").is_file():
-            ar_dest = dest / "allure_report"
-            if ar_dest.exists():
-                shutil.rmtree(ar_dest)
-            shutil.copytree(STATIC_ALLURE_UNIFIED_DIR, ar_dest)
-        elif STATIC_ALLURE_REPORT_DIR.is_dir() and (STATIC_ALLURE_REPORT_DIR / "index.html").is_file():
-            ar_dest = dest / "allure_report"
-            if ar_dest.exists():
-                shutil.rmtree(ar_dest)
-            shutil.copytree(STATIC_ALLURE_REPORT_DIR, ar_dest)
-        elif STATIC_ALLURE_HTML.is_file():
+        # Copy generated Allure HTML directories into history snapshots:
+        #   static/history/<run_id>/allure_reports/<framework>/index.html
+        # (both unified and per-framework where present)
+        try:
+            from .paths import STATIC_ALLURE_REPORTS_DIR
+
+            allure_hist = dest / "allure_reports"
+            if allure_hist.exists():
+                shutil.rmtree(allure_hist)
+            allure_hist.mkdir(parents=True, exist_ok=True)
+            if STATIC_ALLURE_REPORTS_DIR.is_dir():
+                for d in [p for p in STATIC_ALLURE_REPORTS_DIR.iterdir() if p.is_dir()]:
+                    if (d / "index.html").is_file():
+                        shutil.copytree(d, allure_hist / d.name)
+        except Exception:
+            pass
+
+        # Legacy single unified output
+        if not (dest / "allure_reports").is_dir() and STATIC_ALLURE_HTML.is_file():
             shutil.copy2(STATIC_ALLURE_HTML, dest / "allure_report.html")
         if STATIC_LOCUST_HTML.is_file():
             shutil.copy2(STATIC_LOCUST_HTML, dest / "locust_report.html")
@@ -143,13 +150,16 @@ def list_run_sessions(*, limit: int = 30, db_path: Path | None = None) -> list[R
     for r in list_recent_runs(limit=limit, db_path=db_path):
         links: dict[str, str] = {}
         base = STATIC_HISTORY_ROOT / r.run_id
-        # Prefer directory-based Allure output
-        if (base / "allure_report" / "index.html").is_file():
-            links["allure"] = f"history/{r.run_id}/allure_report/index.html"
-            links["pytest"] = links["allure"]
-        elif (base / "allure_report.html").is_file():
-            links["allure"] = f"history/{r.run_id}/allure_report.html"
-            links["pytest"] = links["allure"]
+        # New layout: static/history/<run_id>/allure_reports/<framework>/index.html
+        for fw in ("pytest", "behavex", "locust", "behave_native"):
+            p = base / "allure_reports" / fw / "index.html"
+            if p.is_file():
+                links[fw] = f"history/{r.run_id}/allure_reports/{fw}/index.html"
+        # Back-compat: older snapshots (single unified output) — map to pytest view for legacy history.
+        if "pytest" not in links and (base / "allure_report" / "index.html").is_file():
+            links["pytest"] = f"history/{r.run_id}/allure_report/index.html"
+        if "pytest" not in links and (base / "allure_report.html").is_file():
+            links["pytest"] = f"history/{r.run_id}/allure_report.html"
         if (base / "locust_report.html").is_file():
             links["locust"] = f"history/{r.run_id}/locust_report.html"
         if (base / "behave" / "index.html").is_file():

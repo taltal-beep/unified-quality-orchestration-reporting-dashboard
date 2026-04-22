@@ -12,7 +12,6 @@ from engine.paths import (
     STATIC_ALLURE_HTML,
     STATIC_ALLURE_INDEX,
     STATIC_ALLURE_REPORTS_DIR,
-    STATIC_ALLURE_UNIFIED_INDEX,
     STATIC_LOCUST_HTML,
     allure_report_dir,
 )
@@ -59,11 +58,6 @@ class ReportService:
             subprocess_run=subprocess_run,
         )
 
-    def generate_unified_allure(self, *, subprocess_run: Callable[..., Any] | None = None) -> tuple[bool, str, float | None]:
-        paths = self.report_paths()
-        out = _generate_allure_reports(results_dir=paths.results_dir, mode="unified", subprocess_run=subprocess_run)
-        return out["unified"]
-
     def generate_individual_allure(
         self,
         *,
@@ -73,14 +67,24 @@ class ReportService:
         paths = self.report_paths()
         return _generate_allure_reports(
             results_dir=paths.results_dir,
-            mode="individual",
             frameworks=frameworks,
+            subprocess_run=subprocess_run,
+        )
+
+    def generate_framework_reports(
+        self,
+        *,
+        subprocess_run: Callable[..., Any] | None = None,
+    ) -> dict[str, tuple[bool, str, float | None]]:
+        """Generate isolated Allure HTML for all supported frameworks."""
+        return self.generate_individual_allure(
+            frameworks=["pytest", "locust", "behavex", "behave_native"],
             subprocess_run=subprocess_run,
         )
 
     @staticmethod
     def available_allure_reports() -> list[str]:
-        """Framework names with generated HTML under ``static/allure-reports/<fw>/index.html``."""
+        """Framework names with generated HTML under ``static/allure_reports/<fw>/index.html``."""
         if not STATIC_ALLURE_REPORTS_DIR.is_dir():
             return []
         out: list[str] = []
@@ -102,6 +106,9 @@ class ReportService:
         """
         Returns ``(has_allure_static, has_locust_static)`` for mirrored HTML under ``static/``.
         """
-        has_allure = STATIC_ALLURE_UNIFIED_INDEX.is_file() or STATIC_ALLURE_INDEX.is_file() or STATIC_ALLURE_HTML.is_file()
+        has_allure = False
+        if STATIC_ALLURE_REPORTS_DIR.is_dir():
+            has_allure = any((d / "index.html").is_file() for d in STATIC_ALLURE_REPORTS_DIR.iterdir() if d.is_dir())
+        has_allure = has_allure or STATIC_ALLURE_INDEX.is_file() or STATIC_ALLURE_HTML.is_file()
         has_locust = STATIC_LOCUST_HTML.is_file()
         return has_allure, has_locust

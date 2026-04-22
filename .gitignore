@@ -10,7 +10,7 @@ venv/
 # Mirrored report HTML for Streamlit static serving
 static/allure_report.html
 static/allure_report/
-static/allure-reports/
+static/allure_reports/
 static/locust_report.html
 static/behave/
 

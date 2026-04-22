@@ -15,8 +15,8 @@ ORCHESTRATOR_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
 STATIC_DIR: Final[Path] = ORCHESTRATOR_ROOT / "static"
 
 # Allure HTML output directories (single-file bundle under each directory).
-# New layout: ``static/allure-reports/<framework>/index.html``
-STATIC_ALLURE_REPORTS_DIR: Final[Path] = STATIC_DIR / "allure-reports"
+# New layout: ``static/allure_reports/<framework>/index.html``
+STATIC_ALLURE_REPORTS_DIR: Final[Path] = STATIC_DIR / "allure_reports"
 STATIC_ALLURE_UNIFIED_DIR: Final[Path] = STATIC_ALLURE_REPORTS_DIR / "unified"
 STATIC_ALLURE_UNIFIED_INDEX: Final[Path] = STATIC_ALLURE_UNIFIED_DIR / "index.html"
 
@@ -30,8 +30,10 @@ STATIC_BEHAVE_DIR: Final[Path] = STATIC_DIR / "behave"
 STATIC_BEHAVE_INDEX: Final[Path] = STATIC_BEHAVE_DIR / "index.html"
 
 # Under ``<artifacts>/allure-results/`` when using per-framework isolation (audit).
-# NOTE: ``behave_native`` is reserved for standard Behave (non-BehaveX) when implemented.
-ALLURE_FRAMEWORK_RESULT_SUBDIRS: Final[tuple[str, ...]] = ("pytest", "behave", "locust", "behave_native")
+# NOTE:
+# - ``behavex``: BehaveX output (kept separate from native Behave)
+# - ``behave_native``: standard Behave output
+ALLURE_FRAMEWORK_RESULT_SUBDIRS: Final[tuple[str, ...]] = ("pytest", "behavex", "locust", "behave_native")
 
 
 def default_artifacts_root() -> Path:
@@ -44,14 +46,14 @@ def allure_results_dir(artifacts_root: Path) -> Path:
 
 
 def allure_report_dir(framework: str) -> Path:
-    """Directory under ``static/allure-reports/<framework>/``."""
+    """Directory under ``static/allure_reports/<framework>/``."""
     return (STATIC_ALLURE_REPORTS_DIR / str(framework)).resolve()
 
 
 def allure_framework_result_dirs(artifacts_root: Path) -> tuple[Path, Path, Path, Path]:
     """Per-framework Allure JSON directories (may or may not exist yet)."""
     base = allure_results_dir(artifacts_root)
-    return (base / "pytest", base / "behave", base / "locust", base / "behave_native")
+    return (base / "pytest", base / "behavex", base / "locust", base / "behave_native")
 
 
 def allure_cli_input_directories(results_dir: Path) -> list[Path]:
@@ -59,7 +61,7 @@ def allure_cli_input_directories(results_dir: Path) -> list[Path]:
     Directories to pass to ``allure generate`` (some CLI builds ignore nested JSON
     when only the parent path is supplied).
 
-    If any of ``pytest/``, ``behave/``, ``locust/``, or ``behave_native/`` exist under ``results_dir``,
+    If any of ``pytest/``, ``behavex/``, ``locust/``, or ``behave_native/`` exist under ``results_dir``,
     returns each existing subdirectory; otherwise returns ``[results_dir]`` for a
     flat legacy layout.
     """

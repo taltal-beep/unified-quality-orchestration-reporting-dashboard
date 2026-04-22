@@ -5,7 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 
 from engine.command_builders import RunConfig, TestType, build_command
-from engine.runners import validate_target_repo
+from unittest.mock import MagicMock, patch
+
+from engine.runners import run_native_behave, validate_target_repo
 
 
 def test_validate_target_repo_rejects_missing(tmp_path: Path) -> None:
@@ -29,3 +31,85 @@ def test_build_command_sets_allure_env(tmp_path: Path) -> None:
     assert "pytest" in bc.argv[0] or bc.argv[0].endswith("pytest")
     assert "--alluredir" in bc.argv
     assert "UQO_SHARED_ALLURE_RESULTS_DIR" in bc.env
+
+
+def test_run_native_behave_builds_expected_cli(tmp_path: Path) -> None:
+    class _Stdout:
+        _lines = ["done\n"]
+
+        def readline(self) -> str:
+            return self._lines.pop(0) if self._lines else ""
+
+    with patch("engine.runners.subprocess.Popen") as popen:
+        proc = MagicMock()
+        proc.stdout = _Stdout()
+        proc.poll.side_effect = [None, 0]
+        proc.wait.return_value = 0
+        popen.return_value = proc
+
+        (tmp_path / "features").mkdir()
+        gen = run_native_behave(target_repo=tmp_path, artifacts_root=tmp_path / "artifacts")
+        # drain generator to completion
+        while True:
+            try:
+                next(gen)
+            except StopIteration as e:
+                rr = e.value
+                break
+
+    assert rr is not None
+    popen.assert_called_once()
+    argv = popen.call_args[0][0]
+    assert any(str(a).endswith("behave") or str(a) == "behave" for a in argv)
+    assert "-f" in argv
+    assert "allure_behave.formatter:AllureFormatter" in argv
+    assert "-o" in argv
+    out_dir = (tmp_path / "artifacts" / "allure-results" / "behave_native").resolve()
+    assert str(out_dir) in argv
+
+
+def test_run_native_behave_skips_when_missing_features(tmp_path: Path) -> None:
+    with patch("engine.runners.subprocess.Popen") as popen:
+        gen = run_native_behave(target_repo=tmp_path, artifacts_root=tmp_path / "artifacts")
+        ev = next(gen)
+        assert "skipping" in ev.line
+        try:
+            while True:
+                next(gen)
+        except StopIteration as e:
+            rr = e.value
+    popen.assert_not_called()
+    assert rr is not None
+    assert rr.returncode == 0
+
+
+def test_run_native_behave_timeout_returns_124(tmp_path: Path) -> None:
+    (tmp_path / "features").mkdir()
+
+    class _Stdout:
+        def readline(self) -> str:
+            return ""
+
+    proc = MagicMock()
+    proc.stdout = _Stdout()
+    proc.poll.return_value = None
+    proc.wait.return_value = None
+
+    # Make time jump past the 60s timeout quickly.
+    times = iter([0.0, 0.0, 61.0, 61.0, 61.0, 61.0])
+
+    def fake_time() -> float:
+        return float(next(times, 61.0))
+
+    with patch("engine.runners.subprocess.Popen", return_value=proc):
+        with patch("engine.runners.time.time", side_effect=fake_time):
+            gen = run_native_behave(target_repo=tmp_path, artifacts_root=tmp_path / "artifacts")
+            # drain
+            while True:
+                try:
+                    next(gen)
+                except StopIteration as e:
+                    rr = e.value
+                    break
+    assert rr is not None
+    assert rr.returncode == 124
