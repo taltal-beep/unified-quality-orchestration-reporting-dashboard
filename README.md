@@ -119,45 +119,63 @@ Go to `History` → expand the run → click **Open Allure Server report**.
 
 ## Writing a custom test plugin (step-by-step)
 
-UQO uses a simple “drop-in” plugin pattern. Plugins live under `plugins/` and are discovered at runtime.
+UQO supports **drop-in runner plugins** via **Pluggy**. Plugins are Python modules placed under `plugins/` and loaded by `engine/orchestrator.py`.
 
-### 1) Create a new plugin file
+The plugin interface is defined in `engine/specs.py` (`BaseRunnerSpec`), with these hooks:
+- `get_command(config) -> list[str] | None` (first plugin to return an argv wins)
+- `setup_env(config) -> dict[str, str] | None`
+- `collect_artifacts(run_id) -> list[pathlib.Path] | None`
 
-Create `plugins/my_plugin.py`:
+### 1) Create a plugin module
+
+Create `plugins/my_custom_runner.py`:
 
 ```python
-def uqo_register(registry):
-    """
-    Called by the orchestrator at startup.
-    Register one or more runnable actions (pytest/behavex/locust/custom).
-    """
-    registry.register(
-        name="my_plugin_smoke",
-        description="Example: run a fast smoke check",
-        test_type="pytest",
-        args=["-q", "-m", "smoke"],
-    )
+from __future__ import annotations
+
+from pathlib import Path
+
+from engine.run_config import RunConfig
+from engine.specs import hookimpl
+
+
+@hookimpl(firstresult=True)
+def get_command(config: RunConfig) -> list[str] | None:
+    # Example: handle a custom "tool" selector from RunConfig (shape depends on your RunConfig usage).
+    if getattr(config, "tool", None) != "my-tool":
+        return None
+    return ["python", "-m", "my_tool.cli", "--flag", "value"]
+
+
+@hookimpl
+def setup_env(config: RunConfig) -> dict[str, str] | None:
+    if getattr(config, "tool", None) != "my-tool":
+        return None
+    return {"MY_TOOL_MODE": "1"}
+
+
+@hookimpl
+def collect_artifacts(run_id: str) -> list[Path] | None:
+    # Return host paths that should be uploaded (optional).
+    p = Path("artifacts") / "my-tool"
+    return [p] if p.exists() else None
 ```
 
-### 2) Ensure your target repo supports it
+### 2) Run it (developer workflow)
 
-Your target repository should include:
-- a `requirements.txt` compatible with the chosen framework(s)
-- tests (pytest, BehaveX, Behave, Locust), depending on what you register
+At runtime, `engine/orchestrator.create_plugin_manager(load_dropins=True)` scans `plugins/*.py` and registers each module.
 
-### 3) Run it from the UI
+If you’re extending the system to execute custom plugins from the UI, the typical wiring is:
+- build a `RunConfig` that expresses what tool/framework should run
+- ask Pluggy for `get_command(config)` to obtain the argv
+- merge env from `setup_env(config)`
+- execute inside the Docker runner and upload artifacts from `collect_artifacts(run_id)`
 
-Start Streamlit, select the plugin/action, and click **Run**. UQO will:
-- mount the orchestrator repo into the container
-- install requirements inside the container
-- execute the requested command
-- collect/upload Allure results
+### 3) Production tips
 
-### 4) Production tips for plugins
-
-- **Always write Allure results** (for pytest use `--alluredir`; for behave/behavex use the provided Allure formatters).
-- **Avoid long-lived processes** unless you truly need them; rely on `UQO_CONTAINER_TIMEOUT_S` as a safety net.
-- **Log clearly**: stdout/stderr is streamed into the UI and persisted under `logs/<run_id>.log`.
+- **Timeouts**: rely on `UQO_CONTAINER_TIMEOUT_S` as a hard safety net for runaway tools.
+- **Allure**: write results into `UQO_SHARED_ALLURE_RESULTS_DIR` so UQO can upload them to MinIO and Allure Server can render the report.
+- **Artifacts**: keep output under `artifacts/` so it’s easy to snapshot/upload.
 
 ---
 
