@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import json
 import os
 import queue
 import threading
 import time
 from pathlib import Path
 from typing import Optional
+from uuid import uuid4
 
 # Load `.env` before other imports read ``os.environ`` (integrations, secrets).
 _APP_ROOT = Path(__file__).resolve().parent
@@ -106,6 +108,106 @@ def init_state() -> None:
     st.session_state.setdefault("influx_test_ok", None)
     st.session_state.setdefault("prometheus_test_ok", None)
 
+    if "run_configurations" not in st.session_state:
+        st.session_state["run_configurations"] = None  # type: ignore[assignment]
+    st.session_state.setdefault("config_ui_seed", 0)
+    st.session_state.setdefault("import_uploader_key", 0)
+    st.session_state.setdefault("import_config_text", "")
+
+    # Back-compat / migration: older UI stored a single config across these keys.
+    if st.session_state.get("run_configurations") is None:
+        _lt = st.session_state.get("last_test_type")
+        _tt = str(_lt or TestType.PYTEST.value)
+        if _tt not in {t.value for t in TestType}:
+            _tt = TestType.PYTEST.value
+        st.session_state["run_configurations"] = [
+            {
+                "id": str(uuid4()),
+                "targetRepoPath": str(st.session_state.get("target_repo") or str(Path(".").resolve())),
+                "testType": _tt,
+                "cliArgs": str(st.session_state.get("extra_args") or ""),
+                "consoleBuffer": int(st.session_state.get("log_max_lines") or 2000),
+            }
+        ]
+
+
+def _new_run_configuration(*, default_target: str) -> dict:
+    return {
+        "id": str(uuid4()),
+        "targetRepoPath": str(default_target),
+        "testType": TestType.PYTEST.value,
+        "cliArgs": "",
+        "consoleBuffer": 2000,
+    }
+
+
+def handle_export_config(configurations: list[dict]) -> str:
+    # Keep the file stable + human readable.
+    exportable: list[dict] = []
+    for c in configurations or []:
+        exportable.append(
+            {
+                "id": str(c.get("id") or ""),
+                "targetRepoPath": str(c.get("targetRepoPath") or ""),
+                "testType": str(c.get("testType") or ""),
+                "cliArgs": str(c.get("cliArgs") or ""),
+                "consoleBuffer": int(c.get("consoleBuffer") or 2000),
+            }
+        )
+    return json.dumps(exportable, indent=2, sort_keys=True)
+
+
+def handle_import_config(raw_bytes: bytes) -> list[dict]:
+    try:
+        payload = json.loads(raw_bytes.decode("utf-8"))
+    except Exception as exc:
+        raise ValueError(f"Invalid JSON: {exc}") from exc
+
+    if not isinstance(payload, list):
+        raise ValueError("Expected a JSON array (RunConfig[]).")
+
+    imported: list[dict] = []
+    for i, item in enumerate(payload):
+        if not isinstance(item, dict):
+            raise ValueError(f"Item {i} must be an object.")
+
+        target = item.get("targetRepoPath")
+        test_type = item.get("testType")
+        cli_args = item.get("cliArgs", "")
+        console_buffer = item.get("consoleBuffer", 2000)
+
+        if not isinstance(target, str):
+            raise ValueError(f"Item {i}.targetRepoPath must be a string.")
+        if not isinstance(test_type, str):
+            raise ValueError(f"Item {i}.testType must be a string.")
+        if not isinstance(cli_args, str):
+            raise ValueError(f"Item {i}.cliArgs must be a string.")
+        if not isinstance(console_buffer, int):
+            raise ValueError(f"Item {i}.consoleBuffer must be an integer.")
+
+        imported.append(
+            {
+                "id": str(item.get("id") or uuid4()),
+                "targetRepoPath": target,
+                "testType": test_type,
+                "cliArgs": cli_args,
+                "consoleBuffer": max(200, min(20000, int(console_buffer))),
+            }
+        )
+
+    if not imported:
+        raise ValueError("Imported configuration array is empty.")
+    return imported
+
+
+def handle_import_config_text(raw_text: str) -> list[dict]:
+    if raw_text is None:
+        raise ValueError("No text provided.")
+    raw = str(raw_text).strip()
+    if not raw:
+        raise ValueError("Paste JSON text to import.")
+    return handle_import_config(raw.encode("utf-8"))
+
 
 def _append_line(line: str) -> None:
     st.session_state.log_lines.append(line)
@@ -161,6 +263,74 @@ def _start_worker(cfg: RunConfig, *, db_run_id: str | None = None) -> None:
     st.session_state.is_audit_mode = False
     st.session_state.audit_phase_display = ""
     st.session_state.active_db_run_id = db_run_id
+    t.start()
+
+
+def _start_worker_multi(configs: list[RunConfig], *, db_run_ids: list[str | None]) -> None:
+    events_q: queue.Queue[LogEvent | RunResult] = queue.Queue()
+
+    def worker() -> None:
+        try:
+            for idx, cfg in enumerate(configs):
+                db_id = db_run_ids[idx] if idx < len(db_run_ids) else None
+                events_q.put(
+                    LogEvent(
+                        ts=time.time(),
+                        stream="meta",
+                        line=f"\n=== Run {idx + 1}/{len(configs)}: {cfg.test_type.value} in {cfg.target_repo} ===\n",
+                    )
+                )
+                try:
+                    gen = run_streaming(cfg, artifacts_root=default_artifacts_root())
+                    while True:
+                        try:
+                            ev = next(gen)
+                            events_q.put(ev)
+                        except StopIteration as e:
+                            if e.value is not None:
+                                events_q.put(e.value)
+                            break
+                except Exception as exc:
+                    import traceback
+
+                    if db_id:
+                        try:
+                            update_run_status(
+                                db_id,
+                                status=RunStatus.FAILED,
+                                metadata={"error": str(exc), "traceback": traceback.format_exc()},
+                            )
+                        except Exception:
+                            pass
+                    events_q.put(
+                        LogEvent(
+                            ts=time.time(),
+                            stream="meta",
+                            line=f"[run {idx + 1} error] {exc}\n{traceback.format_exc()}\n",
+                        )
+                    )
+        except Exception as exc:
+            import traceback
+
+            events_q.put(
+                LogEvent(
+                    ts=time.time(),
+                    stream="meta",
+                    line=f"[orchestrator worker error] {exc}\n{traceback.format_exc()}\n",
+                )
+            )
+            events_q.put(LogEvent(ts=time.time(), stream="meta", line=f"{UQO_DONE_MARKER} returncode=-1\n"))
+
+    t = threading.Thread(target=worker, daemon=True)
+    st.session_state.events_q = events_q
+    st.session_state.worker = t
+    st.session_state.running = True
+    st.session_state.last_result = None
+    st.session_state.run_completed = False
+    st.session_state.last_run_id = None
+    st.session_state.is_audit_mode = False
+    st.session_state.audit_phase_display = ""
+    st.session_state.active_db_run_id = next((rid for rid in reversed(db_run_ids) if rid), None)
     t.start()
 
 
@@ -362,8 +532,14 @@ if "uqo_startup_cleanup_done" not in st.session_state:
 
 _drain_events()
 
-st.title("Unified Quality Orchestration & Reporting Dashboard")
-st.caption("Streamlit orchestrator — zero-touch wrapper; runs tools via subprocess in the target repo.")
+_logo_path = (_APP_ROOT / "assets" / "logo.png").resolve()
+header_logo, header_text = st.columns([1, 5], vertical_alignment="center")
+with header_logo:
+    if _logo_path.is_file():
+        st.image(str(_logo_path), width=220)
+with header_text:
+    st.title("Unified Quality Orchestration & Reporting Dashboard")
+    st.caption("Streamlit orchestrator — zero-touch wrapper; runs tools via subprocess in the target repo.")
 
 sandbox_path = str(sample_target_repo().resolve())
 
@@ -406,81 +582,225 @@ with tab_exec:
                 if is_managed_process_alive():
                     st.caption("Orchestrator is managing the uvicorn process for this session.")
 
-        target_repo_str = st.text_input(
-            "Target repository path",
-            value=st.session_state.get("target_repo", "") if not st.session_state.sandbox_mode else sandbox_path,
-            placeholder="/abs/path/to/test-repo or ./relative/path",
-            disabled=bool(st.session_state.running) or bool(st.session_state.sandbox_mode),
-        )
+        _section_label("IMPORT / EXPORT")
+        export_text = handle_export_config(list(st.session_state.get("run_configurations") or []))
+
+        col_ie_a, col_ie_b = st.columns([1, 1], gap="small")
+        with col_ie_a:
+            st.download_button(
+                "Export Configuration",
+                data=export_text,
+                file_name="run-config.json",
+                mime="application/json",
+                disabled=bool(st.session_state.running),
+                use_container_width=True,
+            )
+        with col_ie_b:
+            uploaded = st.file_uploader(
+                "Import Configuration",
+                type=["json"],
+                accept_multiple_files=False,
+                label_visibility="collapsed",
+                disabled=bool(st.session_state.running),
+                key=f"import_config_uploader_{int(st.session_state.get('import_uploader_key') or 0)}",
+            )
+            if uploaded is not None:
+                try:
+                    st.session_state["run_configurations"] = handle_import_config(uploaded.getvalue())
+                    st.session_state["import_config_text"] = ""
+                    st.session_state["config_ui_seed"] = int(st.session_state.get("config_ui_seed") or 0) + 1
+                    st.toast("Configuration imported.")
+                    st.rerun()
+                except Exception as exc:
+                    st.error(str(exc))
+
+        with st.expander("Export as raw JSON text", expanded=False):
+            st.text_area(
+                "Configuration JSON",
+                value=export_text,
+                height=220,
+                disabled=bool(st.session_state.running),
+                help="Copy/paste this JSON to share or import elsewhere.",
+                key="export_config_raw_json_readonly",
+            )
+
+        with st.container(border=True):
+            _section_label("IMPORT FROM RAW JSON TEXT")
+            st.caption("Paste a JSON array of configurations and click Import. This will overwrite the current cards.")
+            st.text_area(
+                "Paste JSON here",
+                key="import_config_text",
+                height=160,
+                disabled=bool(st.session_state.running),
+            )
+            import_from_text = st.button(
+                "Import from Text",
+                type="secondary",
+                disabled=bool(st.session_state.running),
+                use_container_width=True,
+            )
+            if import_from_text:
+                try:
+                    st.session_state["run_configurations"] = handle_import_config_text(
+                        str(st.session_state.get("import_config_text") or "")
+                    )
+                    st.session_state["import_uploader_key"] = int(st.session_state.get("import_uploader_key") or 0) + 1
+                    st.session_state["config_ui_seed"] = int(st.session_state.get("config_ui_seed") or 0) + 1
+                    st.toast("Configuration imported from text.")
+                    st.rerun()
+                except Exception as exc:
+                    st.error(str(exc))
+
+        st.divider()
+
+        configs: list[dict] = list(st.session_state.get("run_configurations") or [])
+        if not configs:
+            configs = [_new_run_configuration(default_target=str(Path(".").resolve()))]
+
+        updated: list[dict] = []
+        remove_id: str | None = None
+        ui_seed = int(st.session_state.get("config_ui_seed") or 0)
+
+        for idx, cfg_state in enumerate(configs):
+            cfg_id = str(cfg_state.get("id") or uuid4())
+
+            header_a, header_b = st.columns([6, 1], gap="small")
+            with header_a:
+                st.markdown(f"**Configuration {idx + 1}**")
+            with header_b:
+                if st.button(
+                    "🗑",
+                    key=f"rm_{cfg_id}_{ui_seed}",
+                    disabled=bool(st.session_state.running) or len(configs) <= 1,
+                    help="Remove this configuration",
+                    use_container_width=True,
+                ):
+                    remove_id = cfg_id
+
+            with st.container(border=True):
+                target_repo_str = st.text_input(
+                    "Target repository path",
+                    value=str(cfg_state.get("targetRepoPath") or ""),
+                    placeholder="/abs/path/to/test-repo or ./relative/path",
+                    disabled=bool(st.session_state.running) or bool(st.session_state.sandbox_mode),
+                    key=f"target_{cfg_id}_{ui_seed}",
+                )
+                if st.session_state.sandbox_mode:
+                    target_repo_str = sandbox_path
+
+                test_type = st.selectbox(
+                    "Test type",
+                    options=[t.value for t in TestType],
+                    index=[t.value for t in TestType].index(str(cfg_state.get("testType") or TestType.PYTEST.value))
+                    if str(cfg_state.get("testType") or TestType.PYTEST.value) in [t.value for t in TestType]
+                    else 0,
+                    disabled=bool(st.session_state.running),
+                    key=f"test_{cfg_id}_{ui_seed}",
+                )
+
+                extra_args = st.text_input(
+                    "Extra CLI args (space-separated)",
+                    value=str(cfg_state.get("cliArgs") or ""),
+                    placeholder="e.g. -m smoke -q",
+                    disabled=bool(st.session_state.running),
+                    key=f"args_{cfg_id}_{ui_seed}",
+                )
+
+                console_buffer = int(
+                    st.number_input(
+                        "Console buffer (lines)",
+                        min_value=200,
+                        max_value=20000,
+                        step=200,
+                        value=int(cfg_state.get("consoleBuffer") or 2000),
+                        disabled=bool(st.session_state.running),
+                        key=f"buf_{cfg_id}_{ui_seed}",
+                    )
+                )
+
+                ok_card, msg_card = validate_target_repo(coerce_path(target_repo_str) if target_repo_str else Path("."))
+                if not ok_card:
+                    st.warning(f"Target repo: {msg_card}")
+
+                updated.append(
+                    {
+                        "id": cfg_id,
+                        "targetRepoPath": target_repo_str,
+                        "testType": test_type,
+                        "cliArgs": extra_args,
+                        "consoleBuffer": console_buffer,
+                    }
+                )
+
+        if remove_id is not None:
+            st.session_state["run_configurations"] = [c for c in updated if str(c.get("id")) != remove_id] or [
+                _new_run_configuration(default_target=str(Path(".").resolve()))
+            ]
+            st.rerun()
+
+        st.session_state["run_configurations"] = updated
+        if updated:
+            st.session_state["target_repo"] = (
+                sandbox_path if st.session_state.sandbox_mode else str(updated[0].get("targetRepoPath") or "")
+            )
         if st.session_state.sandbox_mode:
-            target_repo_str = sandbox_path
             st.session_state["target_repo"] = sandbox_path
-        else:
-            st.session_state["target_repo"] = target_repo_str
 
-        test_type = st.selectbox(
-            "Test type",
-            options=[t.value for t in TestType],
-            index=0,
+        if st.button(
+            "+ Add Configuration",
+            type="secondary",
             disabled=bool(st.session_state.running),
-        )
+            use_container_width=True,
+        ):
+            st.session_state["run_configurations"] = updated + [
+                _new_run_configuration(default_target=str(Path(".").resolve()))
+            ]
+            st.rerun()
 
-        locust_users = 10
-        locust_spawn_rate = 2
-        locust_run_time = "1m"
-        locust_only_summary = True
-        if test_type == TestType.LOCUST.value:
-            st.markdown("**Locust (headless)**")
-            locust_users = int(
+        with st.expander("Locust (headless) — applies to all Locust configs", expanded=False):
+            st.session_state["locust_users"] = int(
                 st.slider(
-                    "Users (-u)", min_value=1, max_value=500, value=int(st.session_state.get("locust_users", 10))
+                    "Users (-u)",
+                    min_value=1,
+                    max_value=500,
+                    value=int(st.session_state.get("locust_users", 10)),
+                    key="locust_users_slider",
                 )
             )
-            locust_spawn_rate = int(
+            st.session_state["locust_spawn_rate"] = int(
                 st.slider(
                     "Spawn rate (-r)",
                     min_value=1,
                     max_value=500,
                     value=int(st.session_state.get("locust_spawn_rate", 2)),
+                    key="locust_spawn_slider",
                 )
             )
-            locust_run_time = st.text_input(
+            st.session_state["locust_run_time"] = st.text_input(
                 "Run time (-t)",
                 value=str(st.session_state.get("locust_run_time", "1m")),
                 help="Examples: 10s, 1m, 5m",
+                key="locust_run_time_input",
             )
-            locust_only_summary = bool(
+            st.session_state["locust_only_summary"] = bool(
                 st.checkbox(
                     "Only summary",
                     value=bool(st.session_state.get("locust_only_summary", True)),
                     help="Keeps logs cleaner in headless mode.",
+                    key="locust_only_summary_cb",
                 )
             )
-            st.session_state["locust_users"] = locust_users
-            st.session_state["locust_spawn_rate"] = locust_spawn_rate
-            st.session_state["locust_run_time"] = locust_run_time
-            st.session_state["locust_only_summary"] = locust_only_summary
 
-        extra_args = st.text_input(
-            "Extra CLI args (space-separated)",
-            value=str(st.session_state.get("extra_args", "")),
-            placeholder="e.g. -m smoke -q",
-            disabled=bool(st.session_state.running),
-        )
-        st.session_state["extra_args"] = extra_args
+        st.divider()
 
-        st.number_input(
-            "Console buffer (lines)",
-            min_value=200,
-            max_value=20000,
-            step=200,
-            key="log_max_lines",
-            disabled=bool(st.session_state.running),
-        )
+        locust_users = int(st.session_state.get("locust_users", 10))
+        locust_spawn_rate = int(st.session_state.get("locust_spawn_rate", 2))
+        locust_run_time = str(st.session_state.get("locust_run_time", "1m"))
+        locust_only_summary = bool(st.session_state.get("locust_only_summary", True))
 
         col_a, col_b, col_c = st.columns(3)
         with col_a:
-            run_clicked = st.button("Run", type="secondary", disabled=bool(st.session_state.running))
+            run_clicked = st.button("Run", type="primary", disabled=bool(st.session_state.running))
         with col_b:
             audit_clicked = st.button(
                 "Run full system audit",
@@ -493,68 +813,91 @@ with tab_exec:
         if clear_clicked:
             st.session_state.log_lines = []
 
-        target_repo = coerce_path(target_repo_str) if target_repo_str else Path(".")
-        ok, msg = validate_target_repo(target_repo)
+        audit_target = (
+            coerce_path(str(updated[0].get("targetRepoPath") or ".")) if updated else Path(".")
+        )
+        ok, msg = validate_target_repo(audit_target)
         if not ok:
-            st.warning(f"Target repo: {msg}")
+            st.warning(f"Target repo (audit / first card): {msg}")
 
         if run_clicked:
-            if not ok:
-                st.error(f"Cannot run: {msg}")
+            bad: list[str] = []
+            for i, c in enumerate(updated):
+                target_repo = coerce_path(c.get("targetRepoPath") or "") if c.get("targetRepoPath") else Path(".")
+                ok_i, msg_i = validate_target_repo(target_repo)
+                if not ok_i:
+                    bad.append(f"Configuration {i + 1}: {msg_i}")
+            if bad:
+                st.error("Cannot run:\n" + "\n".join(f"- {b}" for b in bad))
             else:
-                argv_extra = [a for a in extra_args.split() if a.strip()]
-                # Create a DB row BEFORE execution so History shows it immediately.
-                try:
-                    db_run_uuid = create_run(status=RunStatus.RUNNING, metadata={"test_kind": str(test_type)})
-                    db_run_id = str(db_run_uuid)
-                except Exception:
-                    db_run_id = None
-                timeout_s = float(os.getenv("UQO_CONTAINER_TIMEOUT_S", "600"))
-                cfg = RunConfig(
-                    test_type=TestType(test_type),
-                    target_repo=target_repo,
-                    shared_allure_results_dir=Path(f"artifacts/allure-results/{test_type}"),
-                    artifacts_root=Path("artifacts"),
-                    pytest_args=argv_extra if test_type == TestType.PYTEST.value else (),
-                    behavex_args=argv_extra if test_type == TestType.BEHAVEX.value else (),
-                    behave_native_args=argv_extra if test_type == TestType.BEHAVE_NATIVE.value else (),
-                    locust_args=argv_extra if test_type == TestType.LOCUST.value else (),
-                    locust_headless=True,
-                    locust_users=int(locust_users),
-                    locust_spawn_rate=int(locust_spawn_rate),
-                    locust_run_time=str(locust_run_time),
-                    locust_only_summary=bool(locust_only_summary),
-                    last_test_type=test_type,
-                    run_id=db_run_id,
-                    timeout_s=timeout_s,
+                st.session_state["log_max_lines"] = (
+                    max(int(c.get("consoleBuffer") or 2000) for c in updated) if updated else 2000
                 )
-                st.session_state["last_test_type"] = test_type
+
+                timeout_s = float(os.getenv("UQO_CONTAINER_TIMEOUT_S", "600"))
+                run_cfgs: list[RunConfig] = []
+                db_run_ids: list[str | None] = []
+
+                for c in updated:
+                    test_type = str(c.get("testType") or TestType.PYTEST.value)
+                    target_repo = coerce_path(c.get("targetRepoPath") or "") if c.get("targetRepoPath") else Path(".")
+                    argv_extra = [a for a in str(c.get("cliArgs") or "").split() if a.strip()]
+
+                    try:
+                        db_run_uuid = create_run(status=RunStatus.RUNNING, metadata={"test_kind": str(test_type)})
+                        db_run_id = str(db_run_uuid)
+                    except Exception:
+                        db_run_id = None
+
+                    db_run_ids.append(db_run_id)
+                    run_cfgs.append(
+                        RunConfig(
+                            test_type=TestType(test_type),
+                            target_repo=target_repo,
+                            shared_allure_results_dir=Path(f"artifacts/allure-results/{test_type}"),
+                            artifacts_root=Path("artifacts"),
+                            pytest_args=argv_extra if test_type == TestType.PYTEST.value else (),
+                            behavex_args=argv_extra if test_type == TestType.BEHAVEX.value else (),
+                            behave_native_args=argv_extra if test_type == TestType.BEHAVE_NATIVE.value else (),
+                            locust_args=argv_extra if test_type == TestType.LOCUST.value else (),
+                            locust_headless=True,
+                            locust_users=int(locust_users),
+                            locust_spawn_rate=int(locust_spawn_rate),
+                            locust_run_time=str(locust_run_time),
+                            locust_only_summary=bool(locust_only_summary),
+                            last_test_type=test_type,
+                            run_id=db_run_id,
+                            timeout_s=timeout_s,
+                        )
+                    )
+
+                st.session_state["last_test_type"] = "multi"
                 st.session_state["is_audit_mode"] = False
-                _append_line(f"Starting run: {cfg.test_type.value} in {cfg.target_repo}")
-                _start_worker(cfg, db_run_id=db_run_id)
+                _append_line(f"Starting {len(run_cfgs)} run(s)…")
+                _start_worker_multi(run_cfgs, db_run_ids=db_run_ids)
 
         if audit_clicked:
             if not ok:
                 st.error(f"Cannot run audit: {msg}")
             else:
-                argv_extra = [a for a in extra_args.split() if a.strip()]
+                argv_extra = [a for a in str(updated[0].get("cliArgs") or "").split() if a.strip()] if updated else []
                 st.session_state["last_test_type"] = "audit"
                 st.session_state["is_audit_mode"] = True
                 st.session_state["audit_phase_display"] = ""
                 st.session_state["audit_health_pct"] = None
                 st.session_state["audit_partial_success"] = False
-                _append_line(f"Starting Full System Audit in {target_repo}")
+                _append_line(f"Starting Full System Audit in {audit_target}")
                 _start_worker_audit(
-                    target_repo=target_repo,
+                    target_repo=audit_target,
                     pytest_args=tuple(argv_extra),
                     behavex_args=tuple(argv_extra),
                     native_behave_args=tuple(argv_extra),
                     run_native_behave=True,
                     locust_args=tuple(argv_extra),
-                    locust_users=int(st.session_state.get("locust_users", locust_users)),
-                    locust_spawn_rate=int(st.session_state.get("locust_spawn_rate", locust_spawn_rate)),
-                    locust_run_time=str(st.session_state.get("locust_run_time", locust_run_time)),
-                    locust_only_summary=bool(st.session_state.get("locust_only_summary", locust_only_summary)),
+                    locust_users=int(locust_users),
+                    locust_spawn_rate=int(locust_spawn_rate),
+                    locust_run_time=str(locust_run_time),
+                    locust_only_summary=bool(locust_only_summary),
                 )
 
     with right_run:
@@ -632,7 +975,7 @@ with tab_analytics:
         _section_label("TEST DASHBOARDS")
         d1, d2 = st.columns(2)
         with d1:
-            if has_behave and last_tt in (TestType.BEHAVEX.value, "audit"):
+            if has_behave and last_tt in (TestType.BEHAVEX.value, "audit", "multi"):
                 label = "BehaveX (deep dive)" if last_tt == "audit" else "Open BehaveX report"
                 st.link_button(
                     label,
@@ -642,7 +985,7 @@ with tab_analytics:
             else:
                 st.caption("BehaveX report not available for the last run.")
         with d2:
-            if has_locust and last_tt in (TestType.LOCUST.value, "audit"):
+            if has_locust and last_tt in (TestType.LOCUST.value, "audit", "multi"):
                 label = "Locust (deep dive)" if last_tt == "audit" else "Open Locust report"
                 st.link_button(
                     label,
