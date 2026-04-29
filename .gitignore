@@ -21,5 +21,9 @@ artifacts/history/
 # Local/generated artifacts
 .coverage
 artifacts/allure-report/
+artifacts/allure-results/
 artifacts/allure-results-archive/
+
+# Runtime logs
+logs/
 
