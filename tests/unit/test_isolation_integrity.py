@@ -40,20 +40,9 @@ def test_run_streaming_does_not_override_shared_allure_results_dir(tmp_path: Pat
         captured["shared"] = passed_cfg.shared_allure_results_dir
         return BuiltCommand(argv=["pytest", "-q"], cwd=tmp_path, env=dict(parent_env))
 
-    class _Stdout:
-        _lines = ["done\n"]
-
-        def readline(self) -> str:
-            return self._lines.pop(0) if self._lines else ""
-
     with patch("engine.runners.build_command", side_effect=fake_build_command):
-        with patch("engine.runners.subprocess.Popen") as popen:
-            proc = MagicMock()
-            proc.stdout = _Stdout()
-            proc.poll.side_effect = [None, 0]
-            proc.wait.return_value = 0
-            popen.return_value = proc
-
+        with patch("engine.runners._run_in_ephemeral_container_streaming") as run:
+            run.return_value = (0, 1.0, 2.0)
             list(
                 run_streaming(
                     cfg,
@@ -114,26 +103,15 @@ def test_run_native_behave_uses_popen_for_streaming(tmp_path: Path) -> None:
 
     (tmp_path / "features").mkdir()
 
-    with patch("engine.runners.subprocess.Popen") as popen:
-        class _Stdout:
-            _lines = ["line1\n", "line2\n"]
-
-            def readline(self) -> str:
-                return self._lines.pop(0) if self._lines else ""
-
-        proc = MagicMock()
-        proc.stdout = _Stdout()
-        proc.poll.side_effect = [None, 0]
-        proc.wait.return_value = 0
-        popen.return_value = proc
-
+    with patch("engine.runners._run_in_ephemeral_container_streaming") as run:
+        run.return_value = (0, 1.0, 2.0)
         gen = run_native_behave(target_repo=tmp_path, artifacts_root=tmp_path / "artifacts")
-        # Drain; implementation should call Popen during execution.
+        # Drain; implementation should invoke the streaming container runner.
         try:
             while True:
                 next(gen)
         except StopIteration:
             pass
 
-    assert popen.called is True
+    assert run.called is True
 

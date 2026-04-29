@@ -25,12 +25,9 @@ def test_url_for_formats_relative_path(tmp_path: Path) -> None:
 
 
 def test_run_native_behave_emits_and_returns(tmp_path: Path) -> None:
-    proc = MagicMock()
-    proc.returncode = 0
-    proc.stdout = "ok\n"
-    proc.stderr = ""
-
-    with patch("engine.runners.subprocess.run", return_value=proc):
+    (tmp_path / "features").mkdir()
+    with patch("engine.runners._run_in_ephemeral_container_streaming") as run:
+        run.return_value = (0, 1.0, 2.0)
         gen = run_native_behave(target_repo=tmp_path, artifacts_root=tmp_path)
         ev = next(gen)
         assert isinstance(ev, LogEvent)
