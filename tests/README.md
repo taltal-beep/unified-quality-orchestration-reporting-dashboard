@@ -15,5 +15,7 @@ UQO_FLAKY_DEMO=1 UQO_FLAKY_RATE=0.025 UQO_FLAKY_SEED=123 pytest -q --alluredir=a
 ```
 
 Notes:
-- Only tests marked `flaky_demo` are affected by the injected failures.\n+- Integration/E2E/Contract tests automatically attach the last HTTP request/response on failure.\n+- All tests are auto-labeled into Allure `feature/story/title` based on their location under `tests/`.
+- Only tests marked `flaky_demo` are affected by the injected failures.
+- Integration/E2E/Contract tests automatically attach the last HTTP request/response on failure.
+- All tests are auto-labeled into Allure `feature/story/title` based on their location under `tests/`.
 
