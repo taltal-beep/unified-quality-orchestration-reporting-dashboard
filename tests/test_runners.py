@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from engine.command_builders import RunConfig, TestType, build_command
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from engine.runners import run_native_behave, validate_target_repo
 
@@ -34,18 +34,14 @@ def test_build_command_sets_allure_env(tmp_path: Path) -> None:
 
 
 def test_run_native_behave_builds_expected_cli(tmp_path: Path) -> None:
-    class _Stdout:
-        _lines = ["done\n"]
+    captured = {}
 
-        def readline(self) -> str:
-            return self._lines.pop(0) if self._lines else ""
+    def fake_docker_run(**kwargs):  # type: ignore[no-untyped-def]
+        captured.update(kwargs)
+        kwargs["emit"]("stdout", "done\n")
+        return 0, 1.0, 2.0
 
-    with patch("engine.runners.subprocess.Popen") as popen:
-        proc = MagicMock()
-        proc.stdout = _Stdout()
-        proc.poll.side_effect = [None, 0]
-        proc.wait.return_value = 0
-        popen.return_value = proc
+    with patch("engine.runners._run_in_ephemeral_container_streaming", side_effect=fake_docker_run):
 
         (tmp_path / "features").mkdir()
         gen = run_native_behave(target_repo=tmp_path, artifacts_root=tmp_path / "artifacts")
@@ -58,8 +54,7 @@ def test_run_native_behave_builds_expected_cli(tmp_path: Path) -> None:
                 break
 
     assert rr is not None
-    popen.assert_called_once()
-    argv = popen.call_args[0][0]
+    argv = captured["cmd"].argv
     assert any(str(a).endswith("behave") or str(a) == "behave" for a in argv)
     assert "-f" in argv
     assert "allure_behave.formatter:AllureFormatter" in argv
@@ -69,7 +64,7 @@ def test_run_native_behave_builds_expected_cli(tmp_path: Path) -> None:
 
 
 def test_run_native_behave_skips_when_missing_features(tmp_path: Path) -> None:
-    with patch("engine.runners.subprocess.Popen") as popen:
+    with patch("engine.runners._run_in_ephemeral_container_streaming") as docker_run:
         gen = run_native_behave(target_repo=tmp_path, artifacts_root=tmp_path / "artifacts")
         ev = next(gen)
         assert "skipping" in ev.line
@@ -78,7 +73,7 @@ def test_run_native_behave_skips_when_missing_features(tmp_path: Path) -> None:
                 next(gen)
         except StopIteration as e:
             rr = e.value
-    popen.assert_not_called()
+    docker_run.assert_not_called()
     assert rr is not None
     assert rr.returncode == 0
 
@@ -86,30 +81,17 @@ def test_run_native_behave_skips_when_missing_features(tmp_path: Path) -> None:
 def test_run_native_behave_timeout_returns_124(tmp_path: Path) -> None:
     (tmp_path / "features").mkdir()
 
-    class _Stdout:
-        def readline(self) -> str:
-            return ""
+    def fake_docker_run(**_kwargs):  # type: ignore[no-untyped-def]
+        return 124, 1.0, 2.0
 
-    proc = MagicMock()
-    proc.stdout = _Stdout()
-    proc.poll.return_value = None
-    proc.wait.return_value = None
-
-    # Make time jump past the 60s timeout quickly.
-    times = iter([0.0, 0.0, 61.0, 61.0, 61.0, 61.0])
-
-    def fake_time() -> float:
-        return float(next(times, 61.0))
-
-    with patch("engine.runners.subprocess.Popen", return_value=proc):
-        with patch("engine.runners.time.time", side_effect=fake_time):
-            gen = run_native_behave(target_repo=tmp_path, artifacts_root=tmp_path / "artifacts")
-            # drain
-            while True:
-                try:
-                    next(gen)
-                except StopIteration as e:
-                    rr = e.value
-                    break
+    with patch("engine.runners._run_in_ephemeral_container_streaming", side_effect=fake_docker_run):
+        gen = run_native_behave(target_repo=tmp_path, artifacts_root=tmp_path / "artifacts")
+        # drain
+        while True:
+            try:
+                next(gen)
+            except StopIteration as e:
+                rr = e.value
+                break
     assert rr is not None
     assert rr.returncode == 124

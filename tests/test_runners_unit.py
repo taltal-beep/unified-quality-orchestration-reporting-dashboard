@@ -3,12 +3,21 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from engine.command_builders import RunConfig, TestType
-from engine.runners import UQO_DONE_MARKER, run_streaming, validate_target_repo
+from engine.runners import (
+    DOCKER_MOUNT_POINT,
+    ORCHESTRATOR_MOUNT_POINT,
+    UQO_DONE_MARKER,
+    _docker_volumes_for,
+    _rewrite_container_arg,
+    _to_container_path,
+    run_streaming,
+    validate_target_repo,
+)
 
 
 @pytest.fixture
@@ -16,15 +25,7 @@ def minimal_target_repo(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def test_resolve_subprocess_uses_shutil_which(monkeypatch: pytest.MonkeyPatch, minimal_target_repo: Path) -> None:
-    called: dict[str, str] = {}
-
-    def fake_which(name: str) -> str | None:
-        called["which"] = name
-        return f"/mock/bin/{name}"
-
-    monkeypatch.setattr("engine.runners.shutil.which", fake_which)
-
+def test_run_streaming_uses_docker_execution_seam(minimal_target_repo: Path) -> None:
     cfg = RunConfig(
         test_type=TestType.PYTEST,
         target_repo=minimal_target_repo,
@@ -32,25 +33,20 @@ def test_resolve_subprocess_uses_shutil_which(monkeypatch: pytest.MonkeyPatch, m
         pytest_args=("-q",),
     )
 
-    class _Stdout:
-        _lines = ["one line of output\n"]
+    captured = {}
 
-        def readline(self) -> str:
-            return self._lines.pop(0) if self._lines else ""
+    def fake_docker_run(**kwargs):  # type: ignore[no-untyped-def]
+        captured.update(kwargs)
+        kwargs["emit"]("stdout", "one line of output\n")
+        return 0, 1.0, 2.0
 
-    with patch("engine.runners.subprocess.Popen") as popen:
-        proc = MagicMock()
-        proc.stdout = _Stdout()
-        proc.poll.side_effect = [None, 0]
-        proc.wait.return_value = 0
-        popen.return_value = proc
-
+    with patch("engine.runners._run_in_ephemeral_container_streaming", side_effect=fake_docker_run):
         events: list[object] = []
         gen = run_streaming(cfg, prepare_allure=False, emit_done_marker=False, sync_static=False)
         for item in gen:
             events.append(item)
 
-    assert called.get("which") == "pytest"
+    assert captured["cmd"].cwd == minimal_target_repo.resolve()
     assert events
 
 
@@ -60,3 +56,27 @@ def test_validate_target_repo() -> None:
 
 def test_uqo_done_marker_constant() -> None:
     assert isinstance(UQO_DONE_MARKER, str) and UQO_DONE_MARKER.startswith("[")
+
+
+def test_docker_mapping_mounts_external_target_and_orchestrator(tmp_path: Path) -> None:
+    target_repo = (tmp_path / "target").resolve()
+    target_repo.mkdir()
+
+    volumes = _docker_volumes_for(target_repo)
+
+    assert volumes[str(target_repo)]["bind"] == DOCKER_MOUNT_POINT
+    assert any(cfg["bind"] == ORCHESTRATOR_MOUNT_POINT for cfg in volumes.values())
+
+
+def test_docker_mapping_rewrites_host_paths_for_container(tmp_path: Path) -> None:
+    target_repo = (tmp_path / "target").resolve()
+    target_repo.mkdir()
+    allure_dir = target_repo / "artifacts" / "allure-results" / "pytest"
+    hook_arg = f"{target_repo / 'locustfile.py'},{Path(__file__).resolve().parents[1] / 'drop_in_hooks' / 'locust_custom' / 'locust_hooks.py'}"
+
+    assert _to_container_path(allure_dir, target_root=target_repo) == "/app/artifacts/allure-results/pytest"
+    assert _rewrite_container_arg(str(allure_dir), target_root=target_repo) == "/app/artifacts/allure-results/pytest"
+
+    rewritten_hook_arg = _rewrite_container_arg(hook_arg, target_root=target_repo)
+    assert rewritten_hook_arg.startswith("/app/locustfile.py,")
+    assert f",{ORCHESTRATOR_MOUNT_POINT}/drop_in_hooks/locust_custom/locust_hooks.py" in rewritten_hook_arg

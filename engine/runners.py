@@ -13,9 +13,12 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Generator, Mapping, Optional, Sequence
 
-from engine.orchestrator import client as docker_client
+try:
+    import docker
+except Exception:  # pragma: no cover - optional dependency/import-time daemon failures
+    docker = None
 
-from .run_config import BuiltCommand, RunConfig, TestType, build_command
+from .command_builders import BuiltCommand, RunConfig, TestType, build_command
 from .paths import default_artifacts_root
 from .metrics_extractor import write_manual_locust_results_json
 from .report_generator import (
@@ -53,6 +56,7 @@ def _resolve_subprocess_argv(argv: list[str]) -> None:
 DOCKER_IMAGE = "python:3.11-slim"
 DOCKER_NETWORK = "uqo-net"
 DOCKER_MOUNT_POINT = "/app"
+ORCHESTRATOR_MOUNT_POINT = "/uqo"
 
 
 def _default_container_timeout_s() -> float:
@@ -70,17 +74,76 @@ def _host_repo_root() -> Path:
     return Path(__file__).resolve().parents[1]
 
 
-def _to_container_path(host_path: Path) -> str:
+def _to_container_path(host_path: Path, *, target_root: Path | None = None) -> str:
     """
-    Convert a host path under the orchestrator repo into a container path under /app.
-    If the path is outside the repo root, fall back to /app (best-effort).
+    Convert a mounted host path into its container path.
+
+    The target repo is mounted at /app. The orchestrator repo is mounted at /uqo
+    when the target repo lives outside it, and at /app for in-repo runs.
     """
-    root = _host_repo_root()
+    root = _host_repo_root().expanduser().resolve()
+    target = target_root.expanduser().resolve() if target_root is not None else root
+    mappings: list[tuple[Path, str]] = [(target, DOCKER_MOUNT_POINT)]
+    if target != root:
+        mappings.append((root, ORCHESTRATOR_MOUNT_POINT))
+    else:
+        mappings.append((root, DOCKER_MOUNT_POINT))
+
+    resolved = host_path.expanduser().resolve()
+    for host_base, container_base in mappings:
+        try:
+            rel = resolved.relative_to(host_base)
+        except ValueError:
+            continue
+        return str(Path(container_base) / rel).replace("\\", "/")
+    return DOCKER_MOUNT_POINT
+
+
+def _rewrite_container_arg(arg: str, *, target_root: Path) -> str:
+    """Rewrite host-absolute path arguments to their mounted container paths."""
+    if "," in arg:
+        parts = arg.split(",")
+        rewritten = [_rewrite_container_arg(part, target_root=target_root) for part in parts]
+        return ",".join(rewritten)
+    if "=" in arg:
+        prefix, value = arg.split("=", 1)
+        if value.startswith(os.sep):
+            return f"{prefix}={_to_container_path(Path(value), target_root=target_root)}"
+    if arg.startswith(os.sep):
+        return _to_container_path(Path(arg), target_root=target_root)
+    return arg
+
+
+def _docker_volumes_for(target_root: Path) -> dict[str, dict[str, str]]:
+    """Build Docker bind mounts for the target repo plus orchestrator support files."""
+    root = _host_repo_root().expanduser().resolve()
+    target = target_root.expanduser().resolve()
+    volumes: dict[str, dict[str, str]] = {
+        str(target): {"bind": DOCKER_MOUNT_POINT, "mode": "rw"},
+    }
+    if target != root:
+        volumes[str(root)] = {"bind": ORCHESTRATOR_MOUNT_POINT, "mode": "rw"}
+    return volumes
+
+
+def _orchestrator_container_root(*, target_root: Path) -> str:
+    root = _host_repo_root().expanduser().resolve()
+    target = target_root.expanduser().resolve()
+    return DOCKER_MOUNT_POINT if target == root else ORCHESTRATOR_MOUNT_POINT
+
+
+def _container_display_mounts(target_root: Path) -> str:
+    parts = [f"{host} -> {cfg['bind']}" for host, cfg in _docker_volumes_for(target_root).items()]
+    return ", ".join(parts)
+
+
+def _docker_client():
+    if docker is None:
+        return None
     try:
-        rel = host_path.expanduser().resolve().relative_to(root)
+        return docker.from_env()
     except Exception:
-        return DOCKER_MOUNT_POINT
-    return str(Path(DOCKER_MOUNT_POINT) / rel).replace("\\", "/")
+        return None
 
 
 def _docker_env_from_cmd_env(env: Mapping[str, str]) -> dict[str, str]:
@@ -110,22 +173,24 @@ def _run_in_ephemeral_container_streaming(
     Returns (returncode, started_at, finished_at).
     """
     started_at = time.time()
-    host_root = _host_repo_root()
+    target_root = cmd.cwd.expanduser().resolve()
 
+    docker_client = _docker_client()
     if docker_client is None:
         raise RuntimeError(
             "Docker client is not available. Ensure the `docker` Python package is installed "
             "and Docker Desktop (daemon) is running."
         )
 
-    container_repo_root = DOCKER_MOUNT_POINT
-    container_cwd = _to_container_path(cmd.cwd)
+    container_repo_root = _orchestrator_container_root(target_root=target_root)
+    container_cwd = _to_container_path(cmd.cwd, target_root=target_root)
 
     # Rewrite orchestrator-defined paths that are host-absolute into /app-relative paths.
     env_for_container = dict(cmd.env)
     shared_dir = env_for_container.get("UQO_SHARED_ALLURE_RESULTS_DIR")
     if shared_dir:
-        env_for_container["UQO_SHARED_ALLURE_RESULTS_DIR"] = _to_container_path(Path(shared_dir))
+        env_for_container["UQO_SHARED_ALLURE_RESULTS_DIR"] = _to_container_path(Path(shared_dir), target_root=target_root)
+    container_argv = [_rewrite_container_arg(str(a), target_root=target_root) for a in cmd.argv]
 
     # Ensure the container can import orchestrator/drop-in code when plugins need it.
     pp_parts = [str(Path(container_repo_root) / "drop_in_hooks"), str(container_repo_root)]
@@ -136,7 +201,7 @@ def _run_in_ephemeral_container_streaming(
     env_for_container["PYTHONUNBUFFERED"] = "1"
 
     # Install deps then execute the plugin command.
-    plugin_cmd = shlex.join(list(cmd.argv))
+    plugin_cmd = shlex.join(list(container_argv))
     bash_cmd = f"pip install --no-cache-dir -r {shlex.quote(str(Path(container_repo_root) / 'requirements.txt'))} && cd {shlex.quote(container_cwd)} && {plugin_cmd}"
 
     os.makedirs(str(log_path.parent), exist_ok=True)
@@ -145,7 +210,7 @@ def _run_in_ephemeral_container_streaming(
     returncode: int | None = None
     try:
         emit("meta", f"[docker] image={DOCKER_IMAGE} network={DOCKER_NETWORK}\n")
-        emit("meta", f"[docker] mount {host_root} -> {container_repo_root}\n")
+        emit("meta", f"[docker] mounts {_container_display_mounts(target_root)}\n")
         emit("meta", f"[docker] $ (cwd={container_cwd}) bash -lc {bash_cmd}\n")
 
         container = docker_client.containers.run(
@@ -154,7 +219,7 @@ def _run_in_ephemeral_container_streaming(
             detach=True,
             network=DOCKER_NETWORK,
             working_dir=container_repo_root,
-            volumes={str(host_root): {"bind": container_repo_root, "mode": "rw"}},
+            volumes=_docker_volumes_for(target_root),
             environment=_docker_env_from_cmd_env(env_for_container),
             name=f"uqo-run-{run_id[:12]}",
             auto_remove=False,
