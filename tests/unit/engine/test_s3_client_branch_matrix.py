@@ -30,9 +30,9 @@ def test_default_minio_endpoint_prefers_env(monkeypatch: pytest.MonkeyPatch) -> 
 
 def test_default_minio_endpoint_docker_vs_host(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("MINIO_ENDPOINT", raising=False)
-    monkeypatch.setenv("RUNNING_IN_DOCKER", "1")
+    monkeypatch.setattr(s3, "_is_running_in_docker", lambda: True)
     assert s3._default_minio_endpoint().startswith("http://uqo-minio")
-    monkeypatch.setenv("RUNNING_IN_DOCKER", "0")
+    monkeypatch.setattr(s3, "_is_running_in_docker", lambda: False)
     assert s3._default_minio_endpoint().startswith("http://localhost")
 
 
