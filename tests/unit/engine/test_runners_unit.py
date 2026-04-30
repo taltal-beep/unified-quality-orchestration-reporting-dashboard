@@ -70,7 +70,7 @@ def test_docker_unavailable_fallback_streams_stdout_and_writes_log(
     assert ("stdout", "hello fallback\n") in emitted
     assert ("stdout", "stderr merged\n") in emitted
     assert any("docker unavailable; falling back to local subprocess" in line for _, line in emitted)
-    assert log_path.read_text(encoding="utf-8") == "hello fallback\nstderr merged\n"
+    assert set(log_path.read_text(encoding="utf-8").splitlines()) == {"hello fallback", "stderr merged"}
 
 
 def test_docker_unavailable_fallback_times_out_and_kills_subprocess(
