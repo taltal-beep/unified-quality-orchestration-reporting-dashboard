@@ -60,7 +60,14 @@ from engine.run_history import (
 )
 from engine.paths import STATIC_BEHAVE_INDEX
 from engine.report_generator import STATIC_ALLURE_HTML, STATIC_ALLURE_INDEX
-from engine.services import AuditService, MetricsService, ReportService, RunLogLine, iter_drained_queue_items
+from engine.services import (
+    AuditService,
+    MetricsService,
+    ReportService,
+    RunLogLine,
+    apply_completed_multi_run,
+    iter_drained_queue_items,
+)
 
 
 def _section_label(text: str) -> None:
@@ -92,6 +99,7 @@ def init_state() -> None:
     st.session_state.setdefault("events_q", None)  # type: ignore[assignment]
     st.session_state.setdefault("worker", None)  # type: ignore[assignment]
     st.session_state.setdefault("last_result", None)  # type: ignore[assignment]
+    st.session_state.setdefault("multi_runs_remaining", 0)
     st.session_state.setdefault("sandbox_mode", False)
     st.session_state.setdefault("report_server", None)  # type: ignore[assignment]
     st.session_state.setdefault("last_run_id", None)  # type: ignore[assignment]
@@ -263,6 +271,7 @@ def _start_worker(cfg: RunConfig, *, db_run_id: str | None = None) -> None:
     st.session_state.is_audit_mode = False
     st.session_state.audit_phase_display = ""
     st.session_state.active_db_run_id = db_run_id
+    st.session_state.multi_runs_remaining = 0
     t.start()
 
 
@@ -331,6 +340,7 @@ def _start_worker_multi(configs: list[RunConfig], *, db_run_ids: list[str | None
     st.session_state.is_audit_mode = False
     st.session_state.audit_phase_display = ""
     st.session_state.active_db_run_id = next((rid for rid in reversed(db_run_ids) if rid), None)
+    st.session_state.multi_runs_remaining = len(configs)
     t.start()
 
 
@@ -395,25 +405,39 @@ def _start_worker_audit(
     st.session_state.is_audit_mode = True
     st.session_state.audit_phase_display = ""
     st.session_state.audit_health_pct = None
+    st.session_state.multi_runs_remaining = 0
     t.start()
 
 
 def _apply_run_result_to_session(item: RunResult) -> None:
+    in_multi_run = str(st.session_state.get("last_test_type") or "") == "multi"
+    if in_multi_run:
+        remaining, batch_finished = apply_completed_multi_run(
+            remaining_before=int(st.session_state.get("multi_runs_remaining") or 0)
+        )
+        st.session_state.multi_runs_remaining = remaining
+    else:
+        batch_finished = True
+
     st.session_state.last_result = item
-    st.session_state.running = False
-    st.session_state.run_completed = True
     env = item.command.env
     st.session_state.last_run_id = env.get("UQO_AUDIT_RUN_ID") or env.get("UQO_RUN_ID")
-    st.session_state.active_db_run_id = None
+    if batch_finished:
+        st.session_state.running = False
+        st.session_state.run_completed = True
+        st.session_state.active_db_run_id = None
     if item.audit_mode:
         if item.audit_health_pct is not None:
             st.session_state["audit_health_pct"] = item.audit_health_pct
         st.session_state["audit_partial_success"] = item.audit_partial_success
+    test_kind = str(st.session_state.get("last_test_type") or "unknown")
+    if in_multi_run:
+        test_kind = str(env.get("UQO_LAST_TEST_TYPE") or "unknown")
     try:
         record_completed_run(
             rr=item,
             artifacts_root=default_artifacts_root().expanduser().resolve(),
-            test_kind=str(st.session_state.get("last_test_type") or "unknown"),
+            test_kind=test_kind,
             audit_health_pct=st.session_state.get("audit_health_pct"),
         )
     except Exception:
@@ -440,7 +464,9 @@ def _apply_run_result_to_session(item: RunResult) -> None:
 
 def _apply_run_log_line_to_session(stream: str, line: str) -> None:
     done_sentinel = UQO_DONE_MARKER in line
-    if done_sentinel:
+    in_multi_run = str(st.session_state.get("last_test_type") or "") == "multi"
+    batch_still_running = bool(in_multi_run and int(st.session_state.get("multi_runs_remaining") or 0) > 0)
+    if done_sentinel and not batch_still_running:
         st.session_state.running = False
 
     prefix = ""
@@ -458,7 +484,7 @@ def _apply_run_log_line_to_session(stream: str, line: str) -> None:
             pass
     _append_line(prefix + line.rstrip("\n"))
 
-    if done_sentinel:
+    if done_sentinel and not batch_still_running:
         st.session_state.run_completed = True
 
 
