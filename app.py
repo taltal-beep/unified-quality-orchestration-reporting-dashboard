@@ -60,7 +60,15 @@ from engine.run_history import (
 )
 from engine.paths import STATIC_BEHAVE_INDEX
 from engine.report_generator import STATIC_ALLURE_HTML, STATIC_ALLURE_INDEX
-from engine.services import AuditService, MetricsService, ReportService, RunLogLine, iter_drained_queue_items
+from engine.services import (
+    AuditService,
+    MetricsService,
+    ReportService,
+    RunLogLine,
+    advance_after_run_result,
+    iter_drained_queue_items,
+    stream_multi_run,
+)
 
 
 def _section_label(text: str) -> None:
@@ -97,6 +105,8 @@ def init_state() -> None:
     st.session_state.setdefault("last_run_id", None)  # type: ignore[assignment]
     st.session_state.setdefault("target_repo", str(Path(".").resolve()))
     st.session_state.setdefault("is_audit_mode", False)
+    st.session_state.setdefault("multi_run_active", False)
+    st.session_state.setdefault("multi_runs_remaining", 0)
     st.session_state.setdefault("audit_phase_display", "")
     st.session_state.setdefault("audit_health_pct", None)
     st.session_state.setdefault("audit_partial_success", False)
@@ -261,6 +271,8 @@ def _start_worker(cfg: RunConfig, *, db_run_id: str | None = None) -> None:
     st.session_state.run_completed = False
     st.session_state.last_run_id = None
     st.session_state.is_audit_mode = False
+    st.session_state.multi_run_active = False
+    st.session_state.multi_runs_remaining = 0
     st.session_state.audit_phase_display = ""
     st.session_state.active_db_run_id = db_run_id
     t.start()
@@ -271,44 +283,14 @@ def _start_worker_multi(configs: list[RunConfig], *, db_run_ids: list[str | None
 
     def worker() -> None:
         try:
-            for idx, cfg in enumerate(configs):
-                db_id = db_run_ids[idx] if idx < len(db_run_ids) else None
-                events_q.put(
-                    LogEvent(
-                        ts=time.time(),
-                        stream="meta",
-                        line=f"\n=== Run {idx + 1}/{len(configs)}: {cfg.test_type.value} in {cfg.target_repo} ===\n",
-                    )
-                )
-                try:
-                    gen = run_streaming(cfg, artifacts_root=default_artifacts_root())
-                    while True:
-                        try:
-                            ev = next(gen)
-                            events_q.put(ev)
-                        except StopIteration as e:
-                            if e.value is not None:
-                                events_q.put(e.value)
-                            break
-                except Exception as exc:
-                    import traceback
-
-                    if db_id:
-                        try:
-                            update_run_status(
-                                db_id,
-                                status=RunStatus.FAILED,
-                                metadata={"error": str(exc), "traceback": traceback.format_exc()},
-                            )
-                        except Exception:
-                            pass
-                    events_q.put(
-                        LogEvent(
-                            ts=time.time(),
-                            stream="meta",
-                            line=f"[run {idx + 1} error] {exc}\n{traceback.format_exc()}\n",
-                        )
-                    )
+            for item in stream_multi_run(
+                configs,
+                artifacts_root=default_artifacts_root(),
+                db_run_ids=db_run_ids,
+                run_streaming_fn=run_streaming,
+                update_run_status_fn=update_run_status,
+            ):
+                events_q.put(item)
         except Exception as exc:
             import traceback
 
@@ -329,6 +311,8 @@ def _start_worker_multi(configs: list[RunConfig], *, db_run_ids: list[str | None
     st.session_state.run_completed = False
     st.session_state.last_run_id = None
     st.session_state.is_audit_mode = False
+    st.session_state.multi_run_active = True
+    st.session_state.multi_runs_remaining = len(configs)
     st.session_state.audit_phase_display = ""
     st.session_state.active_db_run_id = next((rid for rid in reversed(db_run_ids) if rid), None)
     t.start()
@@ -393,6 +377,8 @@ def _start_worker_audit(
     st.session_state.run_completed = False
     st.session_state.last_run_id = None
     st.session_state.is_audit_mode = True
+    st.session_state.multi_run_active = False
+    st.session_state.multi_runs_remaining = 0
     st.session_state.audit_phase_display = ""
     st.session_state.audit_health_pct = None
     t.start()
@@ -400,8 +386,14 @@ def _start_worker_audit(
 
 def _apply_run_result_to_session(item: RunResult) -> None:
     st.session_state.last_result = item
-    st.session_state.running = False
-    st.session_state.run_completed = True
+    next_state = advance_after_run_result(
+        multi_run_active=bool(st.session_state.get("multi_run_active")),
+        multi_runs_remaining=int(st.session_state.get("multi_runs_remaining") or 0),
+    )
+    st.session_state.running = next_state.running
+    st.session_state.run_completed = next_state.run_completed
+    st.session_state.multi_run_active = next_state.multi_run_active
+    st.session_state.multi_runs_remaining = next_state.multi_runs_remaining
     env = item.command.env
     st.session_state.last_run_id = env.get("UQO_AUDIT_RUN_ID") or env.get("UQO_RUN_ID")
     st.session_state.active_db_run_id = None
