@@ -95,23 +95,29 @@ def test_audit_does_not_generate_unified_allure_html(tmp_path: Path) -> None:
     assert all(p.name in {"pytest", "behavex", "locust", "behave_native"} for p in calls)
 
 
-def test_run_native_behave_uses_popen_for_streaming(tmp_path: Path) -> None:
+def test_run_native_behave_streams_container_output(tmp_path: Path) -> None:
     """
-    Native Behave must be Popen-based so logs can stream; subprocess.run(capture_output=True)
-    blocks the event stream and looks like a hang in the UI.
+    Native Behave must yield runner output incrementally from the Docker execution seam;
+    blocking until completion would look like a hang in the UI.
     """
 
     (tmp_path / "features").mkdir()
 
-    with patch("engine.runners._run_in_ephemeral_container_streaming") as run:
-        run.return_value = (0, 1.0, 2.0)
+    def fake_docker_run(**kwargs):  # type: ignore[no-untyped-def]
+        kwargs["emit"]("stdout", "line1\n")
+        kwargs["emit"]("stdout", "line2\n")
+        return 0, 0.0, 1.0
+
+    seen: list[str] = []
+    with patch("engine.runners._run_in_ephemeral_container_streaming", side_effect=fake_docker_run) as docker_run:
         gen = run_native_behave(target_repo=tmp_path, artifacts_root=tmp_path / "artifacts")
-        # Drain; implementation should invoke the streaming container runner.
         try:
             while True:
-                next(gen)
+                seen.append(next(gen).line)
         except StopIteration:
             pass
 
-    assert run.called is True
+    assert docker_run.called is True
+    assert any("line1" in line for line in seen)
+    assert any("line2" in line for line in seen)
 

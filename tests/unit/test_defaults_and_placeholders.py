@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from engine.report_generator import ReportServer, default_report_paths, url_for
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from engine.runners import LogEvent, RunResult, run_native_behave
 
@@ -26,8 +26,12 @@ def test_url_for_formats_relative_path(tmp_path: Path) -> None:
 
 def test_run_native_behave_emits_and_returns(tmp_path: Path) -> None:
     (tmp_path / "features").mkdir()
-    with patch("engine.runners._run_in_ephemeral_container_streaming") as run:
-        run.return_value = (0, 1.0, 2.0)
+
+    def fake_docker_run(**kwargs):  # type: ignore[no-untyped-def]
+        kwargs["emit"]("stdout", "ok\n")
+        return 0, 1.0, 2.0
+
+    with patch("engine.runners._run_in_ephemeral_container_streaming", side_effect=fake_docker_run):
         gen = run_native_behave(target_repo=tmp_path, artifacts_root=tmp_path)
         ev = next(gen)
         assert isinstance(ev, LogEvent)

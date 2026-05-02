@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from engine.command_builders import RunConfig, TestType, build_command
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from engine.runners import run_native_behave, validate_target_repo
 
@@ -34,8 +34,14 @@ def test_build_command_sets_allure_env(tmp_path: Path) -> None:
 
 
 def test_run_native_behave_builds_expected_cli(tmp_path: Path) -> None:
-    with patch("engine.runners._run_in_ephemeral_container_streaming") as run:
-        run.return_value = (0, 1.0, 2.0)
+    captured: dict[str, object] = {}
+
+    def fake_docker_run(**kwargs):  # type: ignore[no-untyped-def]
+        captured.update(kwargs)
+        kwargs["emit"]("stdout", "done\n")
+        return 0, 1.0, 2.0
+
+    with patch("engine.runners._run_in_ephemeral_container_streaming", side_effect=fake_docker_run) as run:
 
         (tmp_path / "features").mkdir()
         gen = run_native_behave(target_repo=tmp_path, artifacts_root=tmp_path / "artifacts")
@@ -74,8 +80,11 @@ def test_run_native_behave_skips_when_missing_features(tmp_path: Path) -> None:
 
 def test_run_native_behave_timeout_returns_124(tmp_path: Path) -> None:
     (tmp_path / "features").mkdir()
-    with patch("engine.runners._run_in_ephemeral_container_streaming") as run:
-        run.return_value = (124, 1.0, 2.0)
+
+    def fake_docker_run(**_kwargs):  # type: ignore[no-untyped-def]
+        return 124, 1.0, 2.0
+
+    with patch("engine.runners._run_in_ephemeral_container_streaming", side_effect=fake_docker_run):
         gen = run_native_behave(target_repo=tmp_path, artifacts_root=tmp_path / "artifacts")
         while True:
             try:
