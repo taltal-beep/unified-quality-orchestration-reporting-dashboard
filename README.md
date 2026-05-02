@@ -2,7 +2,9 @@
 
 UQO is a **production-oriented test orchestration system** that runs plugin-driven quality checks inside **ephemeral Docker containers**, persists run state to **Postgres**, stores artifacts in **MinIO (S3)**, and renders per-run **Allure Server** reports.
 
-This repo ships a Streamlit UI (`app.py`) for running tests, watching live logs, and browsing run history.
+This repo ships both:
+- a Streamlit UI (`app.py`) for interactive execution/history
+- a headless CLI (`uqo`) for CI-friendly automation
 
 ## What you get
 
@@ -78,6 +80,11 @@ Option A (recommended): use **Sandbox mode** in the UI.
 Option B: point at your own repo (must be accessible on the same machine running Docker Desktop).
 - Open Streamlit → set **Target repository path** → choose **Test type** → click **Run**
 
+Option C: run headless from CLI (CI-safe JSON output).
+```bash
+uqo run --config load-test.yaml --ci
+```
+
 ### 6) View the Allure report for a completed run
 
 Go to `History` → expand the run → click **Open Allure Server report**.
@@ -88,7 +95,8 @@ Go to `History` → expand the run → click **Open Allure Server report**.
 
 ### Runtime services (Docker Compose)
 
-- **Streamlit (host process)**: UI and orchestration entrypoint (`app.py`)
+- **Streamlit (host process)**: interactive adapter over the shared headless engine (`app.py`)
+- **UQO CLI (`uqo`)**: non-interactive adapter over the same shared headless engine (`uqo_core/cli.py`)
 - **Postgres** (`uqo-postgres`): canonical run lifecycle storage (`uqo_core/run_history.py`)
 - **MinIO** (`uqo-minio`): S3-compatible artifact store
   - Bucket: `BUCKET_NAME` (default `uqo-artifacts`)
@@ -101,14 +109,67 @@ Go to `History` → expand the run → click **Open Allure Server report**.
 
 ### Execution flow (happy path)
 
-1. UI creates a DB run row in Postgres: `status=RUNNING`
-2. Runner starts an ephemeral container via Docker SDK (`uqo_core/runners.py`)
+1. UI or CLI calls the shared engine service (`uqo_core/services/headless_engine.py`)
+2. Engine creates DB run row(s) in Postgres: `status=RUNNING`
+3. Runner starts an ephemeral container via Docker SDK (`uqo_core/runners.py`)
 3. Plugin/test framework emits Allure result files
 4. On completion:
    - DB row is updated to `COMPLETED` or `FAILED`
    - raw Allure results are uploaded to MinIO under `projects/<run_id>/results/`
 5. `uqo-allure-sync` mirrors MinIO → Allure volume; Allure Docker Service updates the report
 6. UI shows an **Allure Server** button for the completed run
+
+## Headless CLI contract
+
+`uqo run` uses YAML config and returns machine-readable output for automation:
+
+```bash
+uqo run --config load-test.yaml --ci --json
+uqo run --config load-test.yaml --ci --stream-json
+```
+
+- `--ci`: strict machine output on stdout (no human chatter mixed in)
+- `--json`: print final summary JSON object
+- `--stream-json`: print NDJSON events and then final summary JSON
+- `--no-persist`: execute without DB/history persistence
+
+Stable process exit codes:
+- `0`: successful run
+- `1`: run executed but test/audit failed
+- `2`: invalid config/arguments
+- `3`: infrastructure/runtime dependency failure
+- `4`: unexpected internal error
+
+Minimal single-run YAML example:
+
+```yaml
+test_type: pytest
+target_repo: ./sample_target_repo
+cli_args: "-q"
+timeout_s: 600
+```
+
+Multi-run YAML example:
+
+```yaml
+runs:
+  - test_type: pytest
+    target_repo: ./sample_target_repo
+    cli_args: "-q"
+  - test_type: locust
+    target_repo: ./sample_target_repo
+    locust_users: 20
+    locust_spawn_rate: 5
+    locust_run_time: "2m"
+```
+
+## Migration notes
+
+- Added a shared headless application engine in `uqo_core/services/headless_engine.py`.
+- Added package CLI entrypoint `uqo` in `pyproject.toml`.
+- Streamlit main run path now delegates orchestration to the same core engine used by CLI.
+- Existing `RunConfig`, repository interfaces, and persistence/update flow remain in `uqo_core`.
+- Backward compatibility is preserved; metadata now includes `trigger_source`, `ci_mode`, and `schema_version`.
 
 ### Resilience guarantees
 

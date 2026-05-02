@@ -1,6 +1,6 @@
 # Unified Quality Orchestration & Reporting Dashboard — Architecture
 
-UQO is a Streamlit-driven test orchestration dashboard. It builds framework-specific commands, runs them in one-off Docker containers, persists run history in Postgres, stores report artifacts in MinIO, and exposes per-run Allure reports through Allure Docker Service.
+UQO is a shared-engine test orchestration system with two adapters: Streamlit UI and a headless CLI. It builds framework-specific commands, runs them in one-off Docker containers, persists run history in Postgres, stores report artifacts in MinIO, and exposes per-run Allure reports through Allure Docker Service.
 
 ## Design goals
 
@@ -19,7 +19,7 @@ UQO is a Streamlit-driven test orchestration dashboard. It builds framework-spec
 - **Allure Docker Service (`uqo-allure`)**: renders `projects/<run_id>/reports/latest/index.html`.
 - **Allure sync (`uqo-allure-sync`)**: continuously mirrors `s3://<bucket>/projects` into Allure's `/app/projects`.
 
-The Streamlit UI (`streamlit run app.py`) runs on the host, not in Compose.
+The Streamlit UI (`streamlit run app.py`) and CLI (`uqo run ...`) run on the host, not in Compose.
 
 ## Source map
 
@@ -31,13 +31,14 @@ The Streamlit UI (`streamlit run app.py`) runs on the host, not in Compose.
 │   ├── command_builders.py         # RunConfig, TestType, framework argv/env builders
 │   ├── runners.py                  # Ephemeral Docker execution, audit workflow, log streaming
 │   ├── run_history.py              # Postgres models, snapshots, S3 upload, history views
+│   ├── cli.py                      # Headless CLI adapter (`uqo run`)
 │   ├── s3_client.py                # MinIO/S3 client and public object URLs
 │   ├── report_generator.py         # Local Allure/static report generation and sync
 │   ├── result_management.py        # Per-run result archive/cleanup
 │   ├── integrations.py             # InfluxDB and Prometheus Pushgateway integration
 │   ├── orchestrator.py             # Pluggy manager and optional plugins/*.py loader
 │   ├── specs.py                    # Pluggy hook specifications
-│   └── services/                   # UI-facing audit, metrics, report, event-drain helpers
+│   └── services/                   # Shared application services (headless engine, config loader, UI helpers)
 ├── drop_in_hooks/                  # Framework helper modules injected via PYTHONPATH
 ├── sample_target_repo/             # Sandbox/demo target API and tests
 ├── scripts/write_allure_environment.py
@@ -48,20 +49,41 @@ Runtime output directories such as `artifacts/`, `logs/`, and `static/` are gene
 
 ## Execution flow
 
-1. The UI validates the target repository path and creates a Postgres run row with `status=RUNNING`.
-2. `app.py` creates a `RunConfig` from `uqo_core.command_builders` with:
+1. A host adapter (UI or CLI) builds run specs and calls `HeadlessEngineService`.
+2. The engine validates inputs, creates Postgres run row(s) with `status=RUNNING`, and maps requests into `RunConfig`:
    - `test_type`: one of `pytest`, `behavex`, `behave_native`, or `locust`.
    - `target_repo`: host path to the target repo.
    - `shared_allure_results_dir`: usually `artifacts/allure-results/<test_type>`.
    - framework-specific args and optional Locust headless settings.
 3. `uqo_core.runners.run_streaming()` prepares the result directory, injects `UQO_RUN_ID`, and calls `build_command()`.
 4. The runner starts a `python:3.11-slim` container on Docker network `uqo-net`, mounts the orchestrator repo to `/app`, installs `requirements.txt`, changes into the target repo path inside the mount, and executes the command.
-5. Container logs are streamed to the UI and written under `logs/<run_id>.log`.
+5. Container logs are streamed to the adapter and written under `logs/<run_id>.log`.
 6. After completion, framework-specific fixups run:
    - BehaveX JSON may be copied from known BehaveX output locations into the shared Allure directory.
    - Locust HTML is mirrored from the isolated results directory into the artifacts/static layout.
 7. Reports are synchronized into `static/`, run metadata is persisted, raw Allure results are uploaded to `projects/<run_id>/results/`, and report snapshots are uploaded under `runs/<run_id>/artifacts/`.
 8. `uqo-allure-sync` mirrors `projects/` from MinIO into Allure Docker Service. The UI links to `ALLURE_SERVER_URL/allure-docker-service/projects/<run_id>/reports/latest/index.html`.
+
+## Headless CLI output + exit-code contract
+
+`uqo run --config <path> --ci` guarantees machine-readable stdout:
+
+- With `--json`: one final summary JSON object.
+- With `--stream-json`: NDJSON event objects followed by final summary JSON.
+
+Exit code mapping:
+
+- `0`: successful run
+- `1`: run executed but domain test/audit failed
+- `2`: invalid config/arguments
+- `3`: infrastructure/runtime dependency failure (e.g. docker/runtime failures)
+- `4`: unexpected internal error
+
+The engine enriches metadata with provenance fields:
+
+- `trigger_source` (`ui` or `cli`)
+- `ci_mode` (boolean)
+- `schema_version` (current engine schema marker)
 
 ## Framework command contract
 

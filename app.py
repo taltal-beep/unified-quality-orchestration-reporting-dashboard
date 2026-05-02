@@ -51,7 +51,6 @@ from uqo_core.metrics_extractor import to_run_metrics
 from uqo_core.run_history import (
     RunStatus,
     cleanup_orphaned_runs,
-    create_run,
     get_run,
     list_run_sessions,
     record_completed_run,
@@ -62,13 +61,17 @@ from uqo_core.paths import STATIC_BEHAVE_INDEX
 from uqo_core.report_generator import STATIC_ALLURE_HTML, STATIC_ALLURE_INDEX
 from uqo_core.services import (
     AuditService,
+    EngineRequest,
+    EngineRunSpec,
+    HeadlessEngineService,
     MetricsService,
     ReportService,
     RunLogLine,
     advance_after_run_result,
     iter_drained_queue_items,
-    stream_multi_run,
 )
+
+_ENGINE = HeadlessEngineService()
 
 
 def _section_label(text: str) -> None:
@@ -280,19 +283,42 @@ def _start_worker(cfg: RunConfig, *, db_run_id: str | None = None) -> None:
     t.start()
 
 
-def _start_worker_multi(configs: list[RunConfig], *, db_run_ids: list[str | None]) -> None:
+def _start_worker_multi(specs: list[EngineRunSpec], *, ci_mode: bool = False) -> None:
     events_q: queue.Queue[LogEvent | RunResult] = queue.Queue()
 
     def worker() -> None:
         try:
-            for item in stream_multi_run(
-                configs,
-                artifacts_root=default_artifacts_root(),
-                db_run_ids=db_run_ids,
-                run_streaming_fn=run_streaming,
-                update_run_status_fn=update_run_status,
-            ):
-                events_q.put(item)
+            request = EngineRequest(
+                runs=tuple(specs),
+                trigger_source="ui",
+                ci_mode=bool(ci_mode),
+                persist=True,
+            )
+            gen = _ENGINE.stream(request)
+            while True:
+                try:
+                    event = next(gen)
+                    events_q.put(event.payload)
+                except StopIteration as stop:
+                    summary = stop.value
+                    if summary is not None:
+                        st.session_state["last_engine_summary"] = summary.to_dict()
+                        events_q.put(
+                            LogEvent(
+                                ts=time.time(),
+                                stream="meta",
+                                line=f"[engine] summary exit_code={summary.exit_code} aggregate_returncode={summary.aggregate_returncode}\n",
+                            )
+                        )
+                        if not summary.runs:
+                            events_q.put(
+                                LogEvent(
+                                    ts=time.time(),
+                                    stream="meta",
+                                    line=f"{UQO_DONE_MARKER} returncode=1\n",
+                                )
+                            )
+                    break
         except Exception as exc:
             import traceback
 
@@ -314,10 +340,10 @@ def _start_worker_multi(configs: list[RunConfig], *, db_run_ids: list[str | None
     st.session_state.last_run_id = None
     st.session_state.is_audit_mode = False
     st.session_state.multi_run_active = True
-    st.session_state.multi_runs_remaining = len(configs)
+    st.session_state.multi_runs_remaining = len(specs)
     st.session_state.audit_phase_display = ""
-    st.session_state.active_db_run_id = next((rid for rid in reversed(db_run_ids) if rid), None)
-    st.session_state.multi_runs_remaining = len(configs)
+    st.session_state.active_db_run_id = None
+    st.session_state.multi_runs_remaining = len(specs)
     t.start()
 
 
@@ -827,46 +853,31 @@ with tab_exec:
                 )
 
                 timeout_s = float(os.getenv("UQO_CONTAINER_TIMEOUT_S", "600"))
-                run_cfgs: list[RunConfig] = []
-                db_run_ids: list[str | None] = []
+                run_specs: list[EngineRunSpec] = []
 
                 for c in updated:
                     test_type = str(c.get("testType") or TestType.PYTEST.value)
                     target_repo = coerce_path(c.get("targetRepoPath") or "") if c.get("targetRepoPath") else Path(".")
                     argv_extra = [a for a in str(c.get("cliArgs") or "").split() if a.strip()]
-
-                    try:
-                        db_run_uuid = create_run(status=RunStatus.RUNNING, metadata={"test_kind": str(test_type)})
-                        db_run_id = str(db_run_uuid)
-                    except Exception:
-                        db_run_id = None
-
-                    db_run_ids.append(db_run_id)
-                    run_cfgs.append(
-                        RunConfig(
+                    run_specs.append(
+                        EngineRunSpec(
                             test_type=TestType(test_type),
                             target_repo=target_repo,
+                            cli_args=tuple(argv_extra),
                             shared_allure_results_dir=Path(f"artifacts/allure-results/{test_type}"),
                             artifacts_root=Path("artifacts"),
-                            pytest_args=argv_extra if test_type == TestType.PYTEST.value else (),
-                            behavex_args=argv_extra if test_type == TestType.BEHAVEX.value else (),
-                            behave_native_args=argv_extra if test_type == TestType.BEHAVE_NATIVE.value else (),
-                            locust_args=argv_extra if test_type == TestType.LOCUST.value else (),
-                            locust_headless=True,
                             locust_users=int(locust_users),
                             locust_spawn_rate=int(locust_spawn_rate),
                             locust_run_time=str(locust_run_time),
                             locust_only_summary=bool(locust_only_summary),
-                            last_test_type=test_type,
-                            run_id=db_run_id,
                             timeout_s=timeout_s,
                         )
                     )
 
                 st.session_state["last_test_type"] = "multi"
                 st.session_state["is_audit_mode"] = False
-                _append_line(f"Starting {len(run_cfgs)} run(s)…")
-                _start_worker_multi(run_cfgs, db_run_ids=db_run_ids)
+                _append_line(f"Starting {len(run_specs)} run(s)…")
+                _start_worker_multi(run_specs)
 
     with right_run:
         col_out, col_stat = st.columns([2, 1], gap="large")
