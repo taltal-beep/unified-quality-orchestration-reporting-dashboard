@@ -100,30 +100,37 @@ def test_docker_mapping_rewrites_host_paths_for_container(tmp_path: Path) -> Non
     assert f",{ORCHESTRATOR_MOUNT_POINT}/drop_in_hooks/locust_custom/locust_hooks.py" in rewritten_hook_arg
 
 
-def test_local_subprocess_fallback_streams_output_and_writes_log(
+def test_local_subprocess_fallback_streams_stdout_stderr_and_writes_log(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     monkeypatch.setattr("engine.runners._docker_client", lambda: None)
-    events: list[tuple[str, str]] = []
+    log_path = tmp_path / "logs" / "run.log"
+    emitted: list[tuple[str, str]] = []
+    cmd = BuiltCommand(
+        argv=[
+            sys.executable,
+            "-c",
+            "import sys; print('hello fallback'); print('stderr merged', file=sys.stderr)",
+        ],
+        cwd=tmp_path,
+        env={},
+    )
 
     rc, started_at, finished_at = _run_in_ephemeral_container_streaming(
-        run_id="rid-local",
-        cmd=BuiltCommand(
-            argv=[sys.executable, "-c", "print('local fallback ok')"],
-            cwd=tmp_path,
-            env={},
-        ),
+        run_id="local-ok",
+        cmd=cmd,
         cfg_timeout_s=5.0,
         cfg_heartbeat_s=0.0,
-        emit=lambda stream, line: events.append((stream, line)),
-        log_path=tmp_path / "logs" / "run.log",
+        emit=lambda stream, line: emitted.append((stream, line)),
+        log_path=log_path,
     )
 
     assert rc == 0
     assert finished_at >= started_at
-    assert ("stdout", "local fallback ok\n") in events
-    assert any("docker unavailable" in line for stream, line in events if stream == "meta")
-    assert (tmp_path / "logs" / "run.log").read_text(encoding="utf-8") == "local fallback ok\n"
+    assert ("stdout", "hello fallback\n") in emitted
+    assert ("stdout", "stderr merged\n") in emitted
+    assert any("docker unavailable" in line for stream, line in emitted if stream == "meta")
+    assert set(log_path.read_text(encoding="utf-8").splitlines()) == {"hello fallback", "stderr merged"}
 
 
 def test_local_subprocess_fallback_times_out_and_emits_124(
@@ -135,7 +142,11 @@ def test_local_subprocess_fallback_times_out_and_emits_124(
     rc, _started_at, _finished_at = _run_in_ephemeral_container_streaming(
         run_id="rid-timeout",
         cmd=BuiltCommand(
-            argv=[sys.executable, "-c", "import time; time.sleep(10)"],
+            argv=[
+                sys.executable,
+                "-c",
+                "import time; print('started', flush=True); time.sleep(10)",
+            ],
             cwd=tmp_path,
             env={},
         ),
@@ -146,6 +157,7 @@ def test_local_subprocess_fallback_times_out_and_emits_124(
     )
 
     assert rc == 124
+    assert ("stdout", "started\n") in events
     assert any("timeout after 0.2s" in line for stream, line in events if stream == "meta")
 
 
