@@ -124,14 +124,24 @@ Go to `History` → expand the run → click **Open Allure Server report**.
 `uqo run` uses YAML config and returns machine-readable output for automation:
 
 ```bash
-uqo run --config load-test.yaml --ci --json
-uqo run --config load-test.yaml --ci --stream-json
+uqo run --config load-test.yaml --stream-json
+uqo run --config load-test.yaml --ghost --stream-json
+uqo run --config load-test.yaml --no-ghost
 ```
 
-- `--ci`: strict machine output on stdout (no human chatter mixed in)
+- `--ci`: legacy-compatible alias for ghost behavior (forces non-interactive mode)
+- `--ghost`: force ghost mode on
+- `--no-ghost`: force ghost mode off (even in CI)
 - `--json`: print final summary JSON object
 - `--stream-json`: print NDJSON event lines and then final summary JSON (always)
 - `--no-persist`: execute without DB/history persistence
+
+Ghost mode auto-detection and precedence:
+
+- `--no-ghost` wins over every other signal
+- `--ghost` forces on
+- `--ci` forces on (backward compatibility)
+- otherwise CI environment auto-detection enables ghost mode (`github`, `gitlab`, `buildkite`, `circleci`, `jenkins`, `azure_pipelines`, or generic `CI=true`)
 
 Stable process exit codes:
 - `0`: successful run
@@ -145,6 +155,9 @@ Final summary JSON schema (`schema_version=1`) is stable for `uqo run`:
 - `exit_code`, `aggregate_returncode`
 - `started_at`, `finished_at`, `duration_s`
 - `runs` (list of run records), `error` (nullable)
+- `execution_mode` (`headless` or `ghost`)
+- `failure_type` (`test_failure`, `sync_failure`, `infra_failure`, or `null`)
+- `sync` (DB/artifact sync status with per-run attempt/error details)
 
 NDJSON event schema (`--stream-json`):
 - `{"event":"log","stream":"stdout|stderr|meta","line":"...","ts":<float>}`
@@ -322,6 +335,7 @@ Supported inputs:
 
 - `config-path` (required)
 - `ci-mode` (`true` by default)
+- `ghost-mode` (`auto` by default; `true` forces `--ghost`, `false` forces `--no-ghost`)
 - `stream-json` (`false` by default)
 - `persist` (`true` by default)
 - `python-version` (`3.11` by default)
@@ -350,7 +364,7 @@ variables:
 Both wrappers call the same contract:
 
 ```bash
-uqo run --config <path> --ci
+uqo run --config <path> --ci [--ghost|--no-ghost]
 ```
 
 ### Required secrets and variables
@@ -369,4 +383,6 @@ Set these in your CI provider when persistence/artifact upload is enabled:
 - Upload/report link failures: verify MinIO credentials and bucket permissions for CI runner identity.
 
 Release gate for wrappers is documented in [`docs/release_checklist_phase2_ci.md`](docs/release_checklist_phase2_ci.md).
+
+Ghost-mode release gate is documented in [`docs/release_checklist_phase2_ghost_mode.md`](docs/release_checklist_phase2_ghost_mode.md).
 

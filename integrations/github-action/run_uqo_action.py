@@ -20,10 +20,21 @@ def _parse_bool(value: str, *, default: bool) -> bool:
     return default
 
 
-def build_command(*, config_path: str, ci_mode: bool, stream_json: bool, persist: bool) -> list[str]:
+def _parse_ghost_mode(value: str) -> str:
+    normalized = str(value or "auto").strip().lower()
+    if normalized in {"auto", "true", "false"}:
+        return normalized
+    return "auto"
+
+
+def build_command(*, config_path: str, ci_mode: bool, stream_json: bool, persist: bool, ghost_mode: str) -> list[str]:
     cmd = ["uqo", "run", "--config", config_path]
     if ci_mode:
         cmd.append("--ci")
+    if ghost_mode == "true":
+        cmd.append("--ghost")
+    elif ghost_mode == "false":
+        cmd.append("--no-ghost")
     if stream_json:
         cmd.append("--stream-json")
     if not persist:
@@ -75,13 +86,21 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--ci-mode", default="true")
     parser.add_argument("--stream-json", default="false")
     parser.add_argument("--persist", default="true")
+    parser.add_argument("--ghost-mode", default="auto")
     parser.add_argument("--summary-path", default="")
     args = parser.parse_args(argv)
 
     ci_mode = _parse_bool(args.ci_mode, default=True)
     stream_json = _parse_bool(args.stream_json, default=False)
     persist = _parse_bool(args.persist, default=True)
-    cmd = build_command(config_path=args.config_path, ci_mode=ci_mode, stream_json=stream_json, persist=persist)
+    ghost_mode = _parse_ghost_mode(args.ghost_mode)
+    cmd = build_command(
+        config_path=args.config_path,
+        ci_mode=ci_mode,
+        stream_json=stream_json,
+        persist=persist,
+        ghost_mode=ghost_mode,
+    )
 
     proc = subprocess.run(cmd, check=False, capture_output=True, text=True)  # noqa: S603
     if proc.stdout:

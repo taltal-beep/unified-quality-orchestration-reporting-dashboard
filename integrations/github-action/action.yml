@@ -8,6 +8,10 @@ inputs:
     description: Enable strict CI machine-output mode.
     required: false
     default: "true"
+  ghost-mode:
+    description: Ghost mode override (`auto`, `true`, or `false`).
+    required: false
+    default: "auto"
   stream-json:
     description: Emit NDJSON stream before final summary.
     required: false
@@ -55,5 +59,6 @@ runs:
         python "${{ github.action_path }}/run_uqo_action.py" \
           --config-path "${{ inputs.config-path }}" \
           --ci-mode "${{ inputs.ci-mode }}" \
+          --ghost-mode "${{ inputs.ghost-mode }}" \
           --stream-json "${{ inputs.stream-json }}" \
           --persist "${{ inputs.persist }}"

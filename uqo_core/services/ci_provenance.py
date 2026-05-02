@@ -43,4 +43,42 @@ def detect_ci_provenance(env: Mapping[str, str] | None = None) -> CIProvenance |
             ci_commit_sha=source.get("CI_COMMIT_SHA"),
             ci_ref_name=source.get("CI_COMMIT_REF_NAME"),
         )
+    if str(source.get("BUILDKITE", "")).lower() == "true":
+        return CIProvenance(
+            ci_provider="buildkite",
+            ci_pipeline_id=source.get("BUILDKITE_BUILD_ID"),
+            ci_job_id=source.get("BUILDKITE_JOB_ID"),
+            ci_commit_sha=source.get("BUILDKITE_COMMIT"),
+            ci_ref_name=source.get("BUILDKITE_BRANCH"),
+        )
+    if str(source.get("CIRCLECI", "")).lower() == "true":
+        return CIProvenance(
+            ci_provider="circleci",
+            ci_pipeline_id=source.get("CIRCLE_WORKFLOW_ID"),
+            ci_job_id=source.get("CIRCLE_BUILD_NUM"),
+            ci_commit_sha=source.get("CIRCLE_SHA1"),
+            ci_ref_name=source.get("CIRCLE_BRANCH"),
+        )
+    if source.get("JENKINS_URL"):
+        return CIProvenance(
+            ci_provider="jenkins",
+            ci_pipeline_id=source.get("BUILD_TAG") or source.get("BUILD_ID"),
+            ci_job_id=source.get("BUILD_NUMBER"),
+            ci_commit_sha=source.get("GIT_COMMIT"),
+            ci_ref_name=source.get("GIT_BRANCH") or source.get("BRANCH_NAME"),
+        )
+    if source.get("TF_BUILD") == "True" or source.get("TF_BUILD") == "true":
+        return CIProvenance(
+            ci_provider="azure_pipelines",
+            ci_pipeline_id=source.get("BUILD_BUILDID"),
+            ci_job_id=source.get("SYSTEM_JOBID"),
+            ci_commit_sha=source.get("BUILD_SOURCEVERSION"),
+            ci_ref_name=source.get("BUILD_SOURCEBRANCHNAME"),
+        )
+    if str(source.get("CI", "")).lower() == "true":
+        return CIProvenance(ci_provider="generic")
     return None
+
+
+def detect_ci_environment(env: Mapping[str, str] | None = None) -> bool:
+    return detect_ci_provenance(env) is not None

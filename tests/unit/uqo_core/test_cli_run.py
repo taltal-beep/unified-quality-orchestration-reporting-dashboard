@@ -12,6 +12,7 @@ from uqo_core.services.ci_provenance import CIProvenance
 from uqo_core.services.headless_engine import (
     ConfigValidationError,
     EngineEvent,
+    InfrastructureRuntimeError,
     EngineRunRecord,
     EngineRunSpec,
     EngineSummary,
@@ -121,6 +122,99 @@ def test_cli_ci_sets_request_trigger_source_and_provenance(monkeypatch, capsys, 
     assert payload["exit_code"] == 0
     assert captured_requests[0].trigger_source == "ci"
     assert captured_requests[0].provenance == CIProvenance(ci_provider="github", ci_pipeline_id="123")
+
+
+def test_cli_auto_detects_ci_env_without_ci_flag(monkeypatch, capsys, tmp_path: Path) -> None:  # noqa: ANN001
+    from uqo_core import cli
+
+    target = tmp_path / "repo"
+    target.mkdir()
+    monkeypatch.setattr(
+        cli,
+        "load_run_specs_from_yaml",
+        lambda _path: (EngineRunSpec(test_type=TestType.PYTEST, target_repo=target),),
+    )
+    monkeypatch.setattr(cli.os, "environ", {"GITHUB_ACTIONS": "true", "GITHUB_RUN_ID": "321"})
+
+    captured_requests: list = []
+
+    class FakeEngine:
+        def stream(self, request):  # noqa: ANN001
+            captured_requests.append(request)
+            if False:
+                yield
+            return _summary(exit_code=0)
+
+    monkeypatch.setattr(cli, "HeadlessEngineService", FakeEngine)
+    code = cli.main(["run", "--config", "ok.yaml"])
+    payload = json.loads(capsys.readouterr().out.strip())
+
+    assert code == 0
+    assert payload["trigger_source"] == "ci"
+    assert captured_requests[0].ci_mode is True
+    assert captured_requests[0].provenance == CIProvenance(ci_provider="github", ci_pipeline_id="321")
+
+
+def test_cli_no_ghost_overrides_ci_env(monkeypatch, capsys, tmp_path: Path) -> None:  # noqa: ANN001
+    from uqo_core import cli
+
+    target = tmp_path / "repo"
+    target.mkdir()
+    monkeypatch.setattr(
+        cli,
+        "load_run_specs_from_yaml",
+        lambda _path: (EngineRunSpec(test_type=TestType.PYTEST, target_repo=target),),
+    )
+    monkeypatch.setattr(cli.os, "environ", {"GITHUB_ACTIONS": "true"})
+
+    captured_requests: list = []
+
+    class FakeEngine:
+        def stream(self, request):  # noqa: ANN001
+            captured_requests.append(request)
+            if False:
+                yield
+            return _summary(exit_code=0)
+
+    monkeypatch.setattr(cli, "HeadlessEngineService", FakeEngine)
+    code = cli.main(["run", "--config", "ok.yaml", "--no-ghost"])
+    _ = json.loads(capsys.readouterr().out.strip())
+
+    assert code == 0
+    assert captured_requests[0].ci_mode is False
+    assert captured_requests[0].trigger_source == "cli"
+    assert captured_requests[0].provenance is None
+
+
+def test_cli_ghost_forces_ci_mode(monkeypatch, capsys, tmp_path: Path) -> None:  # noqa: ANN001
+    from uqo_core import cli
+
+    target = tmp_path / "repo"
+    target.mkdir()
+    monkeypatch.setattr(
+        cli,
+        "load_run_specs_from_yaml",
+        lambda _path: (EngineRunSpec(test_type=TestType.PYTEST, target_repo=target),),
+    )
+    monkeypatch.setattr(cli.os, "environ", {})
+
+    captured_requests: list = []
+
+    class FakeEngine:
+        def stream(self, request):  # noqa: ANN001
+            captured_requests.append(request)
+            if False:
+                yield
+            return _summary(exit_code=0)
+
+    monkeypatch.setattr(cli, "HeadlessEngineService", FakeEngine)
+    code = cli.main(["run", "--config", "ok.yaml", "--ghost"])
+    payload = json.loads(capsys.readouterr().out.strip())
+
+    assert code == 0
+    assert payload["trigger_source"] == "ci"
+    assert captured_requests[0].ci_mode is True
+    assert captured_requests[0].trigger_source == "ci"
 
 
 def test_cli_stream_json_outputs_ndjson(monkeypatch, capsys, tmp_path: Path) -> None:  # noqa: ANN001
@@ -275,3 +369,38 @@ def test_cli_unhandled_exception_maps_to_exit_4(monkeypatch, capsys, tmp_path: P
 
     assert code == 4
     assert payload["exit_code"] == 4
+
+
+def test_cli_headless_engine_error_preserves_exit_code(monkeypatch, capsys, tmp_path: Path) -> None:  # noqa: ANN001
+    from uqo_core import cli
+
+    target = tmp_path / "repo"
+    target.mkdir()
+    monkeypatch.setattr(
+        cli,
+        "load_run_specs_from_yaml",
+        lambda _path: (EngineRunSpec(test_type=TestType.PYTEST, target_repo=target),),
+    )
+
+    class FakeEngine:
+        def stream(self, request):  # noqa: ANN001
+            del request
+            raise InfrastructureRuntimeError("infra down")
+            yield  # pragma: no cover
+
+    monkeypatch.setattr(cli, "HeadlessEngineService", FakeEngine)
+    code = cli.main(["run", "--config", "ok.yaml", "--ci"])
+    payload = json.loads(capsys.readouterr().out.strip())
+
+    assert code == 3
+    assert payload["exit_code"] == 3
+
+
+def test_cli_rejects_conflicting_ghost_flags(capsys) -> None:  # noqa: ANN001
+    from uqo_core import cli
+
+    with pytest.raises(SystemExit) as exc:
+        cli.main(["run", "--config", "ok.yaml", "--ghost", "--no-ghost"])
+    assert exc.value.code == 2
+    err = capsys.readouterr().err
+    assert "--no-ghost" in err

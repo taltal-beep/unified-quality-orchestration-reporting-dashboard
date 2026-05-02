@@ -5,6 +5,7 @@ import uuid
 from pathlib import Path
 
 from uqo_core.command_builders import BuiltCommand, TestType
+from uqo_core.run_history import RunSyncStatus, SyncOperationStatus
 from uqo_core.runners import LogEvent, RunResult
 from uqo_core.services.ci_provenance import CIProvenance
 from uqo_core.services.headless_engine import (
@@ -55,6 +56,11 @@ def test_engine_persists_metadata_context(monkeypatch, tmp_path: Path) -> None: 
     def fake_record_completed_run(*, rr, artifacts_root, test_kind, metadata_context, audit_health_pct=None, db_path=None):  # noqa: ANN001
         del rr, artifacts_root, test_kind, audit_health_pct, db_path
         captured_complete_md.append(dict(metadata_context or {}))
+        return RunSyncStatus(
+            run_id="rid-1",
+            db_finalize=SyncOperationStatus(status="success", attempts=1),
+            artifact_upload=SyncOperationStatus(status="success", attempts=1),
+        )
 
     monkeypatch.setattr("uqo_core.services.headless_engine.create_run", fake_create_run)
     monkeypatch.setattr("uqo_core.services.headless_engine.record_completed_run", fake_record_completed_run)
@@ -77,9 +83,12 @@ def test_engine_persists_metadata_context(monkeypatch, tmp_path: Path) -> None: 
     assert summary.exit_code == int(EngineExitCode.SUCCESS)
     assert captured_start_md[0]["trigger_source"] == "ci"
     assert captured_start_md[0]["ci_mode"] is True
+    assert captured_start_md[0]["execution_mode"] == "ghost"
     assert captured_complete_md[0]["schema_version"] == "1"
     assert captured_start_md[0]["ci_provider"] == "github"
     assert captured_complete_md[0]["ci_pipeline_id"] == "1001"
+    assert summary.sync is not None
+    assert summary.sync["status"] == "success"
 
 
 def test_engine_maps_runtime_failure_to_infra_exit_code(tmp_path: Path) -> None:
@@ -151,3 +160,30 @@ def test_engine_maps_empty_results_to_internal_error(tmp_path: Path) -> None:
 
     assert summary.exit_code == int(EngineExitCode.INTERNAL_ERROR)
     assert summary.aggregate_returncode == 1
+
+
+def test_engine_sync_failure_maps_successful_tests_to_infra_exit(tmp_path: Path, monkeypatch) -> None:  # noqa: ANN001
+    def fake_sync_fail(*, rr, artifacts_root, test_kind, metadata_context, audit_health_pct=None, db_path=None):  # noqa: ANN001
+        del rr, artifacts_root, test_kind, metadata_context, audit_health_pct, db_path
+        return RunSyncStatus(
+            run_id="rid-sync",
+            db_finalize=SyncOperationStatus(status="success", attempts=1),
+            artifact_upload=SyncOperationStatus(status="failed", attempts=3, error="minio timeout"),
+        )
+
+    monkeypatch.setattr("uqo_core.services.headless_engine.record_completed_run", fake_sync_fail)
+    target = tmp_path / "repo"
+    target.mkdir()
+    request = EngineRequest(
+        runs=(EngineRunSpec(test_type=TestType.PYTEST, target_repo=target),),
+        trigger_source="ci",
+        ci_mode=True,
+        persist=True,
+    )
+    engine = HeadlessEngineService(run_streaming_fn=_fake_streaming_success)
+    summary = _drain_summary(engine.stream(request))
+
+    assert summary.exit_code == int(EngineExitCode.INFRA_FAILURE)
+    assert summary.failure_type == "sync_failure"
+    assert summary.sync is not None
+    assert summary.sync["status"] == "partial_failure"

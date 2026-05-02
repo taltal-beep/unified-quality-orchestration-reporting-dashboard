@@ -66,7 +66,14 @@ Runtime output directories such as `artifacts/`, `logs/`, and `static/` are gene
 
 ## Headless CLI output + exit-code contract
 
-`uqo run --config <path> --ci` guarantees machine-readable stdout:
+`uqo run --config <path>` resolves execution mode with this precedence:
+
+- `--no-ghost` disables ghost mode
+- `--ghost` enables ghost mode
+- `--ci` enables ghost mode (legacy-compatible)
+- otherwise CI env auto-detection enables ghost mode when recognized
+
+Ghost mode guarantees machine-readable stdout:
 
 - With `--json`: one final summary JSON object.
 - With `--stream-json`: NDJSON event objects followed by final summary JSON (always).
@@ -83,7 +90,9 @@ The engine enriches metadata with provenance fields:
 
 - `trigger_source` (`ui`, `cli`, or `ci`)
 - `ci_mode` (boolean)
+- `execution_mode` (`headless` or `ghost`)
 - `schema_version` (current engine schema marker)
+- provider metadata when available (`ci_provider`, `ci_pipeline_id`, `ci_job_id`, `ci_commit_sha`, `ci_ref_name`)
 
 Stable `schema_version=1` summary payload keys:
 
@@ -91,6 +100,7 @@ Stable `schema_version=1` summary payload keys:
 - `exit_code`, `aggregate_returncode`
 - `started_at`, `finished_at`, `duration_s`
 - `runs`, `error`
+- `execution_mode`, `failure_type`, `sync`
 
 Contract scope note:
 

@@ -10,7 +10,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 ORCHESTRATOR_ROOT = Path(__file__).resolve().parents[1]
 # When executed as a script (`python uqo_core/run_history.py`), ensure imports like `uqo_core.*` work.
@@ -189,6 +189,59 @@ class RunSessionView:
     links_under_static: dict[str, str]
 
 
+@dataclass(frozen=True)
+class SyncOperationStatus:
+    status: str
+    attempts: int
+    error: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "status": self.status,
+            "attempts": int(self.attempts),
+            "error": self.error,
+        }
+
+
+@dataclass(frozen=True)
+class RunSyncStatus:
+    run_id: str | None
+    db_finalize: SyncOperationStatus
+    artifact_upload: SyncOperationStatus
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "run_id": self.run_id,
+            "db_finalize": self.db_finalize.to_dict(),
+            "artifact_upload": self.artifact_upload.to_dict(),
+        }
+
+
+def _is_transient_sync_error(exc: Exception) -> bool:
+    return isinstance(exc, (ConnectionError, TimeoutError, OSError))
+
+
+def _run_with_retry(
+    fn: Callable[[], None],
+    *,
+    max_attempts: int = 3,
+    base_backoff_s: float = 0.1,
+) -> tuple[int, Exception | None]:
+    attempts = 0
+    last_error: Exception | None = None
+    while attempts < max_attempts:
+        attempts += 1
+        try:
+            fn()
+            return attempts, None
+        except Exception as exc:  # pragma: no cover - exercised via callers
+            last_error = exc
+            if attempts >= max_attempts or not _is_transient_sync_error(exc):
+                break
+            time.sleep(base_backoff_s * float(2 ** (attempts - 1)))
+    return attempts, last_error
+
+
 def _s3_session_links(*, run_id: str, snap_prefix: str) -> dict[str, str]:
     """Build absolute MinIO URLs for reports under ``runs/<id>/artifacts/``."""
     links: dict[str, str] = {}
@@ -274,12 +327,17 @@ def record_completed_run(
     audit_health_pct: float | None = None,
     metadata_context: dict[str, Any] | None = None,
     db_path: Path | None = None,
-) -> None:
+) -> RunSyncStatus:
     """Persist metadata and snapshot HTML after a run completes."""
+    del db_path
     env = rr.command.env
     run_id = env.get("UQO_AUDIT_RUN_ID") or env.get("UQO_RUN_ID")
     if not run_id:
-        return
+        return RunSyncStatus(
+            run_id=None,
+            db_finalize=SyncOperationStatus(status="failed", attempts=0, error="missing_run_id"),
+            artifact_upload=SyncOperationStatus(status="failed", attempts=0, error="missing_run_id"),
+        )
 
     ar = artifacts_root.expanduser().resolve()
     results_dir = ar / "allure-results"
@@ -317,14 +375,32 @@ def record_completed_run(
             }
         )
 
-    snap_prefix = _snapshot_reports(run_id=run_id, artifacts_root=ar)
-    # Also upload raw Allure results into MinIO under a layout compatible with
-    # Allure Docker Service "multiple projects" mode:
-    #   s3://<bucket>/projects/<run_id>/results/<allure result files>
-    try:
-        _upload_allure_results_to_s3(run_id=str(run_id), artifacts_root=ar, test_kind=str(test_kind))
-    except Exception:
-        pass
+    snapshot_attempts = 0
+    upload_attempts = 0
+    artifact_error: str | None = None
+    snap_prefix: str | None = None
+    upload_count = 0
+    snapshot_holder: dict[str, str | None] = {"prefix": None}
+    upload_holder: dict[str, int] = {"count": 0}
+
+    def _snapshot_op() -> None:
+        snapshot_holder["prefix"] = _snapshot_reports(run_id=run_id, artifacts_root=ar)
+
+    def _upload_op() -> None:
+        upload_holder["count"] = _upload_allure_results_to_s3(
+            run_id=str(run_id),
+            artifacts_root=ar,
+            test_kind=str(test_kind),
+        )
+
+    snapshot_attempts, snapshot_error = _run_with_retry(_snapshot_op)
+    upload_attempts, upload_error = _run_with_retry(_upload_op)
+    snap_prefix = snapshot_holder["prefix"]
+    upload_count = int(upload_holder["count"])
+    if snapshot_error is not None:
+        artifact_error = str(snapshot_error)
+    elif upload_error is not None:
+        artifact_error = str(upload_error)
 
     target_repo = str(rr.command.cwd)
     payload: dict[str, Any] = {
@@ -353,10 +429,28 @@ def record_completed_run(
         payload.setdefault("error", "timeout")
         payload.setdefault("error_message", "Container exceeded timeout and was force-killed.")
     status = RunStatus.COMPLETED if int(rr.returncode) == 0 else RunStatus.FAILED
-    update_run_status(run_id, status=status, metadata=payload)
+    db_attempts, db_error = _run_with_retry(lambda: update_run_status(run_id, status=status, metadata=payload))
+
+    db_status = "success" if db_error is None else "failed"
+    if artifact_error is not None:
+        artifact_status = "failed"
+    elif snap_prefix is None and upload_count <= 0:
+        artifact_status = "skipped"
+    else:
+        artifact_status = "success"
+
+    return RunSyncStatus(
+        run_id=str(run_id),
+        db_finalize=SyncOperationStatus(status=db_status, attempts=db_attempts, error=str(db_error) if db_error else None),
+        artifact_upload=SyncOperationStatus(
+            status=artifact_status,
+            attempts=max(1, snapshot_attempts + upload_attempts),
+            error=artifact_error,
+        ),
+    )
 
 
-def _upload_allure_results_to_s3(*, run_id: str, artifacts_root: Path, test_kind: str) -> None:
+def _upload_allure_results_to_s3(*, run_id: str, artifacts_root: Path, test_kind: str) -> int:
     """
     Upload raw Allure results into MinIO for Allure Docker Service.
 
@@ -367,12 +461,12 @@ def _upload_allure_results_to_s3(*, run_id: str, artifacts_root: Path, test_kind
         storage = get_artifact_s3()
     except Exception as exc:
         logger.warning("Raw Allure results upload skipped (MinIO not configured): %s", exc)
-        return
+        return 0
 
     ar = artifacts_root.expanduser().resolve()
     src_root = (ar / "allure-results").resolve()
     if not src_root.is_dir():
-        return
+        return 0
 
     # Select which framework folders to include.
     include_dirs: list[Path] = []
@@ -387,7 +481,7 @@ def _upload_allure_results_to_s3(*, run_id: str, artifacts_root: Path, test_kind
             include_dirs.append(p)
 
     if not include_dirs:
-        return
+        return 0
 
     prefix = f"projects/{run_id}/results"
 
@@ -415,6 +509,7 @@ def _upload_allure_results_to_s3(*, run_id: str, artifacts_root: Path, test_kind
 
     if uploaded:
         logger.info("Uploaded %s Allure result file(s) to s3://%s/%s", uploaded, storage.bucket_name, prefix)
+    return int(uploaded)
 
 
 def init_schema(db_path: Path | None = None) -> None:

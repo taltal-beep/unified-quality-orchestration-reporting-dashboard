@@ -8,12 +8,24 @@ Phase 2 introduces pre-packaged CI wrappers that keep orchestration logic centra
 - CI wrappers are thin adapters that only prepare inputs and consume stable machine outputs.
 - CI provenance is normalized in service/CLI boundaries and persisted through existing repository metadata fields, with no CI-provider logic in repository adapters.
 
+## Ghost mode (CI execution policy)
+
+CI wrappers and direct `uqo run` invocations resolve ghost mode using:
+
+1. `--no-ghost`
+2. `--ghost`
+3. `--ci`
+4. provider environment auto-detection
+
+When ghost mode is active, stdout remains machine-readable (summary JSON, or NDJSON + summary with `--stream-json`), persistence defaults to on unless `--no-persist` is passed, and final summary includes sync status details.
+
 ## Canonical CI provenance fields
 
-When running with `--ci`, persisted metadata may include:
+When running in ghost mode, persisted metadata may include:
 
 - `trigger_source=ci`
-- `ci_provider` (`github` or `gitlab`)
+- `execution_mode=ghost`
+- `ci_provider` (`github`, `gitlab`, `buildkite`, `circleci`, `jenkins`, `azure_pipelines`, `generic`)
 - `ci_pipeline_id`
 - `ci_job_id`
 - `ci_commit_sha`

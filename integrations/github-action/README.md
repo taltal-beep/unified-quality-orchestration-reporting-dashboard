@@ -2,12 +2,13 @@
 
 This composite action is a thin wrapper around the stable CLI contract:
 
-`uqo run --config <path> --ci`
+`uqo run --config <path> --ci [--ghost|--no-ghost]`
 
 ## Inputs
 
 - `config-path` (required): path to UQO YAML config
 - `ci-mode` (optional, default `true`)
+- `ghost-mode` (optional, default `auto`; `true` -> `--ghost`, `false` -> `--no-ghost`)
 - `stream-json` (optional, default `false`)
 - `persist` (optional, default `true`)
 - `python-version` (optional, default `3.11`)

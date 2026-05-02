@@ -14,8 +14,10 @@ from uqo_core.services import (
     SCHEMA_VERSION,
     HeadlessEngineService,
     load_run_specs_from_yaml,
+    resolve_ghost_mode,
 )
 from uqo_core.services.ci_provenance import detect_ci_provenance
+from uqo_core.services.headless_engine import HeadlessEngineError
 
 SUMMARY_SCHEMA_KEYS: tuple[str, ...] = (
     "schema_version",
@@ -40,6 +42,9 @@ def _build_parser() -> argparse.ArgumentParser:
     run_parser = subparsers.add_parser("run", help="Execute one or more runs from a YAML config")
     run_parser.add_argument("--config", required=True, help="Path to YAML config file")
     run_parser.add_argument("--ci", action="store_true", help="CI mode: strict machine-readable stdout")
+    ghost_group = run_parser.add_mutually_exclusive_group()
+    ghost_group.add_argument("--ghost", action="store_true", help="Force ghost mode (non-interactive CI behavior)")
+    ghost_group.add_argument("--no-ghost", action="store_true", help="Disable ghost mode even when CI env is detected")
     run_parser.add_argument("--json", action="store_true", help="Print final summary JSON to stdout")
     run_parser.add_argument("--stream-json", action="store_true", help="Emit NDJSON event objects to stdout")
     run_parser.add_argument("--no-persist", action="store_true", help="Run without DB/history persistence")
@@ -89,12 +94,21 @@ def _run_command(args: argparse.Namespace) -> int:
         )
         return int(EngineExitCode.INVALID_INPUT)
 
+    ghost = resolve_ghost_mode(
+        ghost_flag=bool(args.ghost),
+        no_ghost_flag=bool(args.no_ghost),
+        ci_flag=bool(args.ci),
+        env=os.environ,
+    )
+    ghost_enabled = bool(ghost.enabled)
+    provenance = detect_ci_provenance(os.environ) if ghost_enabled else None
+
     request = EngineRequest(
         runs=specs,
-        trigger_source="ci" if bool(args.ci) else "cli",
-        ci_mode=bool(args.ci),
+        trigger_source="ci" if ghost_enabled else "cli",
+        ci_mode=ghost_enabled,
         persist=not bool(args.no_persist),
-        provenance=detect_ci_provenance(os.environ) if bool(args.ci) else None,
+        provenance=provenance,
     )
     engine = HeadlessEngineService()
     stream_json = bool(args.stream_json)
@@ -107,7 +121,7 @@ def _run_command(args: argparse.Namespace) -> int:
                 event = next(gen)
                 if stream_json:
                     _write_json_stdout(_event_to_ndjson(event.payload))
-                elif not args.ci and getattr(event.payload, "line", None):
+                elif not ghost_enabled and getattr(event.payload, "line", None):
                     sys.stderr.write(str(event.payload.line))
             except StopIteration as stop:
                 summary = stop.value
@@ -127,6 +141,16 @@ def _run_command(args: argparse.Namespace) -> int:
             }
         )
         return int(EngineExitCode.INVALID_INPUT)
+    except HeadlessEngineError as exc:
+        payload = {
+            "schema_version": SCHEMA_VERSION,
+            "error": str(exc),
+            "exit_code": int(exc.exit_code),
+        }
+        if getattr(exc, "details", None):
+            payload["details"] = exc.details
+        _write_json_stdout(payload)
+        return int(exc.exit_code)
     except Exception as exc:  # pragma: no cover - defensive fallback
         _write_json_stdout(
             {

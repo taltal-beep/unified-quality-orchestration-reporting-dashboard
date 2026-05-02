@@ -22,8 +22,9 @@ def test_build_command_includes_expected_flags() -> None:
         ci_mode=True,
         stream_json=True,
         persist=False,
+        ghost_mode="true",
     )
-    assert cmd == ["uqo", "run", "--config", "config.yml", "--ci", "--stream-json", "--no-persist"]
+    assert cmd == ["uqo", "run", "--config", "config.yml", "--ci", "--ghost", "--stream-json", "--no-persist"]
 
 
 def test_extract_summary_uses_last_summary_json_line() -> None:
@@ -52,7 +53,20 @@ def test_main_writes_outputs_and_summary_file(tmp_path: Path, monkeypatch) -> No
     monkeypatch.setenv("GITHUB_OUTPUT", str(output_file))
     monkeypatch.setenv("RUNNER_TEMP", str(tmp_path))
 
-    code = module.main(["--config-path", "config.yml", "--ci-mode", "true", "--stream-json", "false", "--persist", "true"])
+    code = module.main(
+        [
+            "--config-path",
+            "config.yml",
+            "--ci-mode",
+            "true",
+            "--ghost-mode",
+            "auto",
+            "--stream-json",
+            "false",
+            "--persist",
+            "true",
+        ]
+    )
     assert code == 0
 
     lines = output_file.read_text(encoding="utf-8").splitlines()
