@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from uqo_api.routes.analytics import router as analytics_router
+from uqo_api.routes.dashboard import router as dashboard_router
 from uqo_api.routes.events import router as events_router
 from uqo_api.routes.health import router as health_router
 from uqo_api.routes.history import router as history_router
@@ -31,6 +32,7 @@ def create_app() -> FastAPI:
     app.include_router(events_router)
     app.include_router(history_router)
     app.include_router(analytics_router)
+    app.include_router(dashboard_router)
     app.include_router(health_router)
 
     @app.middleware("http")

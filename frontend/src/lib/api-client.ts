@@ -91,6 +91,67 @@ export interface RunDetailResponse {
   };
 }
 
+export interface DashboardTrendIndicator {
+  direction: "up" | "down" | "flat" | "unknown";
+  delta_abs: number | null;
+  delta_pct: number | null;
+}
+
+export interface DashboardOverviewResponse {
+  headline_kpis: {
+    latest_run_id: string | null;
+    latest_status: string | null;
+    health_pct: number | null;
+    pass_count: number | null;
+    fail_count: number | null;
+    duration_ms: number | null;
+  };
+  trend_indicators: {
+    health: DashboardTrendIndicator;
+    failed_count: DashboardTrendIndicator;
+    duration: DashboardTrendIndicator;
+  };
+  reliability_rollup: {
+    status_summary: {
+      regressions: number;
+      improvements: number;
+      unchanged: number;
+      unknown: number;
+    };
+    top_highlights: string[];
+  };
+  performance_rollup: {
+    status_summary: {
+      regressions: number;
+      improvements: number;
+      unchanged: number;
+      unknown: number;
+    };
+    top_highlights: string[];
+  };
+  report_links: {
+    allure: { url: string | null; state: "available" | "missing" | "unknown" };
+    locust: { url: string | null; state: "available" | "missing" | "unknown" };
+    behave: { url: string | null; state: "available" | "missing" | "unknown" };
+  };
+  recent_runs: Array<{
+    run_id: string;
+    created_at: number;
+    status: string | null;
+    returncode: number;
+    health_pct: number | null;
+    duration_ms: number | null;
+    run_detail_url: string;
+    compare_url: string | null;
+  }>;
+  data_freshness: {
+    generated_at: number;
+    source_window_size: number;
+    degraded: boolean;
+    notes: string[];
+  };
+}
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
@@ -134,5 +195,13 @@ export const apiClient = {
       baseline_run_id: baselineRunId
     });
     return api<DeltaComparisonResponse>(`/api/v1/analytics/delta?${params.toString()}`);
+  },
+  getDashboardOverview(recentLimit = 5): Promise<DashboardOverviewResponse> {
+    return api<DashboardOverviewResponse>(`/api/v1/dashboard/overview?recent_limit=${recentLimit}`);
+  },
+  getDashboardRecentRuns(limit = 10): Promise<{ items: DashboardOverviewResponse["recent_runs"]; generated_at: number }> {
+    return api<{ items: DashboardOverviewResponse["recent_runs"]; generated_at: number }>(
+      `/api/v1/dashboard/runs/recent?limit=${limit}`
+    );
   }
 };

@@ -3,6 +3,18 @@
 from .audit_service import AuditService
 from .ci_provenance import CIProvenance, detect_ci_environment, detect_ci_provenance
 from .config_loader import load_run_specs_from_yaml
+from .dashboard_service import (
+    DashboardDataFreshness,
+    DashboardHeadlineKpis,
+    DashboardOverview,
+    DashboardRecentRun,
+    DashboardReportLink,
+    DashboardReportLinks,
+    DashboardRollup,
+    DashboardRollupSummary,
+    DashboardService,
+    DashboardTrendIndicator,
+)
 from .delta_models import DeltaComparisonResult, DeltaStatusSummary, MetricDelta
 from .delta_service import (
     DeltaComparisonError,
@@ -32,6 +44,16 @@ __all__ = [
     "AuditService",
     "CIProvenance",
     "ConfigValidationError",
+    "DashboardDataFreshness",
+    "DashboardHeadlineKpis",
+    "DashboardOverview",
+    "DashboardRecentRun",
+    "DashboardReportLink",
+    "DashboardReportLinks",
+    "DashboardRollup",
+    "DashboardRollupSummary",
+    "DashboardService",
+    "DashboardTrendIndicator",
     "DeltaComparisonError",
     "DeltaComparisonResult",
     "DeltaComparisonService",

@@ -178,6 +178,77 @@ class DeltaComparisonResponse(BaseModel):
     highlights: list[str] = Field(default_factory=list)
 
 
+class DashboardHeadlineKpis(BaseModel):
+    latest_run_id: str | None = None
+    latest_status: str | None = None
+    health_pct: float | None = None
+    pass_count: int | None = None
+    fail_count: int | None = None
+    duration_ms: float | None = None
+
+
+class DashboardTrendIndicator(BaseModel):
+    direction: Literal["up", "down", "flat", "unknown"]
+    delta_abs: float | None = None
+    delta_pct: float | None = None
+
+
+class DashboardRollupSummaryResponse(BaseModel):
+    regressions: int
+    improvements: int
+    unchanged: int
+    unknown: int
+
+
+class DashboardRollupResponse(BaseModel):
+    status_summary: DashboardRollupSummaryResponse
+    top_highlights: list[str] = Field(default_factory=list)
+
+
+class DashboardReportLinkResponse(BaseModel):
+    url: str | None = None
+    state: Literal["available", "missing", "unknown"]
+
+
+class DashboardReportLinksResponse(BaseModel):
+    allure: DashboardReportLinkResponse
+    locust: DashboardReportLinkResponse
+    behave: DashboardReportLinkResponse
+
+
+class DashboardRecentRunItem(BaseModel):
+    run_id: str
+    created_at: float
+    status: str | None = None
+    returncode: int
+    health_pct: float | None = None
+    duration_ms: float | None = None
+    run_detail_url: str
+    compare_url: str | None = None
+
+
+class DashboardDataFreshnessResponse(BaseModel):
+    generated_at: float
+    source_window_size: int
+    degraded: bool
+    notes: list[str] = Field(default_factory=list)
+
+
+class DashboardOverviewResponse(BaseModel):
+    headline_kpis: DashboardHeadlineKpis
+    trend_indicators: dict[Literal["health", "failed_count", "duration"], DashboardTrendIndicator]
+    reliability_rollup: DashboardRollupResponse
+    performance_rollup: DashboardRollupResponse
+    report_links: DashboardReportLinksResponse
+    recent_runs: list[DashboardRecentRunItem] = Field(default_factory=list)
+    data_freshness: DashboardDataFreshnessResponse
+
+
+class DashboardRecentRunsResponse(BaseModel):
+    items: list[DashboardRecentRunItem] = Field(default_factory=list)
+    generated_at: float
+
+
 class HealthLiveResponse(BaseModel):
     status: Literal["ok"]
 

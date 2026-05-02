@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { AppShell } from "../app/AppShell";
 import { ComparePage } from "../features/compare/ComparePage";
+import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { HistoryPage } from "../features/history/HistoryPage";
 import { RunDetailPage } from "../features/run-detail/RunDetailPage";
 
@@ -14,6 +15,67 @@ describe("happy path", () => {
       "fetch",
       vi.fn((input: RequestInfo | URL) => {
         const url = String(input);
+        if (url.includes("/api/v1/dashboard/overview")) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              headline_kpis: {
+                latest_run_id: "run-1",
+                latest_status: "COMPLETED",
+                health_pct: 100,
+                pass_count: 98,
+                fail_count: 2,
+                duration_ms: 1000
+              },
+              trend_indicators: {
+                health: { direction: "up", delta_abs: 1, delta_pct: 1 },
+                failed_count: { direction: "down", delta_abs: -1, delta_pct: -33.3 },
+                duration: { direction: "down", delta_abs: -100, delta_pct: -9.1 }
+              },
+              reliability_rollup: {
+                status_summary: { regressions: 0, improvements: 4, unchanged: 2, unknown: 0 },
+                top_highlights: ["Failed tests improved by 3 tests."]
+              },
+              performance_rollup: {
+                status_summary: { regressions: 0, improvements: 3, unchanged: 0, unknown: 0 },
+                top_highlights: ["Wall duration improved by 200.00 ms."]
+              },
+              report_links: {
+                allure: { url: "http://allure/report", state: "available" },
+                locust: { url: "history/run-1/locust_report.html", state: "available" },
+                behave: { url: "history/run-1/behave/index.html", state: "available" }
+              },
+              recent_runs: [
+                {
+                  run_id: "run-1",
+                  created_at: 1,
+                  returncode: 0,
+                  status: "COMPLETED",
+                  health_pct: 100,
+                  duration_ms: 1000,
+                  run_detail_url: "/runs/run-1",
+                  compare_url: "/compare?current_run_id=run-1&baseline_run_id=run-2"
+                },
+                {
+                  run_id: "run-2",
+                  created_at: 0.5,
+                  returncode: 1,
+                  status: "FAILED",
+                  health_pct: 92,
+                  duration_ms: 1200,
+                  run_detail_url: "/runs/run-2",
+                  compare_url: null
+                }
+              ],
+              data_freshness: {
+                generated_at: 1,
+                source_window_size: 2,
+                degraded: false,
+                notes: []
+              }
+            })
+          });
+        }
         if (url.endsWith("/api/v1/runs")) {
           return Promise.resolve({
             ok: true,
@@ -110,6 +172,7 @@ describe("happy path", () => {
           path: "/",
           element: <AppShell />,
           children: [
+            { index: true, element: <DashboardPage /> },
             { path: "/history", element: <HistoryPage /> },
             { path: "/compare", element: <ComparePage /> },
             { path: "/runs/:runId", element: <RunDetailPage /> }
@@ -117,7 +180,7 @@ describe("happy path", () => {
         }
       ],
       {
-        initialEntries: ["/history"]
+        initialEntries: ["/"]
       }
     );
 
@@ -127,6 +190,8 @@ describe("happy path", () => {
       </QueryClientProvider>
     );
 
+    await waitFor(() => expect(screen.getByText("Dashboard Overview")).toBeInTheDocument());
+    await router.navigate("/history");
     await waitFor(() => expect(screen.getByText("run-1")).toBeInTheDocument());
     await router.navigate("/runs/run-1");
     await waitFor(() => expect(screen.getByText("Run ID: run-1")).toBeInTheDocument());

@@ -431,14 +431,35 @@ Runner image release gate is documented in [`docs/release_checklist_phase2_runne
 - `GET /api/v1/runs`: list persisted run sessions
 - `GET /api/v1/runs/{run_id}`: run details
 - `GET /api/v1/runs/{run_id}/reports`: report links + artifact metadata
+- `GET /api/v1/dashboard/overview`: unified dashboard payload (headline KPIs, trend indicators, reliability/performance rollups, report links, freshness)
+- `GET /api/v1/dashboard/runs/recent`: compact recent run list for dashboard refresh paths
 - `GET /api/v1/analytics/delta?current_run_id=<id>&baseline_run_id=<id>`: core-owned run delta comparison
 - `GET /api/v1/health/live`, `GET /api/v1/health/ready`: liveness/readiness probes
 
 The backend and frontend are migration adapters only; orchestration remains centralized in `uqo_core`.
+
+### Unified dashboard interpretation rules
+
+- Primary React entrypoint is `/` and renders a single overview page fed by `GET /api/v1/dashboard/overview`.
+- KPI/trend computations stay in backend/core (`uqo_core/services/dashboard_service.py`); React renders provided values and states.
+- Trend semantics:
+  - `health`: higher is better
+  - `failed_count`: lower is better
+  - `duration`: lower is better
+- Unknown/degraded behavior:
+  - missing values stay nullable (`null`) and are rendered as `n/a`
+  - trend direction can be `unknown` when baseline/current is unavailable
+  - `data_freshness.degraded=true` indicates partial aggregation and includes reason notes
+- Report link states:
+  - `available`: render as clickable link
+  - `missing`: render as unavailable
+  - `unknown`: render as unknown state (no hard failure)
 
 ### Delta comparison semantics
 
 - Baseline/current roles and sign rules are deterministic and documented in [`docs/delta_comparison_policy.md`](docs/delta_comparison_policy.md).
 - Core analytics logic lives in `uqo_core/services/delta_service.py`; route and React layers map and render only.
 - Classification labels: `regression`, `improvement`, `neutral`, `unknown`.
+
+Unified dashboard release gate is documented in [`docs/release_checklist_phase3_unified_dashboard.md`](docs/release_checklist_phase3_unified_dashboard.md).
 

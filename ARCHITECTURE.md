@@ -165,6 +165,25 @@ Each phase writes to `artifacts/allure-results/<framework>/`. A non-zero phase i
 - Frontend adapter: `frontend/src/features/compare/ComparePage.tsx` with API wiring in `frontend/src/lib/api-client.ts`.
 - Deterministic direction/classification policy table: `docs/delta_comparison_policy.md`.
 
+## Unified dashboard architecture
+
+- Core aggregation source of truth: `uqo_core/services/dashboard_service.py`.
+- Dashboard API adapter: `uqo_api/routes/dashboard.py`.
+- Dashboard frontend entrypoint: `frontend/src/features/dashboard/DashboardPage.tsx` (route `/`).
+- API contracts:
+  - `GET /api/v1/dashboard/overview`
+  - `GET /api/v1/dashboard/runs/recent`
+- Aggregation boundary:
+  - Core/backend computes headline KPIs, trends, reliability/performance rollups, report-link states, and freshness/degraded notes.
+  - React remains presentation-only over typed `/api/v1` contracts.
+- KPI semantics:
+  - health trend uses `higher_is_better`
+  - failed-count trend uses `lower_is_better`
+  - duration trend uses `lower_is_better`
+- Backward compatibility:
+  - Existing pages and routes (`/execution`, `/history`, `/compare`, `/runs/:runId`) remain valid.
+  - Existing endpoints (`/api/v1/runs*`, `/api/v1/analytics/delta`) remain additive-only and unchanged.
+
 ## Extension points
 
 UQO includes a Pluggy extension surface:
