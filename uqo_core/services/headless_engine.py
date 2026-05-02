@@ -10,10 +10,11 @@ from uqo_core.command_builders import RunConfig, TestType
 from uqo_core.repository.models import RunStatus
 from uqo_core.run_history import create_run, record_completed_run, update_run_status
 from uqo_core.runners import LogEvent, RunResult, run_streaming
+from uqo_core.services.ci_provenance import CIProvenance
 from uqo_core.services.multi_run import stream_multi_run
 
 SCHEMA_VERSION = "1"
-TriggerSource = Literal["cli", "ui"]
+TriggerSource = Literal["cli", "ui", "ci"]
 
 
 class EngineExitCode(IntEnum):
@@ -61,6 +62,7 @@ class EngineRequest:
     trigger_source: TriggerSource
     ci_mode: bool = False
     persist: bool = True
+    provenance: CIProvenance | None = None
 
 
 @dataclass(frozen=True)
@@ -197,6 +199,8 @@ class HeadlessEngineService:
             "ci_mode": bool(request.ci_mode),
             "schema_version": SCHEMA_VERSION,
         }
+        if request.provenance is not None:
+            metadata_context.update(request.provenance.to_metadata())
 
         for spec in request.runs:
             db_run_id: str | None = None

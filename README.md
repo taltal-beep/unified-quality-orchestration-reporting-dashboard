@@ -308,3 +308,65 @@ Metrics pushes are best-effort. They do not change the run result.
   - Allure link works (`/projects/<run_id>/reports/latest/index.html` returns 200)
 - Use [`docs/release_checklist_phase1.md`](docs/release_checklist_phase1.md) as the mandatory Foundation go/no-go gate.
 
+### GitHub Action quickstart
+
+Use one line in your workflow job steps:
+
+```yaml
+- uses: ariel-evn/uqo-action@v1
+  with:
+    config-path: ./.uqo/config.yaml
+```
+
+Supported inputs:
+
+- `config-path` (required)
+- `ci-mode` (`true` by default)
+- `stream-json` (`false` by default)
+- `persist` (`true` by default)
+- `python-version` (`3.11` by default)
+
+Action outputs:
+
+- `exit_code`
+- `run_id`
+- `summary_json`
+- `summary_path`
+- `status`
+
+### GitLab template quickstart
+
+Include the shared template and set the config path:
+
+```yaml
+include:
+  - project: "ariel-evn/unified-quality-orchestration-reporting-dashboard"
+    file: "/ci/gitlab/uqo.gitlab-ci.yml"
+
+variables:
+  UQO_CONFIG_PATH: ".uqo/config.yaml"
+```
+
+Both wrappers call the same contract:
+
+```bash
+uqo run --config <path> --ci
+```
+
+### Required secrets and variables
+
+Set these in your CI provider when persistence/artifact upload is enabled:
+
+- Database: `DATABASE_URL` (or `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, optional `POSTGRES_HOST`, `POSTGRES_PORT`)
+- MinIO/S3: `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, optional `BUCKET_NAME`, `MINIO_ENDPOINT`, `MINIO_PUBLIC_BASE_URL`
+- Optional reporting URL: `ALLURE_SERVER_URL`
+
+### CI troubleshooting
+
+- `exit_code=2`: invalid config path or schema; verify `--config` points to a valid YAML file.
+- `exit_code=3`: infrastructure dependency issue (Docker/DB/network/credentials); check DB and storage env vars.
+- Missing `run_id` output: run did not produce a terminal summary run entry; inspect `summary_json` and `uqo-output.ndjson`.
+- Upload/report link failures: verify MinIO credentials and bucket permissions for CI runner identity.
+
+Release gate for wrappers is documented in [`docs/release_checklist_phase2_ci.md`](docs/release_checklist_phase2_ci.md).
+

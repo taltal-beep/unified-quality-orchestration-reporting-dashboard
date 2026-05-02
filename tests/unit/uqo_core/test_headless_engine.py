@@ -6,6 +6,7 @@ from pathlib import Path
 
 from uqo_core.command_builders import BuiltCommand, TestType
 from uqo_core.runners import LogEvent, RunResult
+from uqo_core.services.ci_provenance import CIProvenance
 from uqo_core.services.headless_engine import (
     EngineExitCode,
     EngineRequest,
@@ -61,16 +62,24 @@ def test_engine_persists_metadata_context(monkeypatch, tmp_path: Path) -> None: 
     target = tmp_path / "repo"
     target.mkdir()
     spec = EngineRunSpec(test_type=TestType.PYTEST, target_repo=target, cli_args=("-q",))
-    request = EngineRequest(runs=(spec,), trigger_source="cli", ci_mode=True, persist=True)
+    request = EngineRequest(
+        runs=(spec,),
+        trigger_source="ci",
+        ci_mode=True,
+        persist=True,
+        provenance=CIProvenance(ci_provider="github", ci_pipeline_id="1001"),
+    )
     engine = HeadlessEngineService(run_streaming_fn=_fake_streaming_success)
 
     summary = _drain_summary(engine.stream(request))
 
     assert summary is not None
     assert summary.exit_code == int(EngineExitCode.SUCCESS)
-    assert captured_start_md[0]["trigger_source"] == "cli"
+    assert captured_start_md[0]["trigger_source"] == "ci"
     assert captured_start_md[0]["ci_mode"] is True
     assert captured_complete_md[0]["schema_version"] == "1"
+    assert captured_start_md[0]["ci_provider"] == "github"
+    assert captured_complete_md[0]["ci_pipeline_id"] == "1001"
 
 
 def test_engine_maps_runtime_failure_to_infra_exit_code(tmp_path: Path) -> None:

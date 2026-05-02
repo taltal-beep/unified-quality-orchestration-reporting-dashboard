@@ -1,6 +1,7 @@
 """Service layer: orchestration and use-cases (framework-agnostic where possible)."""
 
 from .audit_service import AuditService
+from .ci_provenance import CIProvenance, detect_ci_provenance
 from .config_loader import load_run_specs_from_yaml
 from .event_drain import RunLogLine, apply_completed_multi_run, iter_drained_queue_items
 from .headless_engine import (
@@ -20,7 +21,9 @@ from .report_service import ReportService
 
 __all__ = [
     "AuditService",
+    "CIProvenance",
     "ConfigValidationError",
+    "detect_ci_provenance",
     "EngineEvent",
     "EngineExitCode",
     "EngineRequest",

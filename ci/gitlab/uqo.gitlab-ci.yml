@@ -1,0 +1,30 @@
+stages:
+  - quality
+
+variables:
+  UQO_CONFIG_PATH: ".uqo/config.yaml"
+  UQO_STREAM_JSON: "false"
+  UQO_PERSIST: "true"
+
+uqo_run:
+  stage: quality
+  image: python:3.11-slim
+  script:
+    - python -m pip install --upgrade pip
+    - python -m pip install uqo-core
+    - |
+      UQO_ARGS=(run --config "$UQO_CONFIG_PATH" --ci)
+      if [ "$UQO_STREAM_JSON" = "true" ]; then
+        UQO_ARGS+=(--stream-json)
+      fi
+      if [ "$UQO_PERSIST" = "false" ]; then
+        UQO_ARGS+=(--no-persist)
+      fi
+      uqo "${UQO_ARGS[@]}" | tee uqo-output.ndjson
+    - tail -n 1 uqo-output.ndjson > uqo-summary.json
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - uqo-output.ndjson
+      - uqo-summary.json

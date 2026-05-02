@@ -8,6 +8,7 @@ import pytest
 
 from uqo_core.command_builders import BuiltCommand, TestType
 from uqo_core.runners import LogEvent, RunResult
+from uqo_core.services.ci_provenance import CIProvenance
 from uqo_core.services.headless_engine import (
     ConfigValidationError,
     EngineEvent,
@@ -20,7 +21,7 @@ from uqo_core.services.headless_engine import (
 def _summary(*, exit_code: int = 0) -> EngineSummary:
     return EngineSummary(
         schema_version="1",
-        trigger_source="cli",
+        trigger_source="ci",
         ci_mode=True,
         persist=True,
         exit_code=exit_code,
@@ -84,7 +85,42 @@ def test_cli_ci_json_summary(monkeypatch, capsys, tmp_path: Path) -> None:  # no
 
     assert code == 0
     assert payload["exit_code"] == 0
-    assert payload["trigger_source"] == "cli"
+    assert payload["trigger_source"] == "ci"
+
+
+def test_cli_ci_sets_request_trigger_source_and_provenance(monkeypatch, capsys, tmp_path: Path) -> None:  # noqa: ANN001
+    from uqo_core import cli
+
+    target = tmp_path / "repo"
+    target.mkdir()
+    monkeypatch.setattr(
+        cli,
+        "load_run_specs_from_yaml",
+        lambda _path: (EngineRunSpec(test_type=TestType.PYTEST, target_repo=target),),
+    )
+    monkeypatch.setattr(
+        cli,
+        "detect_ci_provenance",
+        lambda _env: CIProvenance(ci_provider="github", ci_pipeline_id="123"),
+    )
+
+    captured_requests: list = []
+
+    class FakeEngine:
+        def stream(self, request):  # noqa: ANN001
+            captured_requests.append(request)
+            if False:
+                yield
+            return _summary(exit_code=0)
+
+    monkeypatch.setattr(cli, "HeadlessEngineService", FakeEngine)
+    code = cli.main(["run", "--config", "ok.yaml", "--ci"])
+    payload = json.loads(capsys.readouterr().out.strip())
+
+    assert code == 0
+    assert payload["exit_code"] == 0
+    assert captured_requests[0].trigger_source == "ci"
+    assert captured_requests[0].provenance == CIProvenance(ci_provider="github", ci_pipeline_id="123")
 
 
 def test_cli_stream_json_outputs_ndjson(monkeypatch, capsys, tmp_path: Path) -> None:  # noqa: ANN001

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,7 @@ from uqo_core.services import (
     HeadlessEngineService,
     load_run_specs_from_yaml,
 )
+from uqo_core.services.ci_provenance import detect_ci_provenance
 
 SUMMARY_SCHEMA_KEYS: tuple[str, ...] = (
     "schema_version",
@@ -89,9 +91,10 @@ def _run_command(args: argparse.Namespace) -> int:
 
     request = EngineRequest(
         runs=specs,
-        trigger_source="cli",
+        trigger_source="ci" if bool(args.ci) else "cli",
         ci_mode=bool(args.ci),
         persist=not bool(args.no_persist),
+        provenance=detect_ci_provenance(os.environ) if bool(args.ci) else None,
     )
     engine = HeadlessEngineService()
     stream_json = bool(args.stream_json)

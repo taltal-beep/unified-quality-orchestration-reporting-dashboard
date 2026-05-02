@@ -81,7 +81,7 @@ Exit code mapping:
 
 The engine enriches metadata with provenance fields:
 
-- `trigger_source` (`ui` or `cli`)
+- `trigger_source` (`ui`, `cli`, or `ci`)
 - `ci_mode` (boolean)
 - `schema_version` (current engine schema marker)
 

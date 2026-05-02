@@ -1,0 +1,13 @@
+name: UQO Minimal
+on:
+  push:
+    branches:
+      - main
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ariel-evn/uqo-action@v1
+        with:
+          config-path: ./.uqo/config.yaml
