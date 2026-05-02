@@ -65,8 +65,9 @@ from engine.services import (
     MetricsService,
     ReportService,
     RunLogLine,
-    apply_completed_multi_run,
+    advance_after_run_result,
     iter_drained_queue_items,
+    stream_multi_run,
 )
 
 
@@ -105,6 +106,8 @@ def init_state() -> None:
     st.session_state.setdefault("last_run_id", None)  # type: ignore[assignment]
     st.session_state.setdefault("target_repo", str(Path(".").resolve()))
     st.session_state.setdefault("is_audit_mode", False)
+    st.session_state.setdefault("multi_run_active", False)
+    st.session_state.setdefault("multi_runs_remaining", 0)
     st.session_state.setdefault("audit_phase_display", "")
     st.session_state.setdefault("audit_health_pct", None)
     st.session_state.setdefault("audit_partial_success", False)
@@ -269,6 +272,8 @@ def _start_worker(cfg: RunConfig, *, db_run_id: str | None = None) -> None:
     st.session_state.run_completed = False
     st.session_state.last_run_id = None
     st.session_state.is_audit_mode = False
+    st.session_state.multi_run_active = False
+    st.session_state.multi_runs_remaining = 0
     st.session_state.audit_phase_display = ""
     st.session_state.active_db_run_id = db_run_id
     st.session_state.multi_runs_remaining = 0
@@ -280,44 +285,14 @@ def _start_worker_multi(configs: list[RunConfig], *, db_run_ids: list[str | None
 
     def worker() -> None:
         try:
-            for idx, cfg in enumerate(configs):
-                db_id = db_run_ids[idx] if idx < len(db_run_ids) else None
-                events_q.put(
-                    LogEvent(
-                        ts=time.time(),
-                        stream="meta",
-                        line=f"\n=== Run {idx + 1}/{len(configs)}: {cfg.test_type.value} in {cfg.target_repo} ===\n",
-                    )
-                )
-                try:
-                    gen = run_streaming(cfg, artifacts_root=default_artifacts_root())
-                    while True:
-                        try:
-                            ev = next(gen)
-                            events_q.put(ev)
-                        except StopIteration as e:
-                            if e.value is not None:
-                                events_q.put(e.value)
-                            break
-                except Exception as exc:
-                    import traceback
-
-                    if db_id:
-                        try:
-                            update_run_status(
-                                db_id,
-                                status=RunStatus.FAILED,
-                                metadata={"error": str(exc), "traceback": traceback.format_exc()},
-                            )
-                        except Exception:
-                            pass
-                    events_q.put(
-                        LogEvent(
-                            ts=time.time(),
-                            stream="meta",
-                            line=f"[run {idx + 1} error] {exc}\n{traceback.format_exc()}\n",
-                        )
-                    )
+            for item in stream_multi_run(
+                configs,
+                artifacts_root=default_artifacts_root(),
+                db_run_ids=db_run_ids,
+                run_streaming_fn=run_streaming,
+                update_run_status_fn=update_run_status,
+            ):
+                events_q.put(item)
         except Exception as exc:
             import traceback
 
@@ -338,6 +313,8 @@ def _start_worker_multi(configs: list[RunConfig], *, db_run_ids: list[str | None
     st.session_state.run_completed = False
     st.session_state.last_run_id = None
     st.session_state.is_audit_mode = False
+    st.session_state.multi_run_active = True
+    st.session_state.multi_runs_remaining = len(configs)
     st.session_state.audit_phase_display = ""
     st.session_state.active_db_run_id = next((rid for rid in reversed(db_run_ids) if rid), None)
     st.session_state.multi_runs_remaining = len(configs)
@@ -403,6 +380,8 @@ def _start_worker_audit(
     st.session_state.run_completed = False
     st.session_state.last_run_id = None
     st.session_state.is_audit_mode = True
+    st.session_state.multi_run_active = False
+    st.session_state.multi_runs_remaining = 0
     st.session_state.audit_phase_display = ""
     st.session_state.audit_health_pct = None
     st.session_state.multi_runs_remaining = 0
@@ -410,29 +389,29 @@ def _start_worker_audit(
 
 
 def _apply_run_result_to_session(item: RunResult) -> None:
-    in_multi_run = str(st.session_state.get("last_test_type") or "") == "multi"
-    if in_multi_run:
-        remaining, batch_finished = apply_completed_multi_run(
-            remaining_before=int(st.session_state.get("multi_runs_remaining") or 0)
-        )
-        st.session_state.multi_runs_remaining = remaining
-    else:
-        batch_finished = True
-
     st.session_state.last_result = item
+    next_state = advance_after_run_result(
+        multi_run_active=bool(st.session_state.get("multi_run_active")),
+        multi_runs_remaining=int(st.session_state.get("multi_runs_remaining") or 0),
+    )
+    st.session_state.running = next_state.running
+    st.session_state.run_completed = next_state.run_completed
+    st.session_state.multi_run_active = next_state.multi_run_active
+    st.session_state.multi_runs_remaining = next_state.multi_runs_remaining
+
     env = item.command.env
     st.session_state.last_run_id = env.get("UQO_AUDIT_RUN_ID") or env.get("UQO_RUN_ID")
-    if batch_finished:
-        st.session_state.running = False
-        st.session_state.run_completed = True
+
+    if not next_state.multi_run_active:
         st.session_state.active_db_run_id = None
+
     if item.audit_mode:
         if item.audit_health_pct is not None:
             st.session_state["audit_health_pct"] = item.audit_health_pct
         st.session_state["audit_partial_success"] = item.audit_partial_success
     test_kind = str(st.session_state.get("last_test_type") or "unknown")
-    if in_multi_run:
-        test_kind = str(env.get("UQO_LAST_TEST_TYPE") or "unknown")
+    if str(st.session_state.get("last_test_type") or "") == "multi":
+        test_kind = str(env.get("UQO_LAST_TEST_TYPE") or test_kind)
     try:
         record_completed_run(
             rr=item,
