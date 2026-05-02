@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import shutil
 import sys
 import tempfile
@@ -10,7 +9,6 @@ import time
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
 
@@ -19,10 +17,8 @@ ORCHESTRATOR_ROOT = Path(__file__).resolve().parents[1]
 if str(ORCHESTRATOR_ROOT) not in sys.path:
     sys.path.insert(0, str(ORCHESTRATOR_ROOT))
 
-from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlmodel import Field, Session, SQLModel, create_engine, select
-
+from engine.db import get_repository
+from engine.db_config import create_db_and_tables, get_engine  # get_engine: back-compat re-export
 from engine.metrics import parse_allure_results_dir
 from engine.paths import (
     STATIC_ALLURE_HTML,
@@ -30,89 +26,12 @@ from engine.paths import (
     STATIC_LOCUST_HTML,
 )
 from engine.runners import RunResult
+from engine.repository.models import RunRecord, RunStatus
 from engine.s3_client import get_artifact_s3
 
 logger = logging.getLogger(__name__)
 
 STATIC_HISTORY_ROOT = ORCHESTRATOR_ROOT / "static" / "history"
-
-
-class RunStatus(str, Enum):
-    PENDING = "PENDING"
-    RUNNING = "RUNNING"
-    COMPLETED = "COMPLETED"
-    FAILED = "FAILED"
-
-
-class RunRecord(SQLModel, table=True):
-    """
-    Canonical DB record for run lifecycle.
-
-    Notes:
-    - We use a deterministic UUID derived from the external `run_id` (from env) so we can "upsert"
-      without relying on a separate unique column.
-    - `metadata` is stored in a JSONB column; Python attribute is `metadata_` to avoid clashing with
-      SQLAlchemy's `.metadata`.
-    """
-
-    # Streamlit hot-reload can import this module multiple times within the same process,
-    # reusing the same SQLAlchemy MetaData instance. Allow redefining the table safely.
-    __table_args__ = {"extend_existing": True}
-
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, index=True)
-    status: RunStatus = Field(default=RunStatus.PENDING, index=True)
-    start_time: Optional[datetime] = Field(default=None)
-    end_time: Optional[datetime] = Field(default=None)
-    metadata_: dict[str, Any] = Field(
-        default_factory=dict,
-        sa_column=Column("metadata", JSONB, nullable=False),
-    )
-
-
-def _is_running_in_docker() -> bool:
-    # Heuristic used widely in containers; safe fallback.
-    return Path("/.dockerenv").exists() or os.getenv("RUNNING_IN_DOCKER", "").lower() in {"1", "true", "yes"}
-
-
-def _postgres_host() -> str:
-    host = (os.getenv("POSTGRES_HOST") or "").strip()
-    if host:
-        return host
-    return "uqo-postgres" if _is_running_in_docker() else "localhost"
-
-
-def _required_env(name: str) -> str:
-    v = (os.getenv(name) or "").strip()
-    if not v:
-        defaults: dict[str, str] = {
-            # Defaults match docker-compose.yml for "connect immediately" local dev.
-            "POSTGRES_USER": "uqo_admin",
-            "POSTGRES_PASSWORD": "admin",
-            "POSTGRES_DB": "uqo_history",
-        }
-        if name in defaults:
-            return defaults[name]
-        raise ValueError(f"Missing required environment variable: {name}")
-    return v
-
-
-def _database_url() -> str:
-    user = _required_env("POSTGRES_USER")
-    password = _required_env("POSTGRES_PASSWORD")
-    db = _required_env("POSTGRES_DB")
-    port = (os.getenv("POSTGRES_PORT") or "5432").strip()
-    host = _postgres_host()
-    return f"postgresql+psycopg://{user}:{password}@{host}:{port}/{db}"
-
-
-def get_engine():
-    # `pool_pre_ping` helps in dockerized dev where connections may drop.
-    return create_engine(_database_url(), echo=False, pool_pre_ping=True)
-
-
-def create_db_and_tables() -> None:
-    engine = get_engine()
-    SQLModel.metadata.create_all(engine)
 
 
 def cleanup_orphaned_runs(*, note: str = "Orphaned due to system crash") -> int:
@@ -122,42 +41,28 @@ def cleanup_orphaned_runs(*, note: str = "Orphaned due to system crash") -> int:
     This prevents the UI from displaying runs that were interrupted by a crash or a force-quit
     (Streamlit reload, kernel restart, machine reboot, etc.) as if they were still executing.
     """
-    create_db_and_tables()
-    engine = get_engine()
+    repo = get_repository()
+    rows = repo.list_runs_by_status(RunStatus.RUNNING)
+    if not rows:
+        return 0
     now = _utcnow()
-    updated = 0
-    stmt = select(RunRecord).where(RunRecord.status == RunStatus.RUNNING)
-    with Session(engine) as session:
-        rows = session.exec(stmt).all()
-        for r in rows:
-            try:
-                merged = dict(r.metadata_ or {})
-                merged.setdefault("error", "orphaned")
-                merged.setdefault("error_message", str(note))
-                merged.setdefault("orphaned_at", float(time.time()))
-                r.metadata_ = merged
-                r.status = RunStatus.FAILED
-                r.end_time = now
-                session.add(r)
-                updated += 1
-            except Exception:
-                continue
-        if updated:
-            session.commit()
+    to_persist: list[RunRecord] = []
+    for r in rows:
+        try:
+            merged = dict(r.metadata_ or {})
+            merged.setdefault("error", "orphaned")
+            merged.setdefault("error_message", str(note))
+            merged.setdefault("orphaned_at", float(time.time()))
+            r.metadata_ = merged
+            r.status = RunStatus.FAILED
+            r.end_time = now
+            to_persist.append(r)
+        except Exception:
+            continue
+    updated = repo.bulk_update(to_persist)
     if updated:
         logger.warning("Marked %s orphaned RUNNING run(s) as FAILED (%s).", updated, note)
     return int(updated)
-
-
-def _run_uuid_from_external(run_id: str) -> uuid.UUID:
-    """
-    Convert the orchestrator's external run id (string) into a stable UUID.
-    If `run_id` is already a UUID, reuse it; otherwise derive deterministically.
-    """
-    try:
-        return uuid.UUID(str(run_id))
-    except (ValueError, TypeError):
-        return uuid.uuid5(uuid.NAMESPACE_URL, f"uqo-run:{run_id}")
 
 
 def _utcnow() -> datetime:
@@ -170,21 +75,7 @@ def create_run(*, status: RunStatus = RunStatus.PENDING, metadata: Optional[dict
 
     Returns the new run UUID.
     """
-    create_db_and_tables()
-    engine = get_engine()
-    rr = RunRecord(status=status, start_time=_utcnow(), metadata_={})
-    # Ensure the row is visible in `list_recent_runs()` immediately.
-    base_md: dict[str, Any] = {
-        "run_id": str(rr.id),
-        "created_at": float(time.time()),
-    }
-    if metadata:
-        base_md.update(metadata)
-    rr.metadata_ = base_md
-    with Session(engine) as session:
-        session.add(rr)
-        session.commit()
-        session.refresh(rr)
+    rr = get_repository().create_run(status=status, metadata=metadata)
     return rr.id
 
 
@@ -192,37 +83,7 @@ def update_run_status(run_id: uuid.UUID | str, status: RunStatus, metadata: Opti
     """
     Updates an existing record (or creates it if missing).
     """
-    create_db_and_tables()
-    engine = get_engine()
-    rid = _run_uuid_from_external(str(run_id)) if not isinstance(run_id, uuid.UUID) else run_id
-    now = _utcnow()
-
-    with Session(engine) as session:
-        existing = session.get(RunRecord, rid)
-        if existing is None:
-            existing = RunRecord(
-                id=rid,
-                status=status,
-                start_time=now,
-                end_time=now if status in {RunStatus.COMPLETED, RunStatus.FAILED} else None,
-                metadata_=(metadata or {}),
-            )
-            session.add(existing)
-            session.commit()
-            return
-
-        existing.status = status
-        if existing.start_time is None:
-            existing.start_time = now
-        if status in {RunStatus.COMPLETED, RunStatus.FAILED}:
-            existing.end_time = now
-        if metadata is not None:
-            # Merge (shallow) to preserve previous keys.
-            merged = dict(existing.metadata_ or {})
-            merged.update(metadata)
-            existing.metadata_ = merged
-        session.add(existing)
-        session.commit()
+    get_repository().update_run_status(run_id, status=status, metadata=metadata)
 
 
 @dataclass(frozen=True)
@@ -587,13 +448,9 @@ def _completed_view_from_record(r: RunRecord) -> CompletedRunView | None:
 
 
 def list_recent_runs(*, limit: int = 30, db_path: Path | None = None) -> list[CompletedRunView]:
-    create_db_and_tables()
-    engine = get_engine()
-    stmt = select(RunRecord).order_by(RunRecord.start_time.desc()).limit(int(limit))
+    del db_path  # Back-compat; repository uses ``DATABASE_URL`` / engine config.
     out: list[CompletedRunView] = []
-    with Session(engine) as session:
-        rows = session.exec(stmt).all()
-    for r in rows:
+    for r in get_repository().list_recent_runs(limit=limit):
         v = _completed_view_from_record(r)
         if v is not None:
             out.append(v)
@@ -601,14 +458,11 @@ def list_recent_runs(*, limit: int = 30, db_path: Path | None = None) -> list[Co
 
 
 def get_run(*, run_id: str, db_path: Path | None = None) -> CompletedRunView | None:
-    create_db_and_tables()
-    engine = get_engine()
-    rid = _run_uuid_from_external(run_id)
-    with Session(engine) as session:
-        r = session.get(RunRecord, rid)
-        if r is None:
-            return None
-        return _completed_view_from_record(r)
+    del db_path  # Back-compat; repository uses ``DATABASE_URL`` / engine config.
+    r = get_repository().get_run(run_id)
+    if r is None:
+        return None
+    return _completed_view_from_record(r)
 
 
 def compare_latest_two(*, db_path: Path | None = None) -> dict[str, Any] | None:
