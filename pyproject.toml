@@ -28,7 +28,11 @@ dependencies = [
     "influxdb-client>=1.48.0",
     "pyjwt>=2.9.0",
     "python-multipart>=0.0.9",
+    "PyYAML>=6.0.0",
 ]
+
+[project.scripts]
+uqo = "uqo_core.cli:main"
 
 [project.optional-dependencies]
 ui = [

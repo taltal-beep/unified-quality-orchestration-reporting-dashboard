@@ -272,6 +272,7 @@ def record_completed_run(
     artifacts_root: Path,
     test_kind: str,
     audit_health_pct: float | None = None,
+    metadata_context: dict[str, Any] | None = None,
     db_path: Path | None = None,
 ) -> None:
     """Persist metadata and snapshot HTML after a run completes."""
@@ -346,6 +347,8 @@ def record_completed_run(
         "snapshot_dir": snap_prefix,
         "audit_json": str(audit_blob) if audit_blob else None,
     }
+    if metadata_context:
+        payload.update({str(k): v for k, v in metadata_context.items()})
     if int(rr.returncode) == 124:
         payload.setdefault("error", "timeout")
         payload.setdefault("error_message", "Container exceeded timeout and was force-killed.")
