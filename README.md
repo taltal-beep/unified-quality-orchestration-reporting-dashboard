@@ -431,7 +431,14 @@ Runner image release gate is documented in [`docs/release_checklist_phase2_runne
 - `GET /api/v1/runs`: list persisted run sessions
 - `GET /api/v1/runs/{run_id}`: run details
 - `GET /api/v1/runs/{run_id}/reports`: report links + artifact metadata
+- `GET /api/v1/analytics/delta?current_run_id=<id>&baseline_run_id=<id>`: core-owned run delta comparison
 - `GET /api/v1/health/live`, `GET /api/v1/health/ready`: liveness/readiness probes
 
 The backend and frontend are migration adapters only; orchestration remains centralized in `uqo_core`.
+
+### Delta comparison semantics
+
+- Baseline/current roles and sign rules are deterministic and documented in [`docs/delta_comparison_policy.md`](docs/delta_comparison_policy.md).
+- Core analytics logic lives in `uqo_core/services/delta_service.py`; route and React layers map and render only.
+- Classification labels: `regression`, `improvement`, `neutral`, `unknown`.
 

@@ -7,6 +7,7 @@ export function AppShell() {
       <nav style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
         <NavLink to="/">Execution</NavLink>
         <NavLink to="/history">History</NavLink>
+        <NavLink to="/compare">Compare</NavLink>
       </nav>
       <Outlet />
     </main>

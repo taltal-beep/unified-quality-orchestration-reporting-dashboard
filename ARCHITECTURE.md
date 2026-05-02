@@ -40,7 +40,7 @@ The Streamlit UI (`streamlit run app.py`), FastAPI (`uvicorn uqo_api.main:app ..
 │   ├── integrations.py             # InfluxDB and Prometheus Pushgateway integration
 │   ├── orchestrator.py             # Pluggy manager and optional plugins/*.py loader
 │   ├── specs.py                    # Pluggy hook specifications
-│   └── services/                   # Shared application services (headless engine, config loader, UI helpers)
+│   └── services/                   # Shared application services (headless engine, config loader, delta analytics, UI helpers)
 ├── drop_in_hooks/                  # Framework helper modules injected via PYTHONPATH
 ├── sample_target_repo/             # Sandbox/demo target API and tests
 ├── scripts/write_allure_environment.py
@@ -157,6 +157,13 @@ Each phase writes to `artifacts/allure-results/<framework>/`. A non-zero phase i
 - MinIO downloadable snapshots: `runs/<run_id>/artifacts/...`.
 
 `uqo_core/run_history.py` stores run metadata in Postgres and builds history links from either local static history or MinIO snapshot prefixes.
+
+## Delta comparison analytics
+
+- Core source of truth: `uqo_core/services/delta_service.py`.
+- Delta endpoint: `GET /api/v1/analytics/delta?current_run_id=...&baseline_run_id=...`.
+- Frontend adapter: `frontend/src/features/compare/ComparePage.tsx` with API wiring in `frontend/src/lib/api-client.ts`.
+- Deterministic direction/classification policy table: `docs/delta_comparison_policy.md`.
 
 ## Extension points
 

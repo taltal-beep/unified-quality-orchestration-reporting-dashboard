@@ -4,6 +4,7 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
 import { AppShell } from "../app/AppShell";
+import { ComparePage } from "../features/compare/ComparePage";
 import { HistoryPage } from "../features/history/HistoryPage";
 import { RunDetailPage } from "../features/run-detail/RunDetailPage";
 
@@ -24,6 +25,14 @@ describe("happy path", () => {
                   returncode: 0,
                   status: "COMPLETED",
                   health_pct: 100,
+                  links_under_static: {}
+                },
+                {
+                  run_id: "run-2",
+                  created_at: 0.5,
+                  returncode: 1,
+                  status: "FAILED",
+                  health_pct: 92,
                   links_under_static: {}
                 }
               ]
@@ -56,6 +65,41 @@ describe("happy path", () => {
             })
           });
         }
+        if (url.includes("/api/v1/analytics/delta")) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              comparison: {
+                current_run_id: "run-1",
+                baseline_run_id: "run-2",
+                current_test_kind: "pytest",
+                baseline_test_kind: "pytest"
+              },
+              metrics: {
+                reliability: {
+                  total_tests: _metric(100, 100, 0, 0, "neutral", "higher_is_better", "tests"),
+                  passed: _metric(98, 95, 3, 3.1579, "improvement", "higher_is_better", "tests"),
+                  failed: _metric(2, 5, -3, -60, "improvement", "lower_is_better", "tests"),
+                  broken: _metric(0, 0, 0, null, "neutral", "lower_is_better", "tests"),
+                  skipped: _metric(0, 0, 0, null, "neutral", "lower_is_better", "tests"),
+                  health_pct: _metric(98, 95, 3, 3.1579, "improvement", "higher_is_better", "pct")
+                },
+                performance: {
+                  wall_duration_ms: _metric(1000, 1200, -200, -16.6667, "improvement", "lower_is_better", "ms"),
+                  metrics_duration_ms: _metric(900, 1100, -200, -18.1818, "improvement", "lower_is_better", "ms"),
+                  avg_case_ms: _metric(10, 12, -2, -16.6667, "improvement", "lower_is_better", "ms")
+                }
+              },
+              status_summary: {
+                regressions: [],
+                improvements: ["passed", "failed", "health_pct", "wall_duration_ms", "metrics_duration_ms", "avg_case_ms"],
+                unchanged: ["total_tests", "broken", "skipped"],
+                unknown: []
+              },
+              highlights: ["Failed tests improved by 3 tests."]
+            })
+          });
+        }
         return Promise.resolve({ ok: false, status: 404, json: async () => ({}) });
       })
     );
@@ -67,6 +111,7 @@ describe("happy path", () => {
           element: <AppShell />,
           children: [
             { path: "/history", element: <HistoryPage /> },
+            { path: "/compare", element: <ComparePage /> },
             { path: "/runs/:runId", element: <RunDetailPage /> }
           ]
         }
@@ -86,5 +131,34 @@ describe("happy path", () => {
     await router.navigate("/runs/run-1");
     await waitFor(() => expect(screen.getByText("Run ID: run-1")).toBeInTheDocument());
     expect(screen.getByText("allure_report.html")).toBeInTheDocument();
+    await router.navigate("/compare?current_run_id=run-1&baseline_run_id=run-2");
+    await waitFor(() =>
+      expect(
+        screen.getByText((_, element) => element?.textContent?.includes("Comparing run-1 against baseline run-2.") ?? false, {
+          selector: "p"
+        })
+      ).toBeInTheDocument()
+    );
   });
 });
+
+function _metric(
+  current: number | null,
+  baseline: number | null,
+  absolute: number | null,
+  relative: number | null,
+  classification: "regression" | "improvement" | "neutral" | "unknown",
+  direction: "higher_is_better" | "lower_is_better",
+  unit: "tests" | "pct" | "ms"
+) {
+  return {
+    current_value: current,
+    baseline_value: baseline,
+    absolute_delta: absolute,
+    relative_delta_pct: relative,
+    classification,
+    reason: null,
+    direction,
+    unit
+  };
+}

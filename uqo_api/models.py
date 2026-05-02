@@ -126,6 +126,58 @@ class RunReportsResponse(BaseModel):
     artifact_links: list[str] = Field(default_factory=list)
 
 
+class DeltaMetricNode(BaseModel):
+    current_value: float | None = None
+    baseline_value: float | None = None
+    absolute_delta: float | None = None
+    relative_delta_pct: float | None = None
+    classification: Literal["regression", "improvement", "neutral", "unknown"]
+    reason: str | None = None
+    direction: Literal["higher_is_better", "lower_is_better"]
+    unit: Literal["tests", "pct", "ms"]
+
+
+class DeltaReliabilityMetrics(BaseModel):
+    total_tests: DeltaMetricNode
+    passed: DeltaMetricNode
+    failed: DeltaMetricNode
+    broken: DeltaMetricNode
+    skipped: DeltaMetricNode
+    health_pct: DeltaMetricNode
+
+
+class DeltaPerformanceMetrics(BaseModel):
+    wall_duration_ms: DeltaMetricNode
+    metrics_duration_ms: DeltaMetricNode
+    avg_case_ms: DeltaMetricNode
+
+
+class DeltaMetricsResponse(BaseModel):
+    reliability: DeltaReliabilityMetrics
+    performance: DeltaPerformanceMetrics
+
+
+class DeltaComparisonMeta(BaseModel):
+    current_run_id: str
+    baseline_run_id: str
+    current_test_kind: str
+    baseline_test_kind: str
+
+
+class DeltaStatusSummaryResponse(BaseModel):
+    regressions: list[str] = Field(default_factory=list)
+    improvements: list[str] = Field(default_factory=list)
+    unchanged: list[str] = Field(default_factory=list)
+    unknown: list[str] = Field(default_factory=list)
+
+
+class DeltaComparisonResponse(BaseModel):
+    comparison: DeltaComparisonMeta
+    metrics: DeltaMetricsResponse
+    status_summary: DeltaStatusSummaryResponse
+    highlights: list[str] = Field(default_factory=list)
+
+
 class HealthLiveResponse(BaseModel):
     status: Literal["ok"]
 

@@ -34,6 +34,50 @@ export interface RunListItem {
   links_under_static: Record<string, string>;
 }
 
+export type DeltaClassification = "regression" | "improvement" | "neutral" | "unknown";
+
+export interface DeltaMetricNode {
+  current_value: number | null;
+  baseline_value: number | null;
+  absolute_delta: number | null;
+  relative_delta_pct: number | null;
+  classification: DeltaClassification;
+  reason: string | null;
+  direction: "higher_is_better" | "lower_is_better";
+  unit: "tests" | "pct" | "ms";
+}
+
+export interface DeltaComparisonResponse {
+  comparison: {
+    current_run_id: string;
+    baseline_run_id: string;
+    current_test_kind: string;
+    baseline_test_kind: string;
+  };
+  metrics: {
+    reliability: {
+      total_tests: DeltaMetricNode;
+      passed: DeltaMetricNode;
+      failed: DeltaMetricNode;
+      broken: DeltaMetricNode;
+      skipped: DeltaMetricNode;
+      health_pct: DeltaMetricNode;
+    };
+    performance: {
+      wall_duration_ms: DeltaMetricNode;
+      metrics_duration_ms: DeltaMetricNode;
+      avg_case_ms: DeltaMetricNode;
+    };
+  };
+  status_summary: {
+    regressions: string[];
+    improvements: string[];
+    unchanged: string[];
+    unknown: string[];
+  };
+  highlights: string[];
+}
+
 export interface RunDetailResponse {
   run: {
     run_id: string;
@@ -83,5 +127,12 @@ export const apiClient = {
   },
   getRunReports(runId: string): Promise<{ static_links: Record<string, string>; artifact_links: string[] }> {
     return api<{ static_links: Record<string, string>; artifact_links: string[] }>(`/api/v1/runs/${runId}/reports`);
+  },
+  getDeltaComparison(currentRunId: string, baselineRunId: string): Promise<DeltaComparisonResponse> {
+    const params = new URLSearchParams({
+      current_run_id: currentRunId,
+      baseline_run_id: baselineRunId
+    });
+    return api<DeltaComparisonResponse>(`/api/v1/analytics/delta?${params.toString()}`);
   }
 };

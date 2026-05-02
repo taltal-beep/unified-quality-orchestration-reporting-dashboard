@@ -3,6 +3,14 @@
 from .audit_service import AuditService
 from .ci_provenance import CIProvenance, detect_ci_environment, detect_ci_provenance
 from .config_loader import load_run_specs_from_yaml
+from .delta_models import DeltaComparisonResult, DeltaStatusSummary, MetricDelta
+from .delta_service import (
+    DeltaComparisonError,
+    DeltaComparisonService,
+    IncompatibleRunDataError,
+    InvalidRunIdError,
+    RunNotFoundComparisonError,
+)
 from .event_drain import RunLogLine, apply_completed_multi_run, iter_drained_queue_items
 from .headless_engine import (
     SCHEMA_VERSION,
@@ -24,6 +32,10 @@ __all__ = [
     "AuditService",
     "CIProvenance",
     "ConfigValidationError",
+    "DeltaComparisonError",
+    "DeltaComparisonResult",
+    "DeltaComparisonService",
+    "DeltaStatusSummary",
     "detect_ci_environment",
     "detect_ci_provenance",
     "EngineEvent",
@@ -32,7 +44,10 @@ __all__ = [
     "EngineRunSpec",
     "EngineSummary",
     "HeadlessEngineService",
+    "IncompatibleRunDataError",
     "InfrastructureRuntimeError",
+    "InvalidRunIdError",
+    "MetricDelta",
     "MetricsService",
     "MultiRunState",
     "GhostModeResolution",
@@ -44,5 +59,6 @@ __all__ = [
     "iter_drained_queue_items",
     "load_run_specs_from_yaml",
     "resolve_ghost_mode",
+    "RunNotFoundComparisonError",
     "stream_multi_run",
 ]
