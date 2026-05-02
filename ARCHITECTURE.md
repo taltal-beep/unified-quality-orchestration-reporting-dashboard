@@ -1,119 +1,130 @@
-# Unified Quality Orchestration & Reporting Dashboard — Architecture (Phase 1)
+# Unified Quality Orchestration & Reporting Dashboard — Architecture
 
-## Goals & Constraints
-- **Single Pane of Glass**: one Streamlit UI to configure and run **Pytest**, **BehaveX**, and **Locust**.
-- **Zero‑touch integration (CRITICAL)**: orchestrator must work as a **plug‑and‑play wrapper**.
-  - No edits required in existing `test_*.py`, feature files, or `locustfile.py`.
-  - Provide **drop‑in assets** that can be copied into a target repo root.
-  - UI must accept a **target repository path** (absolute or relative).
-- **Unified reporting**: all test executions must emit into a single orchestrator‑managed `allure-results/` directory.
-- **Air‑gapped readiness**: include offline packaging scripts (wheelhouse) and Allure report generation.
+UQO is a Streamlit-driven test orchestration dashboard. It builds framework-specific commands, runs them in one-off Docker containers, persists run history in Postgres, stores report artifacts in MinIO, and exposes per-run Allure reports through Allure Docker Service.
 
-## Repository Layout
-This repo is the **Orchestrator Core** plus a **Drop‑In Package** that internal teams can copy into any test repo.
+## Design goals
 
-```
+- **Single pane of glass**: run Pytest, BehaveX, native Behave, Locust, or the multi-framework audit workflow from one UI.
+- **Target-repo isolation**: users provide a target repository path; execution happens in an ephemeral container with the orchestrator repo mounted at `/app`.
+- **Unified reporting**: framework outputs are routed under `artifacts/allure-results/<framework>/` and mirrored to static/S3-backed views.
+- **Operational resilience**: startup cleanup marks orphaned `RUNNING` records as `FAILED`, and each container has a hard timeout via `UQO_CONTAINER_TIMEOUT_S`.
+
+## Runtime services
+
+`docker-compose.yml` defines the infrastructure expected by local development:
+
+- **Postgres (`uqo-postgres`)**: canonical run lifecycle storage used by `engine/run_history.py`.
+- **MinIO (`uqo-minio`)**: S3-compatible storage for raw results and report snapshots. The default bucket is `uqo-artifacts`.
+- **MinIO init (`uqo-minio-init`)**: creates the bucket and sets anonymous download policy for report links.
+- **Allure Docker Service (`uqo-allure`)**: renders `projects/<run_id>/reports/latest/index.html`.
+- **Allure sync (`uqo-allure-sync`)**: continuously mirrors `s3://<bucket>/projects` into Allure's `/app/projects`.
+
+The Streamlit UI (`streamlit run app.py`) runs on the host, not in Compose.
+
+## Source map
+
+```text
 .
-├── app.py
-├── ARCHITECTURE.md
-├── requirements.txt
+├── app.py                         # Streamlit UI, worker startup, history/report tabs
+├── docker-compose.yml             # Postgres, MinIO, Allure, MinIO-to-Allure sync
 ├── engine/
-│   ├── __init__.py
-│   ├── config.py
-│   ├── paths.py
-│   ├── command_builders.py
-│   ├── runners.py
-│   ├── log_stream.py
-│   └── result_management.py
-├── drop_in_hooks/
-│   ├── README.md
-│   ├── pytest/
-│   │   └── conftest.py
-│   ├── behave/
-│   │   └── environment.py
-│   └── locust/
-│       └── locust_hooks.py
-├── scripts/
-│   ├── package_offline.sh
-│   ├── install_offline.sh
-│   ├── allure_generate.sh
-│   └── run_allure_server.sh
-├── artifacts/
-│   ├── allure-results/         # shared raw results (managed by orchestrator)
-│   └── allure-report/          # generated HTML report output
-└── docs/
-    ├── INTEGRATION_GUIDE.md
-    └── OPERATIONS_AIRGAP.md
+│   ├── command_builders.py         # RunConfig, TestType, framework argv/env builders
+│   ├── runners.py                  # Ephemeral Docker execution, audit workflow, log streaming
+│   ├── run_history.py              # Postgres models, snapshots, S3 upload, history views
+│   ├── s3_client.py                # MinIO/S3 client and public object URLs
+│   ├── report_generator.py         # Local Allure/static report generation and sync
+│   ├── result_management.py        # Per-run result archive/cleanup
+│   ├── integrations.py             # InfluxDB and Prometheus Pushgateway integration
+│   ├── orchestrator.py             # Pluggy manager and optional plugins/*.py loader
+│   ├── specs.py                    # Pluggy hook specifications
+│   └── services/                   # UI-facing audit, metrics, report, event-drain helpers
+├── drop_in_hooks/                  # Framework helper modules injected via PYTHONPATH
+├── sample_target_repo/             # Sandbox/demo target API and tests
+├── scripts/write_allure_environment.py
+└── tests/                          # Unit, integration, e2e, and contract test suites
 ```
 
-### Orchestrator Core (this repo)
-- **`app.py`**: Streamlit entrypoint. Lets user choose:
-  - Target repo path
-  - Test type (Pytest / BehaveX / Locust)
-  - Options (markers, tags, parallelism, locust users/spawn rate/duration, etc.)
-  - Output window streaming stdout/stderr in real time
-- **`engine/`**: all non‑UI logic.
-  - **Command construction**: build deterministic CLI commands with safe quoting.
-  - **Execution**: run tools via `subprocess` from the chosen target directory.
-  - **Log streaming**: capture stdout/stderr incrementally (tail‑like UI feed).
-  - **Result routing**: ensure a single `artifacts/allure-results/` output directory, per run.
+Runtime output directories such as `artifacts/`, `logs/`, and `static/` are generated by runs and are not source-controlled API surfaces.
 
-### Drop‑In Package (copy into any target repo)
-Located under `drop_in_hooks/` and designed to be **copied into the root of the target repo**.
+## Execution flow
 
-- **Pytest drop‑in**: `drop_in_hooks/pytest/conftest.py`
-  - Forces Allure raw results into the orchestrator’s shared `allure-results` directory.
-  - Works without changing existing tests.
-  - Uses environment variables set by the orchestrator when it spawns pytest.
+1. The UI validates the target repository path and creates a Postgres run row with `status=RUNNING`.
+2. `app.py` creates a `RunConfig` from `engine.command_builders` with:
+   - `test_type`: one of `pytest`, `behavex`, `behave_native`, or `locust`.
+   - `target_repo`: host path to the target repo.
+   - `shared_allure_results_dir`: usually `artifacts/allure-results/<test_type>`.
+   - framework-specific args and optional Locust headless settings.
+3. `engine.runners.run_streaming()` prepares the result directory, injects `UQO_RUN_ID`, and calls `build_command()`.
+4. The runner starts a `python:3.11-slim` container on Docker network `uqo-net`, mounts the orchestrator repo to `/app`, installs `requirements.txt`, changes into the target repo path inside the mount, and executes the command.
+5. Container logs are streamed to the UI and written under `logs/<run_id>.log`.
+6. After completion, framework-specific fixups run:
+   - BehaveX JSON may be copied from known BehaveX output locations into the shared Allure directory.
+   - Locust HTML is mirrored from the isolated results directory into the artifacts/static layout.
+7. Reports are synchronized into `static/`, run metadata is persisted, raw Allure results are uploaded to `projects/<run_id>/results/`, and report snapshots are uploaded under `runs/<run_id>/artifacts/`.
+8. `uqo-allure-sync` mirrors `projects/` from MinIO into Allure Docker Service. The UI links to `ALLURE_SERVER_URL/allure-docker-service/projects/<run_id>/reports/latest/index.html`.
 
-- **BehaveX drop‑in**: `drop_in_hooks/behave/environment.py`
-  - Behave/BehaveX hook file that routes results to the same shared directory.
-  - Again controlled via environment variables from the orchestrator.
+## Framework command contract
 
-- **Locust drop‑in**: `drop_in_hooks/locust/locust_hooks.py`
-  - Registers Locust event listeners to capture run metadata/summary and convert/export to an Allure‑friendly artifact in the shared `allure-results` folder.
-  - Must not require edits inside `locustfile.py`. Integration pattern: orchestrator sets `PYTHONPATH` (or uses `sitecustomize`) so the hook module is imported automatically.
+`engine.command_builders.RunConfig` is the public shape for runner command construction.
 
-**Important:** The orchestrator must support two integration modes:
-1. **Copy mode (manual)**: internal team copies the drop‑in file(s) into their repo root.
-2. **No-copy mode (preferred)**: orchestrator injects hooks via environment:
-   - `PYTHONPATH` to point to orchestrator hook modules
-   - For pytest, `PYTEST_ADDOPTS` / `-p` plugin loading when feasible
-   - For python, optional `PYTHONSTARTUP`/`sitecustomize` strategy for auto-import (documented in `docs/INTEGRATION_GUIDE.md`)
+| `TestType` | Command behavior |
+| --- | --- |
+| `PYTEST` | Runs `pytest <pytest_args> --alluredir <shared_dir>`. |
+| `BEHAVEX` | Runs `behavex`, strips user-provided `-o/--output-folder`, writes native output to `artifacts/behave_reports`, and adds the BehaveX Allure formatter unless a formatter is already present. |
+| `BEHAVE_NATIVE` | Runs `behave -f allure_behave.formatter:AllureFormatter -o <shared_dir>` and defaults to `<target_repo>/features` when no explicit feature target is supplied. |
+| `LOCUST` | Runs `locust` with the target locustfile plus `drop_in_hooks/locust_custom/locust_hooks.py`; headless defaults add users, spawn rate, runtime, summary, and an HTML report path when not supplied. |
 
-## Unified Reporting Contract
-All runners must write to:
-- **Raw results**: `./artifacts/allure-results/`
-- **Generated report**: `./artifacts/allure-report/`
+The runner injects these common variables:
 
-The orchestrator enforces this by:
-- Passing `--alluredir <shared_dir>` for pytest
-- Passing equivalent flags/options for BehaveX/Allure formatter
-- For Locust: emitting Allure compatible result files into `<shared_dir>` (e.g., custom `*-result.json` + attachments).
+- `UQO_SHARED_ALLURE_RESULTS_DIR`: framework output path, rewritten to a container path for Docker execution.
+- `UQO_RUN_ID`: stable run identifier for metadata and result isolation.
+- `UQO_LAST_TEST_TYPE`: selected framework string for downstream hooks/labels.
+- `PYTHONPATH`: orchestrator root and `drop_in_hooks/`, so target runs can import helper modules without copying them.
 
-Each run should be isolated (recommended):
-- Create a run subfolder: `artifacts/allure-results/run_<timestamp>/...`
-- Optionally merge into a “latest” view used by the dashboard.
+Only environment keys with prefixes `UQO_`, `AWS_`, `S3_`, `MINIO_`, plus `SUT_URL`, are propagated into the Docker container.
 
-## Execution Model
-- Streamlit UI triggers one of the runner paths.
-- Runner builds command + env and launches subprocess with:
-  - `cwd = target_repo_path`
-  - `env` augmented with:
-    - `UQO_SHARED_ALLURE_RESULTS_DIR` (absolute path to orchestrator `artifacts/allure-results/...`)
-    - Any tool-specific options (e.g., `PYTEST_ADDOPTS`, `BEHAVE_FORMAT`, Locust env vars)
-- Logs are streamed to UI while the process runs.
-- After completion, `scripts/allure_generate.sh` can generate the report.
+## Audit workflow
 
-## Offline / Air‑Gapped Preparation
-- **`scripts/package_offline.sh`** downloads all Python deps into `./wheels/`:
-  - `pip download -r requirements.txt -d wheels/`
-- **`scripts/install_offline.sh`** installs from local wheels:
-  - `pip install --no-index --find-links wheels -r requirements.txt`
-- Allure CLI (if used) must also be handled for offline use (documented in `docs/OPERATIONS_AIRGAP.md`).
+`engine.runners.run_audit_streaming()` executes phases in one logical run:
 
-## Phase 2 Deliverables (after approval)
-- Implement `app.py` Streamlit UI skeleton (path selector, test type selector, terminal output).
-- Implement `engine/` subprocess runner + log streaming.
-- Implement exact drop‑in hook code for pytest/behave/locust and document integration patterns.
-- Add offline scripts and minimal docs.
+1. Pytest
+2. BehaveX
+3. Optional native Behave
+4. Locust
+
+Each phase writes to `artifacts/allure-results/<framework>/`. A non-zero phase is logged and the remaining phases continue, so audit reports can show partial coverage. The aggregate return code is `0` only when every phase succeeds. The health score is computed from generated Allure results.
+
+## Artifact and history layout
+
+- Raw local results: `artifacts/allure-results/<framework>/`.
+- Archived previous local results: `artifacts/allure-results-archive/<timestamp>_<run_id>/`.
+- Local static report mirrors: `static/allure_reports/<framework>/index.html`, `static/locust_report.html`, and `static/behave/`.
+- MinIO raw results for Allure Docker Service: `projects/<run_id>/results/<files>`.
+- MinIO downloadable snapshots: `runs/<run_id>/artifacts/...`.
+
+`engine/run_history.py` stores run metadata in Postgres and builds history links from either local static history or MinIO snapshot prefixes.
+
+## Extension points
+
+UQO includes a Pluggy extension surface:
+
+- Specs: `engine/specs.py`
+- Manager/loader: `engine/orchestrator.py`
+- Built-in no-op hooks: `engine/plugins_builtin.py`
+- Optional drop-ins: create `plugins/*.py` at the repository root
+
+The hook specs are:
+
+- `get_command(config: RunConfig) -> list[str] | None`
+- `setup_env(config: RunConfig) -> Mapping[str, str] | None`
+- `collect_artifacts(run_id: str) -> list[Path] | None`
+
+The current Streamlit workflow uses the built-in `TestType` command builders. Custom plugin authors should wire `create_plugin_manager(load_dropins=True)` into their own runner selection path or extend the UI/runner flow deliberately; simply adding `plugins/*.py` does not create a new UI test type by itself.
+
+## Operational notes
+
+- Start infrastructure with `docker compose up -d` and verify `docker compose ps` before launching Streamlit.
+- The execution container uses Docker network `uqo-net`; Compose must be running so the network exists.
+- If Allure links 404 immediately after a run, wait for the 5-second `allure-sync` mirror loop, then check that MinIO contains `projects/<run_id>/results/` and `uqo-allure-sync` is healthy.
+- If history downloads or S3 snapshots are missing, verify `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `BUCKET_NAME`, and optionally `MINIO_PUBLIC_BASE_URL`.
+- Metrics pushes are optional. Configure `INFLUXDB_URL`, `INFLUXDB_TOKEN`, `INFLUXDB_ORG`, `INFLUXDB_BUCKET`, and/or `PROMETHEUS_PUSHGATEWAY_URL` plus optional `PROMETHEUS_JOB_NAME`.

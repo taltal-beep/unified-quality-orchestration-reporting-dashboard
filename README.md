@@ -126,30 +126,33 @@ The plugin interface is defined in `engine/specs.py` (`BaseRunnerSpec`), with th
 - `setup_env(config) -> dict[str, str] | None`
 - `collect_artifacts(run_id) -> list[pathlib.Path] | None`
 
+The built-in Streamlit workflow uses `engine.command_builders.TestType` for `pytest`, `behavex`, `behave_native`, and `locust`. A custom plugin can participate in a runner path that calls `create_plugin_manager(load_dropins=True)`, but adding a file under `plugins/` does not automatically add a new option to the UI.
+
 ### 1) Create a plugin module
 
-Create `plugins/my_custom_runner.py`:
+Create `plugins/my_custom_runner.py` at the repository root:
 
 ```python
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Mapping
 
-from engine.run_config import RunConfig
+from engine.command_builders import RunConfig, TestType
 from engine.specs import hookimpl
 
 
-@hookimpl(firstresult=True)
+@hookimpl
 def get_command(config: RunConfig) -> list[str] | None:
-    # Example: handle a custom "tool" selector from RunConfig (shape depends on your RunConfig usage).
-    if getattr(config, "tool", None) != "my-tool":
+    # Example: override Locust command construction for a specialized runner.
+    if config.test_type != TestType.LOCUST:
         return None
-    return ["python", "-m", "my_tool.cli", "--flag", "value"]
+    return ["python", "-m", "my_tool.cli", "--results", str(config.shared_allure_results_dir)]
 
 
 @hookimpl
-def setup_env(config: RunConfig) -> dict[str, str] | None:
-    if getattr(config, "tool", None) != "my-tool":
+def setup_env(config: RunConfig) -> Mapping[str, str] | None:
+    if config.test_type != TestType.LOCUST:
         return None
     return {"MY_TOOL_MODE": "1"}
 
@@ -176,6 +179,46 @@ If you’re extending the system to execute custom plugins from the UI, the typi
 - **Timeouts**: rely on `UQO_CONTAINER_TIMEOUT_S` as a hard safety net for runaway tools.
 - **Allure**: write results into `UQO_SHARED_ALLURE_RESULTS_DIR` so UQO can upload them to MinIO and Allure Server can render the report.
 - **Artifacts**: keep output under `artifacts/` so it’s easy to snapshot/upload.
+
+---
+
+## Operations and troubleshooting
+
+### Required local infrastructure
+
+Run `docker compose up -d` before starting Streamlit. The runner creates one-off `python:3.11-slim` containers on Docker network `uqo-net`; if Compose is down, execution cannot attach to the expected network.
+
+Use these checks when reports or history links are missing:
+
+```bash
+docker compose ps
+docker compose logs --tail=100 allure-sync
+docker compose logs --tail=100 minio-init
+```
+
+### Allure report link returns 404
+
+Allure Docker Service reads from a mirrored volume, not directly from MinIO. After a run completes:
+
+1. Confirm raw results exist in MinIO under `projects/<run_id>/results/`.
+2. Wait for the `uqo-allure-sync` mirror loop (`CHECK_RESULTS_EVERY_SECONDS` and the sync loop both use 5-second defaults).
+3. Verify `ALLURE_SERVER_URL` points at the browser-visible Allure service, for example `http://localhost:5050`.
+4. Open `ALLURE_SERVER_URL/allure-docker-service/projects/<run_id>/reports/latest/index.html`.
+
+### MinIO snapshots or download links are missing
+
+The S3 client requires `MINIO_ROOT_USER` and `MINIO_ROOT_PASSWORD`. It defaults to bucket `uqo-artifacts`, endpoint `http://localhost:9000` on the host, and `http://uqo-minio:9000` in Docker. Set `MINIO_PUBLIC_BASE_URL` when browser download URLs need a different public host.
+
+`minio-init` creates the bucket and applies anonymous download policy. If history downloads fail, check that this container completed successfully.
+
+### Optional metrics integrations
+
+The Integrations tab can push metrics after a run or on demand:
+
+- InfluxDB: set `INFLUXDB_URL`, `INFLUXDB_TOKEN`, `INFLUXDB_ORG`, and `INFLUXDB_BUCKET`.
+- Prometheus Pushgateway: set `PROMETHEUS_PUSHGATEWAY_URL`; optionally set `PROMETHEUS_JOB_NAME` (defaults to `uqo`).
+
+Metrics pushes are best-effort. They do not change the run result.
 
 ---
 
