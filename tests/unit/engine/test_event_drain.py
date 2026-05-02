@@ -7,7 +7,7 @@ from pathlib import Path
 
 from engine.command_builders import BuiltCommand
 from engine.runners import LogEvent, RunResult
-from engine.services.event_drain import RunLogLine, iter_drained_queue_items
+from engine.services.event_drain import RunLogLine, apply_completed_multi_run, iter_drained_queue_items
 
 
 def _minimal_run_result() -> RunResult:
@@ -32,3 +32,10 @@ def test_iter_drained_skips_unknown() -> None:
     q: queue.Queue[object] = queue.Queue()
     q.put(42)
     assert list(iter_drained_queue_items(q)) == []
+
+
+def test_apply_completed_multi_run_finishes_only_after_last_result() -> None:
+    assert apply_completed_multi_run(remaining_before=3) == (2, False)
+    assert apply_completed_multi_run(remaining_before=2) == (1, False)
+    assert apply_completed_multi_run(remaining_before=1) == (0, True)
+    assert apply_completed_multi_run(remaining_before=0) == (0, True)

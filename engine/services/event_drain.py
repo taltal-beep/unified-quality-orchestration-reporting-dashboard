@@ -23,6 +23,22 @@ class RunLogLine:
     line: str
 
 
+def next_multi_run_remaining(remaining_before: int | None) -> int:
+    """Return the child-run count after applying one multi-run RunResult."""
+    return max(0, int(remaining_before or 0) - 1)
+
+
+def apply_completed_multi_run(*, remaining_before: int | None) -> tuple[int, bool]:
+    """
+    Return ``(remaining_after, batch_complete)`` after one child run completes.
+
+    Multi-run workers enqueue each child run's normal done marker and RunResult. The UI
+    should stay locked until the final child RunResult has been applied.
+    """
+    remaining = next_multi_run_remaining(remaining_before)
+    return remaining, remaining == 0
+
+
 def _is_log_like(item: Any) -> TypeGuard[Any]:
     return hasattr(item, "stream") and hasattr(item, "line")
 
