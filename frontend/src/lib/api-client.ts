@@ -91,6 +91,47 @@ export interface RunDetailResponse {
   };
 }
 
+export interface AiConfigStatus {
+  enabled: boolean;
+  configured: boolean;
+  provider: "openai" | "anthropic";
+  model: string;
+  api_key_source: "env" | "runtime_input";
+  api_key_env_var: string | null;
+  key_present: boolean | null;
+  timeout_s: number;
+  retry_count: number;
+  max_input_chars: number;
+  max_output_tokens: number;
+}
+
+export interface UpdateAiConfigRequest {
+  enabled: boolean;
+  provider: "openai" | "anthropic";
+  model: string;
+  api_key_source: "env" | "runtime_input";
+  api_key_env_var?: string | null;
+  api_key_input?: string;
+  timeout_s: number;
+  retry_count: number;
+  max_input_chars: number;
+  max_output_tokens: number;
+}
+
+export interface AiSummaryResponse {
+  schema_version: "v1";
+  run_id: string;
+  status: "available" | "no_summary_generated";
+  summary_text: string | null;
+  confidence: "low" | "medium" | "high" | null;
+  limitations: string[];
+  provider: string | null;
+  model: string | null;
+  generated_at: number;
+  context_stats: Record<string, number>;
+  error_code: string | null;
+}
+
 export interface DashboardTrendIndicator {
   direction: "up" | "down" | "flat" | "unknown";
   delta_abs: number | null;
@@ -203,5 +244,23 @@ export const apiClient = {
     return api<{ items: DashboardOverviewResponse["recent_runs"]; generated_at: number }>(
       `/api/v1/dashboard/runs/recent?limit=${limit}`
     );
+  },
+  getAiConfigStatus(): Promise<AiConfigStatus> {
+    return api<AiConfigStatus>("/api/v1/ai/config/status");
+  },
+  updateAiConfig(payload: UpdateAiConfigRequest): Promise<AiConfigStatus> {
+    return api<AiConfigStatus>("/api/v1/ai/config", {
+      method: "PUT",
+      body: JSON.stringify(payload)
+    });
+  },
+  getRunAiSummary(runId: string): Promise<AiSummaryResponse> {
+    return api<AiSummaryResponse>(`/api/v1/runs/${runId}/ai-summary`);
+  },
+  generateRunAiSummary(runId: string, forceRefresh = false): Promise<AiSummaryResponse> {
+    return api<AiSummaryResponse>(`/api/v1/runs/${runId}/ai-summary:generate`, {
+      method: "POST",
+      body: JSON.stringify({ force_refresh: forceRefresh })
+    });
   }
 };

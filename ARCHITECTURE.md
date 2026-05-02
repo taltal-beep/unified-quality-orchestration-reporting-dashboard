@@ -184,6 +184,31 @@ Each phase writes to `artifacts/allure-results/<framework>/`. A non-zero phase i
   - Existing pages and routes (`/execution`, `/history`, `/compare`, `/runs/:runId`) remain valid.
   - Existing endpoints (`/api/v1/runs*`, `/api/v1/analytics/delta`) remain additive-only and unchanged.
 
+## Phase 4 BYOK failure analysis architecture
+
+- Core AI provider boundary lives in `uqo_core/services/ai/`:
+  - provider protocol + typed config (`config.py`, `provider_base.py`)
+  - pluggable adapters (`providers/openai_provider.py`, `providers/anthropic_provider.py`)
+  - provider factory (`factory.py`)
+- Failure summarization remains core-owned in:
+  - `uqo_core/services/failure_context_builder.py`
+  - `uqo_core/services/failure_analysis_service.py`
+- Summary persistence is additive-only in run metadata (`metadata_.ai_summary_v1`), preserving existing run schema contracts.
+- API adapter surface (`uqo_api/routes/ai.py`) is intentionally thin:
+  - `GET/PUT /api/v1/ai/config...`
+  - `GET/POST /api/v1/runs/{run_id}/ai-summary...`
+- UI surface remains presentation-only:
+  - settings: `frontend/src/features/settings/AIIntegrationSettingsPage.tsx`
+  - run details summary card: `frontend/src/features/run-detail/RunDetailPage.tsx`
+
+Security model:
+
+- explicit feature opt-in
+- no secret echo in API payloads
+- runtime-input key path is memory-only by default
+- token redaction utility applied before error propagation
+- deterministic context budget/truncation for prompt construction
+
 ## Extension points
 
 UQO includes a Pluggy extension surface:

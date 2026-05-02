@@ -9,6 +9,7 @@ export function AppShell() {
         <NavLink to="/execution">Execution</NavLink>
         <NavLink to="/history">History</NavLink>
         <NavLink to="/compare">Compare</NavLink>
+        <NavLink to="/settings/ai">AI Settings</NavLink>
       </nav>
       <Outlet />
     </main>

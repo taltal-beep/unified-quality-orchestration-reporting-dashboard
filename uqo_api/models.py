@@ -63,7 +63,19 @@ class ExecutionStatusResponse(BaseModel):
 
 
 class ErrorPayload(BaseModel):
-    code: Literal["invalid_input", "not_found", "domain_failure", "infra_failure", "internal_error"]
+    code: Literal[
+        "invalid_input",
+        "not_found",
+        "domain_failure",
+        "infra_failure",
+        "internal_error",
+        "provider_misconfigured",
+        "provider_timeout",
+        "provider_rate_limited",
+        "unsupported_provider_model",
+        "ai_feature_disabled",
+        "summary_not_available",
+    ]
     message: str
     details: dict[str, Any] | None = None
 
@@ -261,3 +273,48 @@ class ReadinessCheck(BaseModel):
 class HealthReadyResponse(BaseModel):
     status: Literal["ready", "degraded"]
     checks: dict[str, ReadinessCheck]
+
+
+class AiConfigUpdateRequest(BaseModel):
+    enabled: bool = False
+    provider: Literal["openai", "anthropic"] = "openai"
+    model: str = "gpt-4o-mini"
+    api_key_source: Literal["env", "runtime_input"] = "env"
+    api_key_env_var: str | None = None
+    api_key_input: str | None = None
+    timeout_s: float = 8.0
+    retry_count: int = 1
+    max_input_chars: int = 16000
+    max_output_tokens: int = 300
+
+
+class AiConfigStatusResponse(BaseModel):
+    enabled: bool
+    configured: bool
+    provider: Literal["openai", "anthropic"]
+    model: str
+    api_key_source: Literal["env", "runtime_input"]
+    api_key_env_var: str | None = None
+    key_present: bool | None = None
+    timeout_s: float
+    retry_count: int
+    max_input_chars: int
+    max_output_tokens: int
+
+
+class AiSummaryResponse(BaseModel):
+    schema_version: Literal["v1"]
+    run_id: str
+    status: Literal["available", "no_summary_generated"]
+    summary_text: str | None = None
+    confidence: Literal["low", "medium", "high"] | None = None
+    limitations: list[str] = Field(default_factory=list)
+    provider: str | None = None
+    model: str | None = None
+    generated_at: float
+    context_stats: dict[str, int] = Field(default_factory=dict)
+    error_code: str | None = None
+
+
+class GenerateAiSummaryRequest(BaseModel):
+    force_refresh: bool = False

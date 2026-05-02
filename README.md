@@ -438,6 +438,23 @@ Runner image release gate is documented in [`docs/release_checklist_phase2_runne
 
 The backend and frontend are migration adapters only; orchestration remains centralized in `uqo_core`.
 
+## Phase 4 AI/BYOK contracts
+
+- `GET /api/v1/ai/config/status`: returns non-secret AI configuration status.
+- `PUT /api/v1/ai/config`: updates provider/model/timeouts and optional runtime key input.
+- `GET /api/v1/runs/{run_id}/ai-summary`: returns stored summary or typed no-summary payload.
+- `POST /api/v1/runs/{run_id}/ai-summary:generate`: generates or refreshes a failed-run summary.
+
+Security and behavior guarantees:
+
+- AI integration is explicit opt-in (`enabled=false` by default).
+- Raw API keys are never returned by backend responses.
+- Runtime key input is memory-only by default (not persisted to DB/files).
+- Token-like values are redacted from internal error surfaces before transport.
+- Existing run execution and CLI/CI contracts are unchanged when AI is unavailable.
+
+Release gate: `docs/release_checklist_phase4_ai.md`.
+
 ### Unified dashboard interpretation rules
 
 - Primary React entrypoint is `/` and renders a single overview page fed by `GET /api/v1/dashboard/overview`.

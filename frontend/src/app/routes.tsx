@@ -6,6 +6,7 @@ import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { ExecutionPage } from "../features/execution/ExecutionPage";
 import { HistoryPage } from "../features/history/HistoryPage";
 import { RunDetailPage } from "../features/run-detail/RunDetailPage";
+import { AIIntegrationSettingsPage } from "../features/settings/AIIntegrationSettingsPage";
 
 export const router = createBrowserRouter([
   {
@@ -31,6 +32,10 @@ export const router = createBrowserRouter([
       {
         path: "runs/:runId",
         element: <RunDetailPage />
+      },
+      {
+        path: "settings/ai",
+        element: <AIIntegrationSettingsPage />
       }
     ]
   }
