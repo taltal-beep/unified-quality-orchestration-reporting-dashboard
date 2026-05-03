@@ -9,18 +9,8 @@ from uqo_core.runners import RunResult
 from uqo_core.services.headless_engine import EngineEvent, EngineSummary
 
 
-class _RecordingFailureService:
-    def __init__(self) -> None:
-        self.calls: list[str] = []
-
-    def generate_summary(self, *, run_id: str, force_refresh: bool = False):  # noqa: ANN202
-        self.calls.append(f"{run_id}:{force_refresh}")
-        return None
-
-
-def test_execution_manager_generates_ai_summary_for_failed_run() -> None:
-    service = _RecordingFailureService()
-    manager = ExecutionManager(failure_analysis_service=service)  # type: ignore[arg-type]
+def test_execution_manager_emits_failed_run_id_for_ai_summary_lookup() -> None:
+    manager = ExecutionManager()
     state = ExecutionState(execution_id="exec-1")
     req = CreateExecutionRequest(
         runs=[RunSpecRequest(test_type="pytest", target_repo=".")],
@@ -60,4 +50,16 @@ def test_execution_manager_generates_ai_summary_for_failed_run() -> None:
     manager._engine.stream = _stream  # type: ignore[assignment]
     manager._run_execution(state, req)
 
-    assert service.calls == ["run-1:False"]
+    assert state.status == "failed"
+    assert state.done is True
+    assert state.event_history[0] == {
+        "event": "run_result",
+        "data": {
+            "run_id": "run-1",
+            "test_type": "pytest",
+            "returncode": 1,
+            "started_at": 1.0,
+            "finished_at": 2.0,
+            "cwd": ".",
+        },
+    }
