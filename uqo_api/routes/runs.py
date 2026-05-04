@@ -19,9 +19,10 @@ def create_execution(
         raise HTTPException(status_code=400, detail="At least one run spec is required.")
     state = manager.create_execution(payload)
     base = str(request.base_url).rstrip("/")
+    accepted_status = state.status if state.status in {"queued", "running"} else "running"
     return ExecutionAcceptedResponse(
         execution_id=state.execution_id,
-        status=state.status,
+        status=accepted_status,
         events_url=f"{base}/api/v1/executions/{state.execution_id}/events",
         summary_url=f"{base}/api/v1/executions/{state.execution_id}",
     )
