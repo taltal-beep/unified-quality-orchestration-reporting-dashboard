@@ -5,7 +5,7 @@ import pytest
 from uqo_core.repository.models import RunStatus
 from uqo_core.run_history import CompletedRunView, RunSessionView
 from uqo_core.services.dashboard_service import DashboardService
-from uqo_core.services.delta_service import DeltaComparisonService
+from uqo_core.services.delta_service import DeltaComparisonError, DeltaComparisonService
 
 
 def _completed(
@@ -101,6 +101,36 @@ def test_dashboard_overview_degrades_when_runs_missing() -> None:
     assert overview.report_links.allure.state in {"missing", "unknown"}
     assert overview.data_freshness.degraded is True
     assert "no_runs_available" in overview.data_freshness.notes
+
+
+def test_dashboard_overview_degrades_when_delta_comparison_fails() -> None:
+    sessions = [
+        _session(run_id="run-current", created_at=2.0, returncode=0, status=RunStatus.COMPLETED),
+        _session(run_id="run-baseline", created_at=1.0, returncode=0, status=RunStatus.COMPLETED),
+    ]
+    runs = {
+        "run-current": _completed(run_id="run-current", health_pct=99.0, failed=0, wall_duration_ms=800.0),
+        "run-baseline": _completed(run_id="run-baseline", health_pct=90.0, failed=2, wall_duration_ms=1200.0),
+    }
+
+    class _BrokenDeltaService:
+        def compare_runs(self, *, current_run_id: str, baseline_run_id: str):  # noqa: ANN201
+            raise DeltaComparisonError(f"cannot compare {current_run_id} to {baseline_run_id}")
+
+    service = DashboardService(
+        run_sessions_loader=lambda limit: sessions[:limit],
+        run_lookup=lambda run_id: runs.get(run_id),
+        delta_service_factory=lambda: _BrokenDeltaService(),  # type: ignore[return-value]
+    )
+
+    overview = service.get_overview(recent_limit=2)
+
+    assert overview.headline_kpis.latest_run_id == "run-current"
+    assert overview.trend_health.direction == "up"
+    assert overview.reliability_rollup.status_summary.regressions == 0
+    assert overview.performance_rollup.top_highlights == ()
+    assert overview.data_freshness.degraded is True
+    assert overview.data_freshness.notes == ("delta_comparison_unavailable",)
 
 
 def test_dashboard_recent_runs_validates_limit() -> None:

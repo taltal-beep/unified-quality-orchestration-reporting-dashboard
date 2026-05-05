@@ -1,7 +1,13 @@
 from __future__ import annotations
 
+from typing import Any
+
+import pytest
+
+import uqo_core.services.failure_analysis_service as failure_analysis_module
 from uqo_core.repository.models import RunStatus
 from uqo_core.run_history import CompletedRunView
+from uqo_core.services.ai import AiGenerationRequest, AiGenerationResult, ProviderTimeoutError
 from uqo_core.services.ai.integration_settings import InMemoryAiSettingsStore
 from uqo_core.services.failure_analysis_service import FailureAnalysisService
 
@@ -42,3 +48,141 @@ def test_generate_summary_returns_disabled_fallback() -> None:
     summary = service.generate_summary(run_id="run-1")
     assert summary.status == "no_summary_generated"
     assert summary.error_code == "ai_feature_disabled"
+
+
+def test_get_summary_returns_stored_summary_payload() -> None:
+    service = FailureAnalysisService(
+        settings_store=InMemoryAiSettingsStore(),
+        metadata_lookup=lambda _: {
+            "ai_summary_v1": {
+                "status": "available",
+                "summary_text": "The API timeout caused two failures.",
+                "confidence": "high",
+                "limitations": ["log_truncated"],
+                "provider": "openai",
+                "model": "gpt-4o-mini",
+                "generated_at": "42.5",
+                "context_stats": {"prompt_chars": 123},
+                "error_code": None,
+            }
+        },
+    )
+
+    summary = service.get_summary(run_id="run-1")
+
+    assert summary.status == "available"
+    assert summary.summary_text == "The API timeout caused two failures."
+    assert summary.confidence == "high"
+    assert summary.limitations == ("log_truncated",)
+    assert summary.generated_at == 42.5
+    assert summary.context_stats == {"prompt_chars": 123}
+
+
+def test_generate_summary_reuses_cached_summary_without_calling_provider(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    store = InMemoryAiSettingsStore()
+    store.update(enabled=True, api_key_source="runtime_input", runtime_api_key="secret")
+    state: dict[str, dict[str, Any]] = {
+        "md": {
+            "ai_summary_v1": {
+                "status": "available",
+                "summary_text": "Cached diagnosis.",
+                "confidence": "medium",
+                "limitations": [],
+                "provider": "anthropic",
+                "model": "claude-3-haiku",
+                "generated_at": 10.0,
+                "context_stats": {"prompt_chars": 50},
+                "error_code": None,
+            }
+        }
+    }
+
+    def _unexpected_provider(**_: object) -> object:
+        raise AssertionError("cached summaries should not rebuild the provider")
+
+    monkeypatch.setattr(failure_analysis_module, "build_ai_provider", _unexpected_provider)
+    service = FailureAnalysisService(
+        settings_store=store,
+        run_lookup=lambda _: _failed_run(),
+        metadata_lookup=lambda _: state["md"],
+        metadata_upsert=lambda _, patch: state["md"].update(patch) or True,
+    )
+
+    summary = service.generate_summary(run_id="run-1")
+
+    assert summary.status == "available"
+    assert summary.summary_text == "Cached diagnosis."
+    assert state["md"]["ai_summary_v1"]["summary_text"] == "Cached diagnosis."
+
+
+def test_generate_summary_force_refresh_calls_provider_and_persists_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    store = InMemoryAiSettingsStore()
+    store.update(enabled=True, api_key_source="runtime_input", runtime_api_key="secret")
+    state: dict[str, dict[str, Any]] = {
+        "md": {
+            "error_message": "Request to https://api.example.test timed out",
+            "ai_summary_v1": {
+                "status": "available",
+                "summary_text": "Stale diagnosis.",
+                "confidence": "medium",
+                "limitations": [],
+                "provider": "openai",
+                "model": "gpt-4o-mini",
+                "generated_at": 10.0,
+                "context_stats": {"prompt_chars": 50},
+                "error_code": None,
+            },
+        }
+    }
+    requests: list[AiGenerationRequest] = []
+
+    class _Provider:
+        def generate(self, request: AiGenerationRequest) -> AiGenerationResult:
+            requests.append(request)
+            return AiGenerationResult(text="Fresh diagnosis.", provider="openai", model="gpt-4o-mini")
+
+    monkeypatch.setattr(failure_analysis_module, "build_ai_provider", lambda **_: _Provider())
+    service = FailureAnalysisService(
+        settings_store=store,
+        run_lookup=lambda _: _failed_run(),
+        metadata_lookup=lambda _: state["md"],
+        metadata_upsert=lambda _, patch: state["md"].update(patch) or True,
+    )
+
+    summary = service.generate_summary(run_id="run-1", force_refresh=True)
+
+    assert summary.status == "available"
+    assert summary.summary_text == "Fresh diagnosis."
+    assert summary.context_stats["prompt_chars"] > 0
+    assert requests and "run_id=run-1" in requests[0].prompt
+    assert state["md"]["ai_summary_v1"]["summary_text"] == "Fresh diagnosis."
+
+
+def test_generate_summary_persists_provider_timeout_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    store = InMemoryAiSettingsStore()
+    store.update(enabled=True, api_key_source="runtime_input", runtime_api_key="secret")
+    state: dict[str, dict[str, Any]] = {"md": {"error_message": "network timeout"}}
+
+    class _Provider:
+        def generate(self, request: AiGenerationRequest) -> AiGenerationResult:  # noqa: ARG002
+            raise ProviderTimeoutError("timed out")
+
+    monkeypatch.setattr(failure_analysis_module, "build_ai_provider", lambda **_: _Provider())
+    service = FailureAnalysisService(
+        settings_store=store,
+        run_lookup=lambda _: _failed_run(),
+        metadata_lookup=lambda _: state["md"],
+        metadata_upsert=lambda _, patch: state["md"].update(patch) or True,
+    )
+
+    summary = service.generate_summary(run_id="run-1")
+
+    assert summary.status == "no_summary_generated"
+    assert summary.error_code == "provider_timeout"
+    assert state["md"]["ai_summary_v1"]["error_code"] == "provider_timeout"
