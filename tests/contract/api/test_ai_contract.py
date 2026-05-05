@@ -114,3 +114,22 @@ def test_generate_run_ai_summary_contract() -> None:
     assert payload["schema_version"] == "v1"
     assert payload["status"] == "available"
     assert payload["provider"] == "openai"
+
+
+def test_get_run_ai_summary_contract() -> None:
+    resp = _client().get("/api/v1/runs/run-1/ai-summary")
+    assert resp.status_code == 200
+    payload = resp.json()
+    assert payload == {
+        "schema_version": "v1",
+        "run_id": "run-1",
+        "status": "no_summary_generated",
+        "summary_text": None,
+        "confidence": None,
+        "limitations": ["summary_not_generated"],
+        "provider": None,
+        "model": None,
+        "generated_at": 1.0,
+        "context_stats": {},
+        "error_code": "summary_not_available",
+    }
