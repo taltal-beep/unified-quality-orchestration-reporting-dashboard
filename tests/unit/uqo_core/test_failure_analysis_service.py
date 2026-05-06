@@ -1,9 +1,33 @@
 from __future__ import annotations
 
+import pytest
+
 from uqo_core.repository.models import RunStatus
 from uqo_core.run_history import CompletedRunView
 from uqo_core.services.ai.integration_settings import InMemoryAiSettingsStore
+from uqo_core.services.ai.provider_base import (
+    AiGenerationRequest,
+    AiGenerationResult,
+    AiProviderError,
+    ProviderRateLimitError,
+)
 from uqo_core.services.failure_analysis_service import FailureAnalysisService
+
+
+class _FakeProvider:
+    provider_name = "openai"
+    model = "gpt-4o-mini"
+
+    def __init__(self, *, text: str = "The pytest suite failed.", exc: Exception | None = None) -> None:
+        self._text = text
+        self._exc = exc
+        self.requests: list[AiGenerationRequest] = []
+
+    def generate(self, request: AiGenerationRequest) -> AiGenerationResult:
+        self.requests.append(request)
+        if self._exc is not None:
+            raise self._exc
+        return AiGenerationResult(text=self._text, provider="openai", model=self.model)
 
 
 def _failed_run() -> CompletedRunView:
@@ -30,6 +54,12 @@ def _failed_run() -> CompletedRunView:
     )
 
 
+def _enabled_store() -> InMemoryAiSettingsStore:
+    store = InMemoryAiSettingsStore()
+    store.update(enabled=True, api_key_source="runtime_input", runtime_api_key="test-token")
+    return store
+
+
 def test_generate_summary_returns_disabled_fallback() -> None:
     store = InMemoryAiSettingsStore()
     state: dict[str, dict] = {"md": {}}
@@ -42,3 +72,151 @@ def test_generate_summary_returns_disabled_fallback() -> None:
     summary = service.generate_summary(run_id="run-1")
     assert summary.status == "no_summary_generated"
     assert summary.error_code == "ai_feature_disabled"
+
+
+def test_generate_summary_persists_provider_result(monkeypatch: pytest.MonkeyPatch) -> None:
+    provider = _FakeProvider(text="Two assertions failed in checkout tests.")
+    state: dict[str, dict] = {
+        "md": {
+            "error_message": "AssertionError: expected 200 got 500",
+            "traceback": "tests/test_checkout.py::test_checkout_total",
+        }
+    }
+    monkeypatch.setattr(
+        "uqo_core.services.failure_analysis_service.build_ai_provider",
+        lambda **_: provider,
+    )
+    service = FailureAnalysisService(
+        settings_store=_enabled_store(),
+        run_lookup=lambda _: _failed_run(),
+        metadata_lookup=lambda _: state["md"],
+        metadata_upsert=lambda _, patch: state["md"].update(patch) or True,
+    )
+
+    summary = service.generate_summary(run_id="run-1")
+
+    assert summary.status == "available"
+    assert summary.summary_text == "Two assertions failed in checkout tests."
+    assert summary.provider == "openai"
+    assert summary.model == "gpt-4o-mini"
+    assert summary.error_code is None
+    assert provider.requests[0].max_output_tokens == 300
+    stored = state["md"]["ai_summary_v1"]
+    assert stored["status"] == "available"
+    assert stored["summary_text"] == "Two assertions failed in checkout tests."
+    assert stored["context_stats"]["prompt_chars"] > 0
+
+
+def test_generate_summary_reuses_stored_summary_without_force_refresh(monkeypatch: pytest.MonkeyPatch) -> None:
+    provider = _FakeProvider(text="Fresh summary should not be used.")
+    state: dict[str, dict] = {
+        "md": {
+            "ai_summary_v1": {
+                "schema_version": "v1",
+                "status": "available",
+                "summary_text": "Stored summary",
+                "confidence": "medium",
+                "limitations": ["log_truncated"],
+                "provider": "openai",
+                "model": "gpt-4o-mini",
+                "generated_at": 123.0,
+                "context_stats": {"prompt_chars": 42},
+                "error_code": None,
+            }
+        }
+    }
+    monkeypatch.setattr(
+        "uqo_core.services.failure_analysis_service.build_ai_provider",
+        lambda **_: provider,
+    )
+    service = FailureAnalysisService(
+        settings_store=_enabled_store(),
+        run_lookup=lambda _: _failed_run(),
+        metadata_lookup=lambda _: state["md"],
+        metadata_upsert=lambda _, patch: state["md"].update(patch) or True,
+    )
+
+    summary = service.generate_summary(run_id="run-1")
+
+    assert summary.status == "available"
+    assert summary.summary_text == "Stored summary"
+    assert summary.generated_at == 123.0
+    assert summary.limitations == ("log_truncated",)
+    assert provider.requests == []
+
+
+def test_force_refresh_replaces_stored_summary(monkeypatch: pytest.MonkeyPatch) -> None:
+    provider = _FakeProvider(text="Fresh provider summary")
+    state: dict[str, dict] = {
+        "md": {
+            "ai_summary_v1": {
+                "schema_version": "v1",
+                "status": "available",
+                "summary_text": "Stale summary",
+                "confidence": "medium",
+                "limitations": [],
+                "provider": "openai",
+                "model": "gpt-4o-mini",
+                "generated_at": 123.0,
+                "context_stats": {},
+                "error_code": None,
+            }
+        }
+    }
+    monkeypatch.setattr(
+        "uqo_core.services.failure_analysis_service.build_ai_provider",
+        lambda **_: provider,
+    )
+    service = FailureAnalysisService(
+        settings_store=_enabled_store(),
+        run_lookup=lambda _: _failed_run(),
+        metadata_lookup=lambda _: state["md"],
+        metadata_upsert=lambda _, patch: state["md"].update(patch) or True,
+    )
+
+    summary = service.generate_summary(run_id="run-1", force_refresh=True)
+
+    assert summary.status == "available"
+    assert summary.summary_text == "Fresh provider summary"
+    assert len(provider.requests) == 1
+    assert state["md"]["ai_summary_v1"]["summary_text"] == "Fresh provider summary"
+
+
+@pytest.mark.parametrize(
+    ("exc", "error_code", "expected_limitation"),
+    [
+        (ProviderRateLimitError("quota exhausted"), "provider_rate_limited", None),
+        (
+            AiProviderError("upstream failed with token=supersecretvalue"),
+            "summary_not_available",
+            "upstream failed with ***REDACTED***",
+        ),
+    ],
+)
+def test_generate_summary_persists_provider_failure_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+    exc: Exception,
+    error_code: str,
+    expected_limitation: str | None,
+) -> None:
+    provider = _FakeProvider(exc=exc)
+    state: dict[str, dict] = {"md": {"error_message": "failed with token=plaintextsecret"}}
+    monkeypatch.setattr(
+        "uqo_core.services.failure_analysis_service.build_ai_provider",
+        lambda **_: provider,
+    )
+    service = FailureAnalysisService(
+        settings_store=_enabled_store(),
+        run_lookup=lambda _: _failed_run(),
+        metadata_lookup=lambda _: state["md"],
+        metadata_upsert=lambda _, patch: state["md"].update(patch) or True,
+    )
+
+    summary = service.generate_summary(run_id="run-1")
+
+    assert summary.status == "no_summary_generated"
+    assert summary.error_code == error_code
+    assert state["md"]["ai_summary_v1"]["error_code"] == error_code
+    if expected_limitation is not None:
+        assert expected_limitation in summary.limitations
+        assert all("supersecretvalue" not in limitation for limitation in summary.limitations)
