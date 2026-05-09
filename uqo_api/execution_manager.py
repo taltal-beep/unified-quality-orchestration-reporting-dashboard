@@ -6,7 +6,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Protocol
 from uuid import uuid4
 
 from uqo_core.command_builders import TestType
@@ -18,6 +18,11 @@ from uqo_api.models import CreateExecutionRequest
 
 
 ExecutionStatus = Literal["queued", "running", "completed", "failed"]
+
+
+class FailureAnalysisServiceLike(Protocol):
+    def generate_summary(self, *, run_id: str, force_refresh: bool = False) -> object:
+        ...
 
 
 @dataclass
@@ -45,8 +50,9 @@ class ExecutionState:
 
 
 class ExecutionManager:
-    def __init__(self) -> None:
+    def __init__(self, *, failure_analysis_service: FailureAnalysisServiceLike | None = None) -> None:
         self._engine = HeadlessEngineService()
+        self._failure_analysis_service = failure_analysis_service
         self._states: dict[str, ExecutionState] = {}
         self._states_lock = threading.Lock()
 
@@ -128,6 +134,12 @@ class ExecutionManager:
                             },
                         }
                     )
+                    if run_id and int(payload.returncode) != 0 and self._failure_analysis_service is not None:
+                        try:
+                            self._failure_analysis_service.generate_summary(run_id=str(run_id), force_refresh=False)
+                        except Exception:
+                            # Summary generation is advisory; execution status should remain tied to test results.
+                            pass
         except Exception as exc:  # pragma: no cover - defensive fallback
             error_message = redact_error_message(exc)
             state.append_event(
