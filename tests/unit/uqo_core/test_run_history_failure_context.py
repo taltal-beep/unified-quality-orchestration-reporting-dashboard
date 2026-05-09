@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 
 from uqo_core import run_history
+from uqo_core.command_builders import BuiltCommand
+from uqo_core.runners import RunResult
 
 
 def test_extract_failure_context_from_allure_collects_failed_cases(tmp_path: Path) -> None:
@@ -49,3 +51,40 @@ def test_read_run_log_tail_reads_from_orchestrator_logs(tmp_path: Path, monkeypa
     assert tail is not None
     assert "line3" in tail or "line2" in tail
     assert len(tail) <= 12 + len("\n...[truncated]...")
+
+
+def test_record_completed_run_persists_allure_failure_context(tmp_path: Path, monkeypatch) -> None:
+    artifacts_root = tmp_path / "artifacts"
+    results_dir = artifacts_root / "allure-results"
+    results_dir.mkdir(parents=True, exist_ok=True)
+    (results_dir / "failed-result.json").write_text(
+        json.dumps(
+            {
+                "name": "test_checkout",
+                "fullName": "tests.checkout.test_checkout",
+                "status": "failed",
+                "statusDetails": {
+                    "message": "Checkout total mismatch",
+                    "trace": "Traceback: AssertionError: Checkout total mismatch",
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    captured: dict[str, object] = {}
+    monkeypatch.setattr(run_history, "_snapshot_reports", lambda **_: None)
+    monkeypatch.setattr(run_history, "_upload_allure_results_to_s3", lambda **_: 0)
+    monkeypatch.setattr(
+        run_history,
+        "update_run_status",
+        lambda _run_id, *, status, metadata: captured.update(metadata),
+    )
+    cmd = BuiltCommand(argv=["pytest"], cwd=tmp_path, env={"UQO_RUN_ID": "rid-1"})
+    rr = RunResult(returncode=1, started_at=0.0, finished_at=1.0, command=cmd)
+
+    run_history.record_completed_run(rr=rr, artifacts_root=artifacts_root, test_kind="pytest")
+
+    assert captured["failure_context"]["captured_cases"] == 1
+    assert captured["failure_context"]["failed_cases"][0]["name"] == "test_checkout"
+    assert captured["error_message"] == "Checkout total mismatch"
+    assert "AssertionError" in captured["traceback"]

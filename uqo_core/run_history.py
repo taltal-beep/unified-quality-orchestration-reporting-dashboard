@@ -25,6 +25,7 @@ from uqo_core.paths import (
     STATIC_BEHAVE_DIR,
     STATIC_LOCUST_HTML,
 )
+from uqo_core.security.redaction import redact_text
 from uqo_core.runners import RunResult
 from uqo_core.repository.models import RunRecord, RunStatus
 from uqo_core.s3_client import get_artifact_s3
@@ -242,6 +243,94 @@ def _run_with_retry(
     return attempts, last_error
 
 
+def _truncate_failure_text(value: str, *, max_chars: int, marker: str = "\n...[truncated]...") -> str:
+    if len(value) <= max_chars:
+        return value
+    if max_chars <= 0:
+        return marker
+    return f"{value[:max_chars]}{marker}"
+
+
+def _extract_failure_context_from_allure(
+    *,
+    results_dir: Path,
+    max_cases: int = 10,
+    max_trace_chars: int = 4_000,
+) -> tuple[dict[str, Any] | None, str | None]:
+    if not results_dir.is_dir():
+        return None, None
+
+    failed_cases: list[dict[str, str]] = []
+    traces: list[str] = []
+    for path in sorted(results_dir.rglob("*-result.json")):
+        if len(failed_cases) >= max_cases:
+            break
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        status = str(payload.get("status") or "").lower()
+        if status not in {"failed", "broken"}:
+            continue
+        details = payload.get("statusDetails") if isinstance(payload.get("statusDetails"), dict) else {}
+        message = redact_text(str(details.get("message") or ""))
+        trace = redact_text(str(details.get("trace") or ""))
+        case = {
+            "name": str(payload.get("name") or payload.get("fullName") or "unknown"),
+            "full_name": str(payload.get("fullName") or payload.get("name") or "unknown"),
+            "status": status,
+            "message": _truncate_failure_text(message, max_chars=1_000),
+        }
+        if trace:
+            case["trace"] = _truncate_failure_text(trace, max_chars=1_000)
+            traces.append(trace)
+        failed_cases.append(case)
+
+    if not failed_cases:
+        return None, None
+    trace_excerpt = None
+    if traces:
+        trace_excerpt = _truncate_failure_text("\n\n".join(traces), max_chars=max_trace_chars)
+    return {
+        "schema_version": "v1",
+        "captured_cases": len(failed_cases),
+        "failed_cases": failed_cases,
+    }, trace_excerpt
+
+
+def _read_run_log_tail(*, run_id: str, max_chars: int = 4_000) -> str | None:
+    path = ORCHESTRATOR_ROOT / "logs" / f"{run_id}.log"
+    if not path.is_file():
+        return None
+    try:
+        text = redact_text(path.read_text(encoding="utf-8", errors="replace"))
+    except OSError:
+        return None
+    if len(text) <= max_chars:
+        return text
+
+    marker = "\n...[truncated]..."
+    lines = text.rstrip("\n").splitlines()
+    if not lines:
+        return marker
+    body_lines: list[str] = []
+    body_len = 0
+    for line in reversed(lines):
+        if not body_lines and len(line) >= max_chars:
+            body_lines.append(line[:max_chars])
+            body_len = max_chars
+            break
+        added = len(line) + (1 if body_lines else 0)
+        if body_lines and body_len + added > max_chars:
+            break
+        body_lines.append(line)
+        body_len += added
+    body = "\n".join(reversed(body_lines))
+    return f"{marker}{body}"
+
+
 def _s3_session_links(*, run_id: str, snap_prefix: str) -> dict[str, str]:
     """Build absolute MinIO URLs for reports under ``runs/<id>/artifacts/``."""
     links: dict[str, str] = {}
@@ -425,6 +514,21 @@ def record_completed_run(
     }
     if metadata_context:
         payload.update({str(k): v for k, v in metadata_context.items()})
+    if int(rr.returncode) != 0:
+        failure_context, trace_excerpt = _extract_failure_context_from_allure(results_dir=results_dir)
+        if failure_context:
+            payload.setdefault("failure_context", failure_context)
+            failed_cases = failure_context.get("failed_cases")
+            if isinstance(failed_cases, list) and failed_cases:
+                first_message = failed_cases[0].get("message") if isinstance(failed_cases[0], dict) else None
+                if first_message:
+                    payload.setdefault("error_message", str(first_message))
+        if trace_excerpt:
+            payload.setdefault("traceback", trace_excerpt)
+        log_tail = _read_run_log_tail(run_id=str(run_id))
+        if log_tail:
+            payload.setdefault("log_tail", log_tail)
+            payload.setdefault("error_message", log_tail)
     if int(rr.returncode) == 124:
         payload.setdefault("error", "timeout")
         payload.setdefault("error_message", "Container exceeded timeout and was force-killed.")
