@@ -37,3 +37,28 @@ def test_failure_context_applies_budget_truncation() -> None:
     )
     assert context.context_stats["prompt_chars"] <= 120
     assert "log_truncated" in context.limitations or "context_budget_truncated" in context.limitations
+
+
+def test_failure_context_redacts_structured_secret_metadata() -> None:
+    context = build_failure_context(
+        run=_run(),
+        metadata={
+            "error_message": "request failed with api_key=LOGSECRET123456",
+            "traceback": "Authorization: Bearer trace-secret-123456",
+            "sync": {
+                "api_key": "SYNCSECRET123456",
+                "nested": {
+                    "authorization": "Bearer nested-secret-123456",
+                    "safe": "retained diagnostic context",
+                },
+            },
+        },
+        budget=FailureContextBudget(),
+    )
+
+    assert "LOGSECRET123456" not in context.prompt
+    assert "trace-secret-123456" not in context.prompt
+    assert "SYNCSECRET123456" not in context.prompt
+    assert "nested-secret-123456" not in context.prompt
+    assert "retained diagnostic context" in context.prompt
+    assert "***REDACTED***" in context.prompt

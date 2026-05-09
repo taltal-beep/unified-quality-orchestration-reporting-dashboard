@@ -16,3 +16,19 @@ def test_redact_value_masks_nested_structures() -> None:
     redacted = redact_value(payload)
     assert redacted["error"] == "***REDACTED***"
     assert redacted["items"][0] == "***REDACTED***"
+
+
+def test_redact_value_masks_sensitive_mapping_keys() -> None:
+    payload = {
+        "api_key": "SECRET12345678",
+        "nested": {
+            "authorization": "Bearer runtime-token-123456",
+            "safe": "diagnostic evidence",
+        },
+    }
+
+    redacted = redact_value(payload)
+
+    assert redacted["api_key"] == "***REDACTED***"
+    assert redacted["nested"]["authorization"] == "***REDACTED***"
+    assert redacted["nested"]["safe"] == "diagnostic evidence"
