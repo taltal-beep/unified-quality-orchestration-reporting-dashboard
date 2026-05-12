@@ -45,7 +45,7 @@ def test_github_fixture_is_one_line_consumer() -> None:
 
 
 def test_gitlab_template_exposes_runner_image_controls() -> None:
-    template = Path("ci/gitlab/uqo.gitlab-ci.yml").read_text(encoding="utf-8")
+    template = Path("ci/gitlab/testo.gitlab-ci.yml").read_text(encoding="utf-8")
     assert "UQO_RUNNER_IMAGE" in template
     assert "UQO_RUNNER_PREBUILT" in template
 

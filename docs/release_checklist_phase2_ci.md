@@ -37,7 +37,7 @@ This is the go/no-go gate before assigning/re-pointing `v1` for the GitHub actio
 
 ## 6) Runner image release checks (`uqo-runner`)
 
-- `docker buildx build --load -f Dockerfile.uqo-runner -t uqo-runner:rc .`
+- `docker buildx build --load -f Dockerfile.testo-runner -t uqo-runner:rc .`
 - `docker run --rm uqo-runner:rc run --help`
 - `UQO_RUNNER_IMAGE=uqo-runner:rc UQO_RUNNER_PREBUILT=true python3 -m pytest -q --no-cov tests/integration/test_runner_image_mode_smoke.py`
 - `python3 scripts/ci/compare_runner_latency.py --baseline artifacts/legacy.json --candidate artifacts/image.json --max-startup-regression 0 --min-e2e-improvement-pct 20`

@@ -47,14 +47,14 @@ Minimal consumer usage:
 
 ## GitLab include template
 
-Template lives at `ci/gitlab/uqo.gitlab-ci.yml`.
+Template lives at `ci/gitlab/testo.gitlab-ci.yml`.
 
 Minimal consumer include:
 
 ```yaml
 include:
   - project: "ariel-evn/unified-quality-orchestration-reporting-dashboard"
-    file: "/ci/gitlab/uqo.gitlab-ci.yml"
+    file: "/ci/gitlab/testo.gitlab-ci.yml"
 
 variables:
   UQO_CONFIG_PATH: ".uqo/config.yaml"
@@ -93,7 +93,7 @@ Tier selection is marker-driven and shared across local, GitHub Actions, and Git
 Reference CI definitions:
 
 - GitHub: `.github/workflows/pr-fast.yml`, `.github/workflows/pr-heavy.yml`, `.github/workflows/nightly-external.yml`, `.github/workflows/release-gate.yml`
-- GitLab: `ci/gitlab/uqo.tests.gitlab-ci.yml`, `ci/gitlab/uqo.external.gitlab-ci.yml`
+- GitLab: `ci/gitlab/testo.tests.gitlab-ci.yml`, `ci/gitlab/testo.external.gitlab-ci.yml`
 
 All tier jobs upload diagnostics artifacts (`logs`, summary JSON, API responses, screenshots when present) on failure, and external suites run with `external-e2e` concurrency isolation.
 
