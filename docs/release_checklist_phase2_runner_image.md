@@ -4,7 +4,7 @@ This checklist gates publication of the `uqo-runner` prebuilt image used by CI a
 
 ## 1) Build and local smoke
 
-- `docker buildx build --load -f Dockerfile.uqo-runner -t uqo-runner:rc .`
+- `docker buildx build --load -f Dockerfile.testo-runner -t uqo-runner:rc .`
 - `docker run --rm uqo-runner:rc run --help`
 - `docker run --rm -e UQO_RUNNER_PREBUILT=true uqo-runner:rc run --config tests/fixtures/ci/ghost_minimal.yml --stream-json`
 

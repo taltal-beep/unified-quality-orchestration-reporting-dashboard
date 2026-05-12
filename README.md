@@ -376,7 +376,7 @@ Include the shared template and set the config path:
 ```yaml
 include:
   - project: "ariel-evn/unified-quality-orchestration-reporting-dashboard"
-    file: "/ci/gitlab/uqo.gitlab-ci.yml"
+    file: "/ci/gitlab/testo.gitlab-ci.yml"
 
 variables:
   UQO_CONFIG_PATH: ".uqo/config.yaml"
