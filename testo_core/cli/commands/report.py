@@ -1,7 +1,8 @@
 """``testo report`` — generate / serve / export a report from the latest run.
 
-The run path emits raw ``allure-results/`` only; HTML rendering and any UI is
-performed by this command on demand.  See [Phase 3 plan](../../../.cursor/plans).
+The run path emits raw ``allure-results/`` only; HTML rendering is done here.
+By default this command writes merged HTML under ``--out`` then runs
+``allure open`` so the dashboard is served over HTTP (not ``file://``).
 """
 
 from __future__ import annotations
@@ -18,14 +19,29 @@ def report(
         "-a",
         help="Artifacts root that holds the per-stage allure-results.",
     ),
-    plan: str = typer.Option(
+    cycle: str | None = typer.Option(
+        None,
+        "--cycle",
+        help="Restrict the report to one cycle's artifacts (YAML key under cycles:; legacy plans:).",
+    ),
+    plan: str | None = typer.Option(
         None,
         "--plan",
         "-p",
-        help="Restrict the report to one plan's artifacts.",
+        help="Deprecated alias for --cycle.",
+        hidden=True,
     ),
-    serve: bool = typer.Option(False, "--serve", help="Start a local HTTP server for the report."),
-    port: int = typer.Option(8080, "--port", help="Port to bind the report server."),
+    generate_only: bool = typer.Option(
+        False,
+        "--generate-only",
+        help="Write HTML to --out only; do not start the local HTTP dashboard.",
+    ),
+    host: str = typer.Option(
+        "127.0.0.1",
+        "--host",
+        help="Host for the Allure dashboard (after allure generate).",
+    ),
+    port: int = typer.Option(8080, "--port", help="Port for the Allure dashboard server."),
     out: Path = typer.Option(
         Path("artifacts/report"),
         "--out",
@@ -44,17 +60,20 @@ def report(
         help="When --format=json|junit, file path to write the machine-readable summary to.",
     ),
 ) -> None:
-    """Generate / serve / export a report from a previous ``testo run``."""
+    """Build a unified Allure report from the latest (or selected) cycle, then open it locally."""
     from testo_core.cli.ui.console import default_console
     from testo_core.reporting.entry import dispatch_report
+
+    resolved = cycle if cycle is not None else plan
 
     console = default_console()
     exit_code = dispatch_report(
         console=console,
         artifacts_root=artifacts_root,
-        plan_name=plan,
-        serve=serve,
+        plan_name=resolved,
+        generate_only=generate_only,
         port=port,
+        host=host,
         out_dir=out,
         fmt=fmt,
         summary_out=summary_out,

@@ -14,6 +14,9 @@ The layout produced by :func:`testo_core.engine.orchestrator.run_plan` is:
           *-result.json
 ```
 
+When ``plan_name`` is omitted, only the **latest** plan directory (by
+``events.ndjson`` mtime) is scanned — see :func:`testo_core.reporting.paths.discover_latest_plan_dir`.
+
 The collector is **read-only** — Allure / JUnit exporters consume the
 returned :class:`CollectedResults` and decide whether to copy, generate, or
 stream from each entry.
@@ -24,7 +27,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from testo_core.reporting.paths import discover_plan_dirs, plan_artifacts_dir
+from testo_core.reporting.paths import discover_latest_plan_dir, plan_artifacts_dir
 
 
 @dataclass(frozen=True)
@@ -69,7 +72,8 @@ def collect_results(
         plan_dir = plan_artifacts_dir(artifacts_root, plan_name)
         plan_dirs = [plan_dir] if plan_dir.is_dir() else []
     else:
-        plan_dirs = discover_plan_dirs(artifacts_root)
+        latest = discover_latest_plan_dir(artifacts_root)
+        plan_dirs = [latest] if latest is not None else []
 
     stages: list[StageCollection] = []
     for plan_dir in plan_dirs:
