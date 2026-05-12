@@ -36,7 +36,10 @@ def _register_commands() -> None:
     app.command(name="run", help="Execute a plan defined in testosterone.yaml.")(run_cmd.run)
     app.add_typer(plans_cmd.app, name="plans", help="Inspect plans defined in the config.")
     app.add_typer(config_cmd.app, name="config", help="Validate or scaffold a testosterone.yaml.")
-    app.command(name="report", help="Generate / serve / export a report from the latest run.")(
+    app.command(
+        name="report",
+        help="Build a unified Allure report from the latest cycle and open it locally (HTTP).",
+    )(
         report_cmd.report
     )
     app.command(name="version", help="Print testo-core version.")(version_cmd.version)

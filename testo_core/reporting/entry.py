@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 from rich.console import Console
@@ -9,6 +10,7 @@ from rich.console import Console
 from testo_core.engine.exit_codes import EngineExitCode
 from testo_core.reporting.collector import collect_results
 from testo_core.reporting.exporter import write_json_summary, write_junit_xml
+from testo_core.reporting.paths import relpath_for_display
 
 
 def dispatch_report(
@@ -16,8 +18,9 @@ def dispatch_report(
     console: Console,
     artifacts_root: Path,
     plan_name: str | None,
-    serve: bool,
+    generate_only: bool,
     port: int,
+    host: str,
     out_dir: Path,
     fmt: str,
     summary_out: Path | None,
@@ -27,9 +30,13 @@ def dispatch_report(
     if not results.stages:
         console.print(
             f"[fail]no results found under {artifacts_root}[/] "
-            f"— run `testo run --plan ...` first."
+            f"— run ``testo run --cycle …`` (or ``testo run`` with a single cycle) first."
         )
         return int(EngineExitCode.INVALID_INPUT)
+
+    console.print(
+        "[bold magenta]────────────────────────── Post-Workout Review ──────────────────────────[/]"
+    )
 
     fmt_normalised = fmt.lower().strip()
     if fmt_normalised in {"json", "junit"}:
@@ -42,18 +49,19 @@ def dispatch_report(
         except OSError as exc:
             console.print(f"[fail]failed to write {target}: {exc}[/]")
             return int(EngineExitCode.INFRA_FAILURE)
-        console.print(f"[ok]wrote {fmt_normalised} summary to[/] {written}")
+        rel = relpath_for_display(Path(written))
+        console.print(f"[ok]wrote {fmt_normalised} summary to[/] [link=file://{Path(written).resolve().as_uri()}]{rel}[/]")
         return int(EngineExitCode.SUCCESS)
 
     if fmt_normalised != "html":
         console.print(f"[fail]unknown --format {fmt_normalised!r}[/]")
         return int(EngineExitCode.INVALID_INPUT)
 
-    # HTML generation path → uses the Allure CLI when present.
     from testo_core.reporting.allure import (
         AllureCLINotFoundError,
         generate_html,
     )
+    from testo_core.reporting.server import open_generated_report
 
     try:
         outcome = generate_html(result_dirs=results.result_dirs, out_dir=out_dir)
@@ -65,9 +73,36 @@ def dispatch_report(
         console.print(f"[fail]allure generate failed:[/] {outcome.message}")
         return int(EngineExitCode.INFRA_FAILURE)
 
-    console.print(f"[ok]wrote Allure HTML to[/] {outcome.out_dir}")
-    if serve:
-        from testo_core.reporting.server import serve_report
+    out_resolved = outcome.out_dir.resolve()
+    index_path = out_resolved / "index.html"
+    rel_idx = relpath_for_display(index_path)
+    idx_uri = index_path.resolve().as_uri()
 
-        return int(serve_report(report_dir=outcome.out_dir, port=port) or 0)
-    return int(EngineExitCode.SUCCESS)
+    console.print("[ok]Workout summary compiled. Open the dashboard to see your gains.[/]")
+    console.print(f"[muted]index.html[/] [link={idx_uri}]{rel_idx}[/]")
+
+    if generate_only:
+        console.print(
+            "[dim]``--generate-only``: static files only. Run ``testo report`` without that flag "
+            "for a local HTTP server (avoids browser file:// restrictions).[/]"
+        )
+        return int(EngineExitCode.SUCCESS)
+
+    if shutil.which("allure") is None:
+        console.print(
+            "[fail]Allure CLI is required to open the dashboard after ``allure generate``. "
+            "Install from https://allurereport.org/docs/install/ or use ``--generate-only``.[/]"
+        )
+        return int(EngineExitCode.INFRA_FAILURE)
+
+    url = f"http://{host}:{port}/"
+    console.print(f"[bold]Dashboard[/] [link={url}]{url}[/]")
+    console.print("[dim]Press Ctrl+C here to stop the server when you are done.[/]")
+
+    code = open_generated_report(report_dir=out_resolved, host=host, port=port)
+    if code == 127:
+        console.print("[fail]``allure`` CLI was not found on PATH.[/]")
+        return int(EngineExitCode.INFRA_FAILURE)
+    if code not in (0, 130):
+        return int(EngineExitCode.INFRA_FAILURE)
+    return int(code)

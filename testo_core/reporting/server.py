@@ -1,15 +1,14 @@
-"""``testo report --serve`` — serve a generated HTML report.
+"""Local HTTP dashboard for a generated Allure HTML tree.
 
-Two backends are supported, preferred order:
+Preferred backend when the Allure CLI is installed:
 
-1. ``allure open`` — when the Allure CLI is installed.  Provides the full
-   single-page-application experience (search, history, attachments).
-2. A standard-library :mod:`http.server`.  Always works, even when Allure is
-   absent.  Useful inside Docker images that have not been provisioned with
-   the Allure CLI.
+* ``allure open`` — serves a pre-generated report directory (full SPA).
 
-The function blocks until the user hits Ctrl-C (or the process is otherwise
-terminated), then cleanly shuts the server down.
+Fallback:
+
+* :mod:`http.server` — static files only; used when ``allure`` is missing.
+
+Blocking APIs return only after the server process exits (normally Ctrl-C).
 """
 
 from __future__ import annotations
@@ -32,24 +31,33 @@ def find_free_port() -> int:
         return int(sock.getsockname()[1])
 
 
-def serve_report(*, report_dir: Path, port: int = 8080) -> int:
-    """Block on a static HTTP server for ``report_dir``.
+def open_generated_report(*, report_dir: Path, host: str = "127.0.0.1", port: int = 8080) -> int:
+    """Run ``allure open`` on a directory produced by ``allure generate``.
 
-    Returns the exit code (0 on graceful shutdown).
+    Inherits the parent stdout/stderr so Allure can print its own URLs.
+    Blocks until the Allure process exits (Ctrl-C returns 130).
+
+    Returns:
+        Process exit code, or ``130`` after SIGINT, or ``127`` if ``allure`` is missing.
     """
     report_dir = report_dir.expanduser().resolve()
     if not report_dir.is_dir():
         raise FileNotFoundError(f"report directory not found: {report_dir}")
-    if shutil.which("allure") is not None:
-        return _serve_with_allure_cli(report_dir=report_dir, port=port)
-    return _serve_with_stdlib(report_dir=report_dir, port=port)
-
-
-def _serve_with_allure_cli(*, report_dir: Path, port: int) -> int:
+    if shutil.which("allure") is None:
+        return 127
     proc = subprocess.Popen(  # noqa: S603 - argv is trusted
-        ["allure", "open", str(report_dir), "--port", str(port)],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        [
+            "allure",
+            "open",
+            str(report_dir),
+            "--host",
+            host,
+            "--port",
+            str(port),
+        ],
+        stdin=subprocess.DEVNULL,
+        stdout=None,
+        stderr=None,
     )
     try:
         return int(proc.wait())
@@ -60,6 +68,19 @@ def _serve_with_allure_cli(*, report_dir: Path, port: int) -> int:
         except subprocess.TimeoutExpired:
             proc.kill()
             return 130
+
+
+def serve_report(*, report_dir: Path, port: int = 8080) -> int:
+    """Block on a static HTTP server for ``report_dir``.
+
+    Returns the exit code (0 on graceful shutdown).
+    """
+    report_dir = report_dir.expanduser().resolve()
+    if not report_dir.is_dir():
+        raise FileNotFoundError(f"report directory not found: {report_dir}")
+    if shutil.which("allure") is not None:
+        return open_generated_report(report_dir=report_dir, host="127.0.0.1", port=port)
+    return _serve_with_stdlib(report_dir=report_dir, port=port)
 
 
 def _serve_with_stdlib(*, report_dir: Path, port: int) -> int:
