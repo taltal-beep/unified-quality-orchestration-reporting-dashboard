@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from testo_core.repository.models import ReportArchive
+from testo_core.reporting.paths import plan_artifacts_dir
 
 
 def _case_key(data: dict[str, Any]) -> str:
@@ -103,8 +104,8 @@ def diff_archives(*, baseline: ReportArchive, current: ReportArchive, tmp: Path)
         dest_artifacts_root=tmp / "b",
         plan_name=current.cycle_name,
     )
-    base_root = tmp / "a" / baseline.cycle_name
-    cur_root = tmp / "b" / current.cycle_name
+    base_root = plan_artifacts_dir(tmp / "a", baseline.cycle_name)
+    cur_root = plan_artifacts_dir(tmp / "b", current.cycle_name)
     base_cases = _load_cases(base_root)
     cur_cases = _load_cases(cur_root)
 

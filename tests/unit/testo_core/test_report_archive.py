@@ -56,7 +56,7 @@ def test_build_and_extract_cycle_zip_roundtrip(tmp_path: Path) -> None:
 
 
 def test_extract_archive_rejects_plan_name_outside_artifacts_root(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match="escapes artifacts root"):
+    with pytest.raises(ValueError, match="plan name escapes root"):
         extract_archive_to_plan_dir(
             zip_bytes=b"not reached",
             dest_artifacts_root=tmp_path / "out-artifacts",

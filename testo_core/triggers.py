@@ -9,6 +9,7 @@ from pathlib import Path, PurePosixPath
 from typing import Iterable
 
 from testo_core.config.schema import Plan, TestosteroneConfig
+from testo_core.reporting.paths import safe_child_path
 
 _GIT_TIMEOUT_S = 60.0
 
@@ -80,7 +81,8 @@ def persist_trigger_snapshot(
 
 
 def _snapshot_state_path(artifacts_root: Path, plan_name: str) -> Path:
-    return artifacts_root / ".testo" / "trigger_state" / f"{plan_name}.json"
+    state_root = artifacts_root / ".testo" / "trigger_state"
+    return safe_child_path(state_root, f"{plan_name}.json", label="plan name")
 
 
 def _git_repo_root(anchor: Path) -> Path | None:

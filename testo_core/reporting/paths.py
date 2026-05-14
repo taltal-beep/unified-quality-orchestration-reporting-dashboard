@@ -6,17 +6,21 @@ import os
 from pathlib import Path
 
 
+def safe_child_path(root: Path, child: str, *, label: str = "path segment") -> Path:
+    """Resolve one child path and reject values that escape ``root``."""
+    base = root.expanduser().resolve()
+    path = (base / str(child)).resolve()
+    try:
+        path.relative_to(base)
+    except ValueError as exc:
+        raise ValueError(f"{label} escapes root: {child!r}") from exc
+    return path
+
+
 def plan_artifacts_dir(artifacts_root: Path, plan: str | None = None) -> Path:
     """Return ``<artifacts>/<plan>/`` (or ``<artifacts>/`` if ``plan`` is None)."""
     root = artifacts_root.expanduser().resolve()
-    if not plan:
-        return root
-    path = (root / plan).resolve()
-    try:
-        path.relative_to(root)
-    except ValueError as exc:
-        raise ValueError(f"plan name escapes artifacts root: {plan!r}") from exc
-    return path
+    return safe_child_path(root, plan, label="plan name") if plan else root
 
 
 def discover_plan_dirs(artifacts_root: Path) -> list[Path]:

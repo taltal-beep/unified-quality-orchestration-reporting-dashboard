@@ -94,3 +94,31 @@ def test_cycle_name_all_reserved(tmp_path: Path) -> None:
     _write_minimal_cycle_yaml(yml, cycle_name="all")
     with pytest.raises(ConfigValidationError, match="reserved"):
         load_config(yml)
+
+
+def test_cycle_name_rejects_parent_directory_segments(tmp_path: Path) -> None:
+    yml = tmp_path / "testosterone.yaml"
+    _write_minimal_cycle_yaml(yml, cycle_name='"../outside"')
+    with pytest.raises(ConfigValidationError, match="cycle name.*must not contain"):
+        load_config(yml)
+
+
+def test_stage_name_rejects_parent_directory_segments(tmp_path: Path) -> None:
+    yml = tmp_path / "testosterone.yaml"
+    yml.write_text(
+        """
+version: 1
+defaults:
+  target_repo: .
+  artifacts_root: artifacts
+cycles:
+  c1:
+    stages:
+      - name: "../outside-stage"
+        equipment: pytest
+        args: []
+""",
+        encoding="utf-8",
+    )
+    with pytest.raises(ConfigValidationError, match="stage .* must not contain"):
+        load_config(yml)

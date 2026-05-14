@@ -18,7 +18,7 @@ single anonymous plan called ``default``.
 from __future__ import annotations
 
 import tomllib
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any, Mapping
 
 import yaml
@@ -140,6 +140,7 @@ def _build_cycle_config(raw: dict[str, Any], *, config_dir: Path, source: Path) 
                 "cycle name 'all' is reserved for `testo run --cycle all` (run every cycle). "
                 "Rename this cycle in your config."
             )
+        _validate_artifact_name(name_key, kind="cycle name")
         cycle = _parse_cycle(
             cycle_name=name_key,
             cycle_raw=cycle_raw or {},
@@ -262,6 +263,7 @@ def _parse_stage(*, stage_raw: Mapping[str, Any], defaults: Defaults, config_dir
     framework = str((equipment_raw if equipment_raw is not None else framework_raw) or "").strip()
     if not name:
         raise ConfigValidationError("stage is missing 'name'.")
+    _validate_artifact_name(name, kind=f"stage {name!r} name")
     if not framework:
         raise ConfigValidationError(f"stage {name!r} is missing 'equipment' (legacy: 'framework').")
     if framework == "behave_native":
@@ -318,6 +320,17 @@ def _resolve_path(value: Any, *, config_dir: Path) -> Path:
         return config_dir
     p = Path(str(value)).expanduser()
     return p if p.is_absolute() else (config_dir / p).resolve()
+
+
+def _validate_artifact_name(value: str, *, kind: str) -> None:
+    """Reject artifact path names that can escape their containing directory."""
+    text = str(value).strip()
+    posix_text = text.replace("\\", "/")
+    win = PureWindowsPath(text)
+    if posix_text.startswith("/") or win.is_absolute() or win.drive:
+        raise ConfigValidationError(f"{kind} must be relative: {value!r}")
+    if any(part == ".." for part in posix_text.split("/")) or any(part == ".." for part in win.parts):
+        raise ConfigValidationError(f"{kind} must not contain '..': {value!r}")
 
 
 def _normalise_env(value: Any) -> tuple[tuple[str, str], ...]:

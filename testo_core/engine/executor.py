@@ -30,6 +30,7 @@ from testo_core.config.schema import Stage
 from testo_core.engine.log_buffer import LogBuffer, drain_stream_into_buffer, merged_env
 from testo_core.engine.result import StageResult
 from testo_core.frameworks.base import FrameworkAdapter, get_adapter
+from testo_core.reporting.paths import plan_artifacts_dir, safe_child_path
 
 
 _TERMINATE_GRACE_S: float = 5.0
@@ -47,7 +48,8 @@ def run_stage(
 ) -> StageResult:
     """Execute one stage and return a :class:`StageResult`."""
     adapter: FrameworkAdapter = get_adapter(stage.framework)
-    stage_root = (artifacts_root / plan_name / stage.name).expanduser().resolve()
+    plan_root = plan_artifacts_dir(artifacts_root, plan_name)
+    stage_root = safe_child_path(plan_root, stage.name, label="stage name")
     results_dir = (stage_root / "allure-results" / adapter.results_subdir()).resolve()
     stage_root.mkdir(parents=True, exist_ok=True)
     if results_dir.exists():
