@@ -252,7 +252,7 @@ class DashboardService:
         allure_base = os.getenv("ALLURE_SERVER_URL", "").rstrip("/")
         if latest_session and allure_base:
             allure = DashboardReportLink(
-                url=f"{allure_base}/allure-docker-service/projects/{latest_session.run_id}/reports/latest/index.html",
+                url=f"{allure_base.rstrip('/')}/reports/{latest_session.run_id}/index.html",
                 state="available",
             )
         elif allure_base:

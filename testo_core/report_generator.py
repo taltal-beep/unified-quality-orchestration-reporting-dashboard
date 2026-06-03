@@ -64,19 +64,22 @@ class ReportPaths:
 
 
 def _invoke_allure_generate(
-    cmd: list[str],
     *,
+    result_dirs: list[Path],
+    report_dir: Path,
+    single_file: bool,
     subprocess_run: Callable[..., Any] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     """Thin wrapper so tests can inject ``subprocess_run`` without patching ``subprocess``."""
-    runner = subprocess_run or subprocess.run
-    # Allure CLI (Java) may attempt to collect analytics by resolving the local hostname,
-    # which can fail in sandboxed / restricted environments (e.g. CI, IDE sandboxes).
-    # Disable analytics to keep report generation deterministic and offline-safe.
-    env = dict(os.environ)
-    env.setdefault("ALLURE_NO_ANALYTICS", "1")
-    env.setdefault("ALLURE_ANALYTICS_DISABLED", "1")
-    return runner(cmd, capture_output=True, text=True, check=False, env=env)
+    from testo_core.reporting.allure_cli import run_generate
+
+    return run_generate(
+        result_dirs=result_dirs,
+        out_dir=report_dir,
+        clean=True,
+        single_file=single_file,
+        subprocess_run=subprocess_run,
+    )
 
 
 def compute_system_health_pct(results_dir: Path) -> float | None:
@@ -103,16 +106,14 @@ def generate_allure_html(
     subprocess_run: Callable[..., Any] | None = None,
 ) -> tuple[bool, str, float | None]:
     """
-    Generate Allure HTML by calling the Allure CLI:
-      allure generate <input_dirs...> --clean --single-file -o <report_dir>
+    Generate Allure HTML via Allure Report 3 (Node.js CLI):
+      ``allure awesome --single-file`` or ``allure generate`` with ``allurerc.mjs``.
 
     Each report is generated from an isolated framework-specific results directory.
 
     Returns ``(ok, message, health_pct)`` where ``health_pct`` is passed/total from result JSON files.
 
-    NOTE: Allure CLI is NOT the python package. Install separately:
-      - macOS: `brew install allure`
-      - Linux (varies): see Allure docs / package manager
+    Requires Node.js 18+ and ``npm install`` in the repo root (or ``TESTO_ALLURE_BIN``).
     """
     results_dir = results_dir.expanduser().resolve()
     report_dir = report_dir.expanduser().resolve()
@@ -146,20 +147,21 @@ def generate_allure_html(
 
     report_dir.mkdir(parents=True, exist_ok=True)
 
-    # Allure CLI can be sensitive to CWD; always pass absolute paths.
-    cmd = [
-        "allure",
-        "generate",
-        *[str(p) for p in use_inputs],
-        "--clean",
-        "--single-file",
-        "-o",
-        str(report_dir),
-    ]
     try:
-        p = _invoke_allure_generate(cmd, subprocess_run=subprocess_run)
+        p = _invoke_allure_generate(
+            result_dirs=use_inputs,
+            report_dir=report_dir,
+            single_file=True,
+            subprocess_run=subprocess_run,
+        )
     except FileNotFoundError:
-        return False, "Allure CLI not found. Install it (e.g. `brew install allure`).", None
+        return False, "Allure Report 3 CLI not found. Run `npm install` in the repo root.", None
+    except Exception as exc:
+        from testo_core.reporting.allure_cli import AllureCLINotFoundError
+
+        if isinstance(exc, AllureCLINotFoundError):
+            return False, str(exc), None
+        raise
 
     if p.returncode != 0:
         err = (p.stderr or p.stdout or "").strip()
