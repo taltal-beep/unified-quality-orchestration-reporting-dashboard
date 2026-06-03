@@ -64,7 +64,8 @@ def run(
     async_report_db: bool = typer.Option(
         False,
         "--async-report-db",
-        help="Archive reports in a background thread (may not finish before the process exits).",
+        help="Archive reports in a background thread with a join timeout. "
+        "Ignored when --ci is set (archive runs synchronously).",
     ),
     workers: int = typer.Option(
         None,
@@ -78,6 +79,27 @@ def run(
         "-f",
         help="Run the cycle even when a trigger would skip it (ignore selective paths).",
     ),
+    tag: str | None = typer.Option(
+        None,
+        "--tag",
+        help="When set with ``--cycle all``, run only cycles that list this tag in ``tags:``. "
+        "With a single cycle, fail if that cycle does not include the tag.",
+    ),
+    fail_fast: bool = typer.Option(
+        False,
+        "--fail-fast",
+        help="Stop after the first failing stage (within a cycle). With ``--cycle all``, also stop after the first failing cycle.",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Print the resolved execution plan (no subprocesses). Respects triggers unless ``--force``.",
+    ),
+    reporter: str | None = typer.Option(
+        None,
+        "--reporter",
+        help="Comma-separated reporter types (overrides testosterone.yaml reporters).",
+    ),
 ) -> None:
     """Run a plan end-to-end."""
     # Deferred imports so `testo --help` and `testo plans list` stay light.
@@ -85,6 +107,11 @@ def run(
     from testo_core.cli.runner import execute_plan_command
 
     console = make_console(plain=True) if ci else default_console()
+    reporter_override: tuple[str, ...] | None = None
+    if reporter:
+        reporter_override = tuple(
+            t.strip().lower() for t in reporter.split(",") if t.strip()
+        )
     exit_code = execute_plan_command(
         console=console,
         plan_name=cycle if cycle is not None else plan,
@@ -96,5 +123,14 @@ def run(
         force=force,
         report_db=not no_report_db,
         async_report_db=async_report_db,
+        tag=tag,
+        fail_fast=fail_fast,
+        dry_run=dry_run,
+        reporter_override=reporter_override,
     )
+    if not ci:
+        if exit_code == 0:
+            console.print("[ok]Run finished successfully.[/]")
+        else:
+            console.print(f"[fail]Run exited with code {exit_code}.[/]")
     raise typer.Exit(code=int(exit_code))

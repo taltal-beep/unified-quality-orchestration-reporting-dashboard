@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Testo Extent Report — sample-pytests</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1e293b;
+      --surface-2: #334155;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --pass: #22c55e;
+      --fail: #ef4444;
+      --broken: #f97316;
+      --skip: #64748b;
+      --accent: #6366f1;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(0,0,0,.35);
+    }
+    html.light {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-2: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --shadow: 0 4px 24px rgba(15,23,42,.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+    header {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: 1rem; margin-bottom: 1.5rem; padding: 1.25rem 1.5rem;
+      background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+    header h1 { margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    header .meta { color: var(--muted); font-size: 0.875rem; }
+    .badge {
+      display: inline-block; padding: 0.35rem 0.85rem; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .badge.pass { background: rgba(34,197,94,.2); color: var(--pass); }
+    .badge.fail { background: rgba(239,68,68,.2); color: var(--fail); }
+    .toolbar { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: center; }
+    .toolbar input {
+      flex: 1; min-width: 200px; padding: 0.6rem 1rem; border-radius: 8px;
+      border: 1px solid var(--surface-2); background: var(--surface); color: var(--text);
+    }
+    .toolbar button {
+      padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid var(--surface-2);
+      background: var(--surface); color: var(--text); cursor: pointer; font-size: 0.875rem;
+    }
+    .cards {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .card {
+      background: var(--surface); border-radius: var(--radius); padding: 1.1rem 1.25rem;
+      box-shadow: var(--shadow); border-left: 4px solid var(--accent);
+    }
+    .card.pass { border-left-color: var(--pass); }
+    .card.fail { border-left-color: var(--fail); }
+    .card.broken { border-left-color: var(--broken); }
+    .card.skip { border-left-color: var(--skip); }
+    .card .label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .card .value { font-size: 1.75rem; font-weight: 700; margin-top: 0.25rem; }
+    .chart-panel {
+      background: var(--surface); border-radius: var(--radius); padding: 1.25rem;
+      box-shadow: var(--shadow); margin-bottom: 1.5rem; display: flex; flex-wrap: wrap;
+      gap: 2rem; align-items: center;
+    }
+    .chart-panel h2 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--muted); width: 100%; }
+    .bar-chart { display: flex; height: 28px; width: 280px; border-radius: 6px; overflow: hidden; }
+    .bar-chart span { display: block; height: 100%; }
+    .bar-chart .p { background: var(--pass); }
+    .bar-chart .f { background: var(--fail); }
+    .bar-chart .b { background: var(--broken); }
+    .bar-chart .s { background: var(--skip); }
+    .legend { display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.8rem; color: var(--muted); }
+    .legend span::before {
+      content: ""; display: inline-block; width: 10px; height: 10px;
+      border-radius: 2px; margin-right: 0.35rem; vertical-align: middle;
+    }
+    .legend .lp::before { background: var(--pass); }
+    .legend .lf::before { background: var(--fail); }
+    .legend .lb::before { background: var(--broken); }
+    .legend .ls::before { background: var(--skip); }
+    .accordion { display: flex; flex-direction: column; gap: 0.75rem; }
+    .stage {
+      background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .stage-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.25rem; cursor: pointer; user-select: none;
+      border-bottom: 1px solid transparent;
+    }
+    .stage.open .stage-header { border-bottom-color: var(--surface-2); }
+    .stage-header h3 { margin: 0; font-size: 1rem; }
+    .stage-meta { font-size: 0.8rem; color: var(--muted); }
+    .stage-body { display: none; padding: 0 1rem 1rem; }
+    .stage.open .stage-body { display: block; }
+    .test-row {
+      display: grid; grid-template-columns: 1fr auto auto; gap: 0.75rem;
+      align-items: start; padding: 0.75rem 0; border-bottom: 1px solid var(--surface-2);
+    }
+    .test-row:last-child { border-bottom: none; }
+    .status-chip {
+      font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+      padding: 0.2rem 0.5rem; border-radius: 4px;
+    }
+    .status-chip.passed { background: rgba(34,197,94,.2); color: var(--pass); }
+    .status-chip.failed, .status-chip.broken { background: rgba(239,68,68,.2); color: var(--fail); }
+    .status-chip.skipped { background: rgba(100,116,139,.3); color: var(--skip); }
+    .failure {
+      grid-column: 1 / -1; font-size: 0.8rem; color: var(--fail);
+      background: rgba(239,68,68,.08); padding: 0.5rem 0.75rem; border-radius: 6px;
+      white-space: pre-wrap; font-family: ui-monospace, monospace;
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>sample-pytests</h1>
+        <div class="meta">Generated 2026-06-01 11:36:30 UTC</div>
+      </div>
+      <span class="badge pass">PASS</span>
+    </header>
+
+    <div class="toolbar">
+      <input type="search" id="search" placeholder="Search tests by name or status…" autocomplete="off"/>
+      <button type="button" id="theme-toggle">Toggle theme</button>
+      <button type="button" id="expand-all">Expand all</button>
+      <button type="button" id="collapse-all">Collapse all</button>
+    </div>
+
+    <div class="cards">
+      <div class="card"><div class="label">Total</div><div class="value">130</div></div>
+      <div class="card pass"><div class="label">Passed</div><div class="value">130</div></div>
+      <div class="card fail"><div class="label">Failed</div><div class="value">0</div></div>
+      <div class="card broken"><div class="label">Broken</div><div class="value">0</div></div>
+      <div class="card skip"><div class="label">Skipped</div><div class="value">0</div></div>
+      <div class="card"><div class="label">Duration</div><div class="value">0s</div></div>
+    </div>
+
+    <div class="chart-panel">
+      <h2>Results distribution</h2>
+      <div class="bar-chart" title="Pass / Fail / Broken / Skipped">
+        <span class="p" style="width:100.0%"></span>
+        
+        
+        
+      </div>
+      <svg width="120" height="120" viewBox="0 0 42 42" aria-hidden="true">
+        <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="#334155" stroke-width="4"/>
+        
+        
+        <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="#22c55e" stroke-width="4"
+          stroke-dasharray="100.0 0.0"
+          stroke-dashoffset="25" transform="rotate(-90 21 21)"/>
+        
+      </svg>
+      <div class="legend">
+        <span class="lp">Passed 130</span>
+        <span class="lf">Failed 0</span>
+        <span class="lb">Broken 0</span>
+        <span class="ls">Skipped 0</span>
+      </div>
+    </div>
+
+    <div class="accordion" id="accordion">
+      
+      <div class="stage" data-stage>
+        <div class="stage-header" role="button" tabindex="0" aria-expanded="false">
+          <h3>sample-pytests / pytest-sample (pytest)</h3>
+          <span class="stage-meta">130 tests</span>
+        </div>
+        <div class="stage-body">
+          
+          <div class="test-row" data-test data-name="test_admin_with_valid_token_returns_claims passed">
+            <div>
+              <strong>test_admin_with_valid_token_returns_claims</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_admin_without_auth_header_returns_401 passed">
+            <div>
+              <strong>test_admin_without_auth_header_returns_401</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_chaos_high_latency_path passed">
+            <div>
+              <strong>test_chaos_high_latency_path</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_chaos_normal_path passed">
+            <div>
+              <strong>test_chaos_normal_path</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_chaos_server_error_path passed">
+            <div>
+              <strong>test_chaos_server_error_path</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_chaos_unauthorized_path passed">
+            <div>
+              <strong>test_chaos_unauthorized_path</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_error_endpoint_returns_500 passed">
+            <div>
+              <strong>test_error_endpoint_returns_500</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_first_matching_item[10] passed">
+            <div>
+              <strong>test_find_item_returns_first_matching_item[10]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_first_matching_item[1] passed">
+            <div>
+              <strong>test_find_item_returns_first_matching_item[1]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_first_matching_item[2] passed">
+            <div>
+              <strong>test_find_item_returns_first_matching_item[2]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_first_matching_item[3] passed">
+            <div>
+              <strong>test_find_item_returns_first_matching_item[3]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_first_matching_item[4] passed">
+            <div>
+              <strong>test_find_item_returns_first_matching_item[4]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_first_matching_item[5] passed">
+            <div>
+              <strong>test_find_item_returns_first_matching_item[5]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_first_matching_item[6] passed">
+            <div>
+              <strong>test_find_item_returns_first_matching_item[6]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_first_matching_item[7] passed">
+            <div>
+              <strong>test_find_item_returns_first_matching_item[7]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_first_matching_item[8] passed">
+            <div>
+              <strong>test_find_item_returns_first_matching_item[8]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_first_matching_item[9] passed">
+            <div>
+              <strong>test_find_item_returns_first_matching_item[9]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_none_when_id_absent[-1] passed">
+            <div>
+              <strong>test_find_item_returns_none_when_id_absent[-1]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_none_when_id_absent[-50] passed">
+            <div>
+              <strong>test_find_item_returns_none_when_id_absent[-50]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_none_when_id_absent[0] passed">
+            <div>
+              <strong>test_find_item_returns_none_when_id_absent[0]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_none_when_id_absent[100] passed">
+            <div>
+              <strong>test_find_item_returns_none_when_id_absent[100]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_none_when_id_absent[2] passed">
+            <div>
+              <strong>test_find_item_returns_none_when_id_absent[2]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_none_when_id_absent[3] passed">
+            <div>
+              <strong>test_find_item_returns_none_when_id_absent[3]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_none_when_id_absent[4] passed">
+            <div>
+              <strong>test_find_item_returns_none_when_id_absent[4]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_none_when_id_absent[50] passed">
+            <div>
+              <strong>test_find_item_returns_none_when_id_absent[50]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_none_when_id_absent[5] passed">
+            <div>
+              <strong>test_find_item_returns_none_when_id_absent[5]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_none_when_id_absent[999] passed">
+            <div>
+              <strong>test_find_item_returns_none_when_id_absent[999]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_find_item_returns_none_when_list_empty passed">
+            <div>
+              <strong>test_find_item_returns_none_when_list_empty</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_flaky_fails_when_random_below_threshold passed">
+            <div>
+              <strong>test_flaky_fails_when_random_below_threshold</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_flaky_succeeds_when_random_above_threshold passed">
+            <div>
+              <strong>test_flaky_succeeds_when_random_above_threshold</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_expires_one_hour_after_iat[a] passed">
+            <div>
+              <strong>test_issue_token_expires_one_hour_after_iat[a]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_expires_one_hour_after_iat[b] passed">
+            <div>
+              <strong>test_issue_token_expires_one_hour_after_iat[b]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_expires_one_hour_after_iat[c] passed">
+            <div>
+              <strong>test_issue_token_expires_one_hour_after_iat[c]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_expires_one_hour_after_iat[d] passed">
+            <div>
+              <strong>test_issue_token_expires_one_hour_after_iat[d]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_expires_one_hour_after_iat[e] passed">
+            <div>
+              <strong>test_issue_token_expires_one_hour_after_iat[e]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_payload_round_trips_username[0] passed">
+            <div>
+              <strong>test_issue_token_payload_round_trips_username[0]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_payload_round_trips_username[\xfc\xf1\xee\xe7\xf8d\xe9] passed">
+            <div>
+              <strong>test_issue_token_payload_round_trips_username[\xfc\xf1\xee\xe7\xf8d\xe9]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_payload_round_trips_username[admin] passed">
+            <div>
+              <strong>test_issue_token_payload_round_trips_username[admin]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_payload_round_trips_username[alice] passed">
+            <div>
+              <strong>test_issue_token_payload_round_trips_username[alice]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_payload_round_trips_username[bob] passed">
+            <div>
+              <strong>test_issue_token_payload_round_trips_username[bob]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_payload_round_trips_username[u/with/slash] passed">
+            <div>
+              <strong>test_issue_token_payload_round_trips_username[u/with/slash]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_payload_round_trips_username[u@example.com] passed">
+            <div>
+              <strong>test_issue_token_payload_round_trips_username[u@example.com]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_payload_round_trips_username[user-123] passed">
+            <div>
+              <strong>test_issue_token_payload_round_trips_username[user-123]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_payload_round_trips_username[with space] passed">
+            <div>
+              <strong>test_issue_token_payload_round_trips_username[with space]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_payload_round_trips_username[x] passed">
+            <div>
+              <strong>test_issue_token_payload_round_trips_username[x]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_returns_non_empty_string[alice] passed">
+            <div>
+              <strong>test_issue_token_returns_non_empty_string[alice]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_returns_non_empty_string[bob] passed">
+            <div>
+              <strong>test_issue_token_returns_non_empty_string[bob]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_returns_non_empty_string[carol] passed">
+            <div>
+              <strong>test_issue_token_returns_non_empty_string[carol]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_returns_non_empty_string[dave] passed">
+            <div>
+              <strong>test_issue_token_returns_non_empty_string[dave]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_issue_token_returns_non_empty_string[eve] passed">
+            <div>
+              <strong>test_issue_token_returns_non_empty_string[eve]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_construction_roundtrips_fields[0-zero-meta8] passed">
+            <div>
+              <strong>test_item_construction_roundtrips_fields[0-zero-meta8]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_construction_roundtrips_fields[1-alpha-meta0] passed">
+            <div>
+              <strong>test_item_construction_roundtrips_fields[1-alpha-meta0]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_construction_roundtrips_fields[10-x-meta3] passed">
+            <div>
+              <strong>test_item_construction_roundtrips_fields[10-x-meta3]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_construction_roundtrips_fields[100-centi-meta5] passed">
+            <div>
+              <strong>test_item_construction_roundtrips_fields[100-centi-meta5]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_construction_roundtrips_fields[12345-big-meta9] passed">
+            <div>
+              <strong>test_item_construction_roundtrips_fields[12345-big-meta9]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_construction_roundtrips_fields[2-beta-meta1] passed">
+            <div>
+              <strong>test_item_construction_roundtrips_fields[2-beta-meta1]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_construction_roundtrips_fields[3-gamma-meta2] passed">
+            <div>
+              <strong>test_item_construction_roundtrips_fields[3-gamma-meta2]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_construction_roundtrips_fields[42-answer-meta4] passed">
+            <div>
+              <strong>test_item_construction_roundtrips_fields[42-answer-meta4]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_construction_roundtrips_fields[7-lucky-meta7] passed">
+            <div>
+              <strong>test_item_construction_roundtrips_fields[7-lucky-meta7]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_construction_roundtrips_fields[999-near-max-meta6] passed">
+            <div>
+              <strong>test_item_construction_roundtrips_fields[999-near-max-meta6]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_equality_matches_dataclass_semantics[a0-b0-true] passed">
+            <div>
+              <strong>test_item_equality_matches_dataclass_semantics[a0-b0-True]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_equality_matches_dataclass_semantics[a1-b1-true] passed">
+            <div>
+              <strong>test_item_equality_matches_dataclass_semantics[a1-b1-True]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_equality_matches_dataclass_semantics[a2-b2-false] passed">
+            <div>
+              <strong>test_item_equality_matches_dataclass_semantics[a2-b2-False]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_equality_matches_dataclass_semantics[a3-b3-false] passed">
+            <div>
+              <strong>test_item_equality_matches_dataclass_semantics[a3-b3-False]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_equality_matches_dataclass_semantics[a4-b4-false] passed">
+            <div>
+              <strong>test_item_equality_matches_dataclass_semantics[a4-b4-False]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_meta_accepts_arbitrary_dict_values[meta0] passed">
+            <div>
+              <strong>test_item_meta_accepts_arbitrary_dict_values[meta0]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_meta_accepts_arbitrary_dict_values[meta1] passed">
+            <div>
+              <strong>test_item_meta_accepts_arbitrary_dict_values[meta1]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_meta_accepts_arbitrary_dict_values[meta2] passed">
+            <div>
+              <strong>test_item_meta_accepts_arbitrary_dict_values[meta2]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_meta_accepts_arbitrary_dict_values[meta3] passed">
+            <div>
+              <strong>test_item_meta_accepts_arbitrary_dict_values[meta3]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_meta_accepts_arbitrary_dict_values[meta4] passed">
+            <div>
+              <strong>test_item_meta_accepts_arbitrary_dict_values[meta4]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_meta_accepts_arbitrary_dict_values[meta5] passed">
+            <div>
+              <strong>test_item_meta_accepts_arbitrary_dict_values[meta5]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_meta_accepts_arbitrary_dict_values[meta6] passed">
+            <div>
+              <strong>test_item_meta_accepts_arbitrary_dict_values[meta6]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_meta_accepts_arbitrary_dict_values[meta7] passed">
+            <div>
+              <strong>test_item_meta_accepts_arbitrary_dict_values[meta7]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_meta_accepts_arbitrary_dict_values[meta8] passed">
+            <div>
+              <strong>test_item_meta_accepts_arbitrary_dict_values[meta8]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_item_meta_accepts_arbitrary_dict_values[meta9] passed">
+            <div>
+              <strong>test_item_meta_accepts_arbitrary_dict_values[meta9]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_items_create_assigns_sequential_ids passed">
+            <div>
+              <strong>test_items_create_assigns_sequential_ids</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_items_create_defaults_name_when_missing passed">
+            <div>
+              <strong>test_items_create_defaults_name_when_missing</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_items_delete_existing_returns_deleted_true passed">
+            <div>
+              <strong>test_items_delete_existing_returns_deleted_true</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_items_delete_unknown_id_returns_404 passed">
+            <div>
+              <strong>test_items_delete_unknown_id_returns_404</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_items_full_crud_flow_round_trip passed">
+            <div>
+              <strong>test_items_full_crud_flow_round_trip</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_items_get_returns_existing_item passed">
+            <div>
+              <strong>test_items_get_returns_existing_item</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_items_get_unknown_id_returns_404 passed">
+            <div>
+              <strong>test_items_get_unknown_id_returns_404</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_items_list_initially_empty passed">
+            <div>
+              <strong>test_items_list_initially_empty</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_login_returns_token_for_username[alice] passed">
+            <div>
+              <strong>test_login_returns_token_for_username[alice]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_login_returns_token_for_username[bob] passed">
+            <div>
+              <strong>test_login_returns_token_for_username[bob]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_login_returns_token_for_username[charlie] passed">
+            <div>
+              <strong>test_login_returns_token_for_username[charlie]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_login_uses_default_user_when_username_missing passed">
+            <div>
+              <strong>test_login_uses_default_user_when_username_missing</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_exception_carries_expected_detail[-missing bearer token] passed">
+            <div>
+              <strong>test_require_bearer_exception_carries_expected_detail[-missing bearer token]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_exception_carries_expected_detail[basic xxx-missing bearer token] passed">
+            <div>
+              <strong>test_require_bearer_exception_carries_expected_detail[Basic xxx-missing bearer token]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_exception_carries_expected_detail[bearer not-a-token-invalid token] passed">
+            <div>
+              <strong>test_require_bearer_exception_carries_expected_detail[Bearer not-a-token-invalid token]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_exception_carries_expected_detail[none-missing bearer token] passed">
+            <div>
+              <strong>test_require_bearer_exception_carries_expected_detail[None-missing bearer token]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_rejects_missing_or_blank_header[  ] passed">
+            <div>
+              <strong>test_require_bearer_rejects_missing_or_blank_header[  ]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_rejects_missing_or_blank_header[ ] passed">
+            <div>
+              <strong>test_require_bearer_rejects_missing_or_blank_header[ ]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_rejects_missing_or_blank_header[\t] passed">
+            <div>
+              <strong>test_require_bearer_rejects_missing_or_blank_header[\t]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_rejects_missing_or_blank_header[] passed">
+            <div>
+              <strong>test_require_bearer_rejects_missing_or_blank_header[]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_rejects_missing_or_blank_header[none] passed">
+            <div>
+              <strong>test_require_bearer_rejects_missing_or_blank_header[None]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_rejects_undecodable_token[...] passed">
+            <div>
+              <strong>test_require_bearer_rejects_undecodable_token[...]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_rejects_undecodable_token[abc] passed">
+            <div>
+              <strong>test_require_bearer_rejects_undecodable_token[abc]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_rejects_undecodable_token[definitely-not-jwt] passed">
+            <div>
+              <strong>test_require_bearer_rejects_undecodable_token[definitely-not-jwt]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_rejects_undecodable_token[not.a.jwt] passed">
+            <div>
+              <strong>test_require_bearer_rejects_undecodable_token[not.a.jwt]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_rejects_undecodable_token[x.y.z] passed">
+            <div>
+              <strong>test_require_bearer_rejects_undecodable_token[x.y.z]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_rejects_wrong_scheme[basic abc] passed">
+            <div>
+              <strong>test_require_bearer_rejects_wrong_scheme[Basic abc]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_rejects_wrong_scheme[bearertoken] passed">
+            <div>
+              <strong>test_require_bearer_rejects_wrong_scheme[bearertoken]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_rejects_wrong_scheme[jwt something] passed">
+            <div>
+              <strong>test_require_bearer_rejects_wrong_scheme[JWT something]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_rejects_wrong_scheme[token xyz] passed">
+            <div>
+              <strong>test_require_bearer_rejects_wrong_scheme[Token xyz]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_rejects_wrong_scheme[x-bearer foo] passed">
+            <div>
+              <strong>test_require_bearer_rejects_wrong_scheme[X-Bearer foo]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_returns_claims_for_valid_token[alice] passed">
+            <div>
+              <strong>test_require_bearer_returns_claims_for_valid_token[alice]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_returns_claims_for_valid_token[bob] passed">
+            <div>
+              <strong>test_require_bearer_returns_claims_for_valid_token[bob]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_returns_claims_for_valid_token[carol] passed">
+            <div>
+              <strong>test_require_bearer_returns_claims_for_valid_token[carol]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_returns_claims_for_valid_token[dave] passed">
+            <div>
+              <strong>test_require_bearer_returns_claims_for_valid_token[dave]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_returns_claims_for_valid_token[eve] passed">
+            <div>
+              <strong>test_require_bearer_returns_claims_for_valid_token[eve]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_returns_claims_for_valid_token[frank] passed">
+            <div>
+              <strong>test_require_bearer_returns_claims_for_valid_token[frank]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_returns_claims_for_valid_token[grace] passed">
+            <div>
+              <strong>test_require_bearer_returns_claims_for_valid_token[grace]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_returns_claims_for_valid_token[heidi] passed">
+            <div>
+              <strong>test_require_bearer_returns_claims_for_valid_token[heidi]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_returns_claims_for_valid_token[ivan] passed">
+            <div>
+              <strong>test_require_bearer_returns_claims_for_valid_token[ivan]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_returns_claims_for_valid_token[judy] passed">
+            <div>
+              <strong>test_require_bearer_returns_claims_for_valid_token[judy]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_scheme_check_is_case_insensitive[bearer] passed">
+            <div>
+              <strong>test_require_bearer_scheme_check_is_case_insensitive[BEARER]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_scheme_check_is_case_insensitive[bearer] passed">
+            <div>
+              <strong>test_require_bearer_scheme_check_is_case_insensitive[Bearer]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_scheme_check_is_case_insensitive[bearer] passed">
+            <div>
+              <strong>test_require_bearer_scheme_check_is_case_insensitive[bEaReR]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_scheme_check_is_case_insensitive[bearer] passed">
+            <div>
+              <strong>test_require_bearer_scheme_check_is_case_insensitive[BeArEr]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_require_bearer_scheme_check_is_case_insensitive[bearer] passed">
+            <div>
+              <strong>test_require_bearer_scheme_check_is_case_insensitive[bearer]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_root_returns_hello_world_message passed">
+            <div>
+              <strong>test_root_returns_hello_world_message</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_root_returns_ok_status passed">
+            <div>
+              <strong>test_root_returns_ok_status</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_secure_with_invalid_bearer_token_returns_401 passed">
+            <div>
+              <strong>test_secure_with_invalid_bearer_token_returns_401</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_secure_with_valid_bearer_token_returns_secure_true passed">
+            <div>
+              <strong>test_secure_with_valid_bearer_token_returns_secure_true</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_secure_without_auth_header_returns_401 passed">
+            <div>
+              <strong>test_secure_without_auth_header_returns_401</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_slow_endpoint_returns_ok passed">
+            <div>
+              <strong>test_slow_endpoint_returns_ok</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_submit_echoes_payload[payload0] passed">
+            <div>
+              <strong>test_submit_echoes_payload[payload0]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_submit_echoes_payload[payload1] passed">
+            <div>
+              <strong>test_submit_echoes_payload[payload1]</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+          <div class="test-row" data-test data-name="test_upload_with_file_reports_size passed">
+            <div>
+              <strong>test_upload_with_file_reports_size</strong>
+              
+            </div>
+            <span class="status-chip passed">passed</span>
+            <span style="color:var(--muted);font-size:0.85rem">0s</span>
+            
+          </div>
+          
+        </div>
+      </div>
+      
+    </div>
+  </div>
+  <script>
+    const chartData = {"passed": 130, "failed": 0, "broken": 0, "skipped": 0};
+    document.querySelectorAll('.stage-header').forEach(h => {
+      h.addEventListener('click', () => {
+        const stage = h.closest('.stage');
+        stage.classList.toggle('open');
+        h.setAttribute('aria-expanded', stage.classList.contains('open'));
+      });
+    });
+    document.getElementById('search').addEventListener('input', e => {
+      const q = e.target.value.trim().toLowerCase();
+      document.querySelectorAll('[data-test]').forEach(row => {
+        const name = row.getAttribute('data-name') || '';
+        row.classList.toggle('hidden', q && !name.includes(q));
+      });
+      document.querySelectorAll('[data-stage]').forEach(stage => {
+        const visible = stage.querySelectorAll('[data-test]:not(.hidden)').length;
+        stage.classList.toggle('hidden', q && visible === 0);
+      });
+    });
+    document.getElementById('expand-all').onclick = () =>
+      document.querySelectorAll('.stage').forEach(s => { s.classList.add('open'); });
+    document.getElementById('collapse-all').onclick = () =>
+      document.querySelectorAll('.stage').forEach(s => { s.classList.remove('open'); });
+    const root = document.documentElement;
+    document.getElementById('theme-toggle').onclick = () => {
+      const light = root.classList.toggle('light');
+      root.classList.toggle('dark', !light);
+      localStorage.setItem('testo-extent-theme', light ? 'light' : 'dark');
+    };
+    if (localStorage.getItem('testo-extent-theme') === 'light') {
+      root.classList.add('light');
+      root.classList.remove('dark');
+    }
+  </script>
+</body>
+</html>

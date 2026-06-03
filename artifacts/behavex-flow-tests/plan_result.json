@@ -1,0 +1,19 @@
+{
+  "aggregate_returncode": 0,
+  "duration_s": 7.4875781536102295,
+  "exit_code": 0,
+  "finished_at": 1779313480.5424142,
+  "plan": "behavex-flow-tests",
+  "stages": [
+    {
+      "duration_s": 7.23671293258667,
+      "error": null,
+      "framework": "behavex",
+      "log_path": "/Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/behavex-flow-tests/flow-tests/run.log",
+      "name": "flow-tests",
+      "returncode": 0,
+      "timed_out": false
+    }
+  ],
+  "started_at": 1779313473.054836
+}

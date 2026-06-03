@@ -1,0 +1,2 @@
+﻿01:05:25 - INFO - HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+01:05:25 - INFO - HTTP Request: GET http://testserver/admin "HTTP/1.1 200 OK"

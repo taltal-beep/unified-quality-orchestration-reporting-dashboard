@@ -1,0 +1,22 @@
+{
+  "artifacts_root": "/Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts",
+  "broken": 0,
+  "failed": 0,
+  "passed": 130,
+  "schema_version": "1",
+  "skipped": 0,
+  "stages": [
+    {
+      "broken": 0,
+      "duration_ms": 28,
+      "failed": 0,
+      "framework": "pytest",
+      "passed": 130,
+      "plan": "sample-pytests",
+      "skipped": 0,
+      "stage": "pytest-sample",
+      "total": 130
+    }
+  ],
+  "total": 130
+}

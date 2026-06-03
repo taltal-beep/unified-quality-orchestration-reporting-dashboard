@@ -16,7 +16,7 @@ This repo ships both:
   - Runaway plugin (infinite loop) → container is hard-killed on timeout.
 - **Production-grade reporting**:
   - Raw results uploaded to MinIO under `projects/<run_id>/results/`
-  - Allure Docker Service reads those results and generates `projects/<run_id>/reports/latest`
+  - Allure Report 3 HTML is generated and stored under `reports/<run_id>/` in MinIO
 - **Pluggable execution**: drop in new test plugins without changing the core engine.
 
 ---
@@ -89,6 +89,50 @@ The `testo` CLI reads `testosterone.yaml` and runs a named **cycle** (top-level 
 - **BehaveX dependency**: `behavex` is already included as a runtime dependency in `pyproject.toml`. You can verify the executable is available with:
   - `testo config validate --check-executables`
 
+### Post-run reporters (`reporters:` / `--reporter`)
+
+After a cycle finishes, `testo run` invokes configured **reporters** to process Allure `*-result.json` artifacts:
+
+| Type | Output |
+|------|--------|
+| `allure` | HTML dashboard at `out_dir` (default `./reports/allure`) |
+| `extent` | Premium dark-theme HTML at `output_dir` with charts + searchable test accordion |
+| `reportportal` | Live launch on ReportPortal (REST API v1/v2 auto-detect) |
+| `testbeats` | Slack Block Kit / Teams Adaptive Card webhooks (green `#2EB67D` / red `#E01E5A` accent bar) |
+
+Example [`testosterone.yaml`](testosterone.yaml):
+
+```yaml
+reporters:
+  - type: allure
+    out_dir: ./reports/allure
+  - type: extent
+    output_dir: ./reports/extent
+  - type: reportportal
+    endpoint: http://localhost:8080
+    project: superadmin_personal
+    token: ${env:REPORTPORTAL_TOKEN}
+    api_version: auto
+  - type: testbeats
+    slack_webhook: ${env:SLACK_WEBHOOK}
+    report_url: http://localhost:8080/reports/extent/index.html
+    channel: testo-ci
+```
+
+Use `${env:VAR}` or `${env:VAR:-default}` for secrets (same as stage `args`).
+
+```bash
+testo run --cycle sample-pytests
+open reports/extent/index.html
+testo report --cycle sample-pytests --format html   # interactive Allure server
+```
+
+Override reporters for one run: `testo run --cycle smoke --reporter extent,testbeats`
+
+- **`testo report`** remains the manual post-hoc command (HTML / JSON / JUnit).
+- TestBeats without webhooks still writes `artifacts/reports/testbeats/notification_preview.json`.
+- ReportPortal requires a running instance and valid API token.
+
 Start the new backend + frontend in parallel:
 
 ```bash
@@ -129,9 +173,9 @@ Go to `History` → expand the run → click **Open Allure Server report**.
   - Bucket: `BUCKET_NAME` (default `uqo-artifacts`)
   - Raw Allure results: `projects/<run_id>/results/*`
   - HTML snapshots (optional): `runs/<run_id>/artifacts/*`
-- **Allure Docker Service** (`uqo-allure`): generates per-run reports by project id
-  - Report URL: `ALLURE_SERVER_URL/allure-docker-service/projects/<run_id>/reports/latest/index.html`
-- **Allure sync** (`uqo-allure-sync`): mirrors MinIO `projects/` into Allure’s `/app/projects/`
+- **Allure static host** (`uqo-allure-static`): nginx serving pre-generated Allure 3 HTML
+  - Report URL: `ALLURE_SERVER_URL/reports/<run_id>/index.html`
+- **Allure reports sync** (`uqo-allure-reports-sync`): mirrors MinIO `reports/` into the nginx volume
 - **Mock API (sandbox)**: local target used for demos (managed by Streamlit via `testo_core/sandbox_api.py`)
 
 ### Execution flow (happy path)
@@ -144,7 +188,7 @@ Go to `History` → expand the run → click **Open Allure Server report**.
 4. On completion:
    - DB row is updated to `COMPLETED` or `FAILED`
    - raw Allure results are uploaded to MinIO under `projects/<run_id>/results/`
-5. `uqo-allure-sync` mirrors MinIO → Allure volume; Allure Docker Service updates the report
+5. `uqo-allure-reports-sync` mirrors MinIO `reports/` → nginx; open the static Allure 3 report URL
 6. UI shows an **Allure Server** button for the completed run
 
 ## Headless CLI contract
@@ -318,10 +362,10 @@ docker compose logs --tail=100 minio-init
 
 Allure Docker Service reads from a mirrored volume, not directly from MinIO. After a run completes:
 
-1. Confirm raw results exist in MinIO under `projects/<run_id>/results/`.
-2. Wait for the `uqo-allure-sync` mirror loop (`CHECK_RESULTS_EVERY_SECONDS` and the sync loop both use 5-second defaults).
-3. Verify `ALLURE_SERVER_URL` points at the browser-visible Allure service, for example `http://localhost:5050`.
-4. Open `ALLURE_SERVER_URL/allure-docker-service/projects/<run_id>/reports/latest/index.html`.
+1. Confirm HTML exists in MinIO under `reports/<run_id>/` (optional raw JSON under `projects/<run_id>/results/`).
+2. Wait for the `uqo-allure-reports-sync` mirror loop (5-second default).
+3. Verify `ALLURE_SERVER_URL` points at the static host, for example `http://localhost:5050`.
+4. Open `ALLURE_SERVER_URL/reports/<run_id>/index.html`.
 
 ### MinIO snapshots or download links are missing
 
@@ -347,7 +391,7 @@ Metrics pushes are best-effort. They do not change the run result.
   - orphan cleanup works (force-kill Streamlit mid-run; restart; run is `FAILED`)
   - timeout works (plugin that sleeps forever; container killed; run is `FAILED`)
   - Allure link works (`/projects/<run_id>/reports/latest/index.html` returns 200)
-- Use [`docs/release_checklist_phase1.md`](docs/release_checklist_phase1.md) as the mandatory Foundation go/no-go gate.
+- Use [`docs/Release Management/Release Checklist - Phase 1 Foundation.md`](docs/Release Management/Release Checklist - Phase 1 Foundation.md) as the mandatory Foundation go/no-go gate.
 
 ### GitHub Action quickstart
 
@@ -424,11 +468,11 @@ Set these in your CI provider when persistence/artifact upload is enabled:
 - Missing `run_id` output: run did not produce a terminal summary run entry; inspect `summary_json` and `uqo-output.ndjson`.
 - Upload/report link failures: verify MinIO credentials and bucket permissions for CI runner identity.
 
-Release gate for wrappers is documented in [`docs/release_checklist_phase2_ci.md`](docs/release_checklist_phase2_ci.md).
+Release gate for wrappers is documented in [`docs/Release Management/Release Checklist - Phase 2 CI Integrations.md`](docs/Release Management/Release Checklist - Phase 2 CI Integrations.md).
 
-Ghost-mode release gate is documented in [`docs/release_checklist_phase2_ghost_mode.md`](docs/release_checklist_phase2_ghost_mode.md).
+Ghost-mode release gate is documented in [`docs/Release Management/Release Checklist - Phase 2 Ghost Mode.md`](docs/Release Management/Release Checklist - Phase 2 Ghost Mode.md).
 
-Runner image release gate is documented in [`docs/release_checklist_phase2_runner_image.md`](docs/release_checklist_phase2_runner_image.md).
+Runner image release gate is documented in [`docs/Release Management/Release Checklist - Phase 2 Runner Image.md`](docs/Release Management/Release Checklist - Phase 2 Runner Image.md).
 
 ---
 
@@ -462,7 +506,7 @@ Security and behavior guarantees:
 - Token-like values are redacted from internal error surfaces before transport.
 - Existing run execution and CLI/CI contracts are unchanged when AI is unavailable.
 
-Release gate: `docs/release_checklist_phase4_ai.md`.
+Release gate: `docs/Release Management/Release Checklist - Phase 4 AI and Failure Analysis.md`.
 
 ### Unified dashboard interpretation rules
 
@@ -483,9 +527,9 @@ Release gate: `docs/release_checklist_phase4_ai.md`.
 
 ### Delta comparison semantics
 
-- Baseline/current roles and sign rules are deterministic and documented in [`docs/delta_comparison_policy.md`](docs/delta_comparison_policy.md).
+- Baseline/current roles and sign rules are deterministic and documented in [`docs/Release Management/Delta Comparison Policy.md`](docs/Release Management/Delta Comparison Policy.md).
 - Core analytics logic lives in `testo_core/services/delta_service.py`; route and React layers map and render only.
 - Classification labels: `regression`, `improvement`, `neutral`, `unknown`.
 
-Unified dashboard release gate is documented in [`docs/release_checklist_phase3_unified_dashboard.md`](docs/release_checklist_phase3_unified_dashboard.md).
+Unified dashboard release gate is documented in [`docs/Release Management/Release Checklist - Phase 3 Unified Dashboard.md`](docs/Release Management/Release Checklist - Phase 3 Unified Dashboard.md).
 

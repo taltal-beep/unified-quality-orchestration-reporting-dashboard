@@ -1,0 +1,2644 @@
+<!DOCTYPE html>
+
+
+
+
+<html lang="en" manifest="outputs/bootstrap/manifest/report.manifest">
+    <head>
+        <title>Test Execution Report</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <!-- Latest compiled and minified CSS -->
+        <link href="outputs/bootstrap/css/pace-theme-loading-bar.min.css"
+              rel="stylesheet">
+        <link rel="stylesheet" href="outputs/bootstrap/css/behavex.min.css"
+              rel="stylesheet">
+        <link rel="stylesheet"
+              href="outputs/bootstrap/css/bootstrap-theme.min.css">
+        <link href="outputs/bootstrap/css/bootstrap.min.css"
+              rel="stylesheet">
+        <link href="outputs/bootstrap/css/behavex.min.css"
+              rel="stylesheet">
+        <!-- <link href="outputs/bootstrap/css/jquery-ui.min.css"
+              rel="stylesheet">-->
+        <style>
+        .timeline-container {
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f8f8f8;
+            margin-bottom: 10px;
+            padding: 10px;
+            overflow: visible; /* Allow tooltips to show outside */
+        }
+
+        .worker-timeline-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0px;
+            height: 28px;
+        }
+
+        .worker-timeline-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .worker-label {
+            width: 80px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+            text-align: right;
+            padding-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .worker-timeline {
+            flex: 1;
+            height: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            position: relative;
+            overflow: visible; /* Allow tooltips to show outside */
+        }
+
+        .scenario-segment {
+            height: 100%;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            transition: opacity 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+            box-sizing: border-box;
+            z-index: 1;
+        }
+
+        .scenario-segment:hover {
+            opacity: 0.8;
+            z-index: 1000;
+        }
+
+        .scenario-passed {
+            background-color: #71C176;
+        }
+
+        .scenario-failed {
+            background-color: #F7819F;
+        }
+
+        .scenario-skipped {
+            background-color: #999;
+        }
+
+        .scenario-untested {
+            background-color: #ccc;
+        }
+
+        /* Ensure tooltips appear above everything */
+        .tooltip {
+            z-index: 10000 !important;
+        }
+
+        .tooltip-inner {
+            max-width: 600px !important;
+        }
+
+        .timeline-summary {
+            text-align: center;
+            color: #666;
+            margin-top: 5px;
+        }
+        </style>
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="outputs/bootstrap/js/jquery-1.11.0.min.js"
+                type="application/javascript"></script>
+        <script src="outputs/bootstrap/js/bootstrap.min.js"
+            type="application/javascript"></script>
+        <script src="outputs/bootstrap/js/chart.js"
+            type="application/javascript"></script>
+        <script src="outputs/bootstrap/js/jquery.tablesorter.min.js"
+            type="application/javascript"></script>
+        <script src="outputs/bootstrap/js/jquery.tooltipster.min.js"
+            type="application/javascript"></script>
+        <script src="outputs/bootstrap/js/jquery-ui.min.js"
+            type="application/javascript"></script>
+        <script src="outputs/bootstrap/js/pace.min.js"
+            type="application/javascript"></script>
+        
+    </head>
+    <body><div style="display: none" id="iframe-container">
+                <div id="div-iframe" style="width:97%;height:97%;border:1px solid
+                #ddd;position:absolute;z-index: 1;background-color:white;">
+                </div>
+                <div class="pull-right" style="padding-right: 3%">
+                    <a href="#" class="btn btn-xs btn-warning pull-left"
+                           data-close-iframe>Close X</a>
+                       <div class="navbar-static-top" style="z-index: 1;
+                    position:absolute;">
+                        <a href="#" class="btn btn-xs btn-warning"
+                           data-close-iframe>Close X</a>
+                    </div>
+                </div>
+                <div class="pull-left" style="padding-right: 3%">
+                    <a href="#" class="btn btn-xs btn-warning pull-left"
+                           data-close-iframe>Close X</a>
+                       <div class="navbar-static-top" style="z-index: 1;
+                    position:absolute;">
+                        <a href="#" class="btn btn-xs btn-warning"
+                           data-close-iframe>Close X</a>
+                    </div>
+                </div>
+            </div><nav class="navbar navbar-inverse" style="margin-top:16px;">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand">BehaveX</a>
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <!-- icon behavex-->
+                    <li class="nav-item active">
+                        <a class="nav-link" href="#">Test Report</a>
+                    </li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="nav-item">
+                        <div class="navbar-text" style="padding: 0;margin: 0;margin-top: 0px;">
+                            <span class="glyphicon glyphicon-info-sign btn-lg" data-toggle="tooltip_info"></span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div id="accordion2" role="tablist" aria-multiselectable="true">
+                <div class="panel panel-default container_body">
+                    <div class="panel-heading" role="tab" id="headingOne">
+                        <button class="btn btn-info btn-sm" type="button" data-toggle="collapse"
+                                data-target="#collapse-filters" aria-expanded="true"
+                                aria-controls="collapse-filters">Filters</button>&nbsp;
+                        <button class="btn btn-info btn-sm" type="button" data-toggle="collapse"
+                                data-target="#collapse-metrics" aria-expanded="false"
+                                aria-controls="collapse-metrics">Metrics</button>
+                    </div>
+                </div>
+                <div id="collapse-metrics" class="metrics-hidden behavex-big-row panel-collapse collapse in"
+                     role="tabpanel" aria-labelledby="headingOne">
+                    <div class="panel-body">
+                        <div class="container-fluid behavex-row-total">
+                            <div class="col-xs-12">
+                                <div class="col-xs-3">
+                                    <h5><b>Automation Rate:        100%</b></h5>
+                                    <canvas id="chart-automation-rate"></canvas>
+                                </div>
+                                <div class="col-xs-3">
+                                    <h5 id="h5-status"><b>Pass Rate:        100%</b></h5>
+                                    <canvas id="chart-pass-rate"></canvas>
+                                </div>
+                                <div class="col-xs-6">
+                                    <h5 id="h5-status"><b>Steps: 11</b><b class="span-behavex" id="reusability"></b></h5>
+                                    <canvas id="chart-steps"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-xs-12" style="margin-top: 20px;">
+                                <div class="col-xs-12">
+                                                                        <h5><b>Execution Timeline</b></h5>
+                                    <div class="timeline-container"><div class="worker-timeline-row">
+                                                    <div class="worker-label">Worker 0</div>
+                                                    <div class="worker-timeline"><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 0.0%; width: 1.0%;"
+                                                                 data-scenario-name="Root still returns 200 after other calls"
+                                                                 data-feature-name="Mock API flows — items, auth headers, and repeats (part 2)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651534"
+                                                                 data-duration="0.006202220916748047"
+                                                                 data-worker-id="0">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 0.34%; width: 1.0%;"
+                                                                 data-scenario-name="Second root check"
+                                                                 data-feature-name="Mock API flows — items, auth headers, and repeats (part 2)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651541"
+                                                                 data-duration="0.0012161731719970703"
+                                                                 data-worker-id="0">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 0.44%; width: 1.0%;"
+                                                                 data-scenario-name="Items endpoint returns 200 with empty list after reset"
+                                                                 data-feature-name="Mock API flows — items, auth headers, and repeats (part 2)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651543"
+                                                                 data-duration="0.0010416507720947266"
+                                                                 data-worker-id="0">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 0.49%; width: 1.0%;"
+                                                                 data-scenario-name="Create two items and list them"
+                                                                 data-feature-name="Mock API flows — items, auth headers, and repeats (part 2)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651544"
+                                                                 data-duration="0.002605915069580078"
+                                                                 data-worker-id="0">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 0.68%; width: 1.0%;"
+                                                                 data-scenario-name="Get first item by id"
+                                                                 data-feature-name="Mock API flows — items, auth headers, and repeats (part 2)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651548"
+                                                                 data-duration="0.0017139911651611328"
+                                                                 data-worker-id="0">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 0.78%; width: 1.0%;"
+                                                                 data-scenario-name="Get second item by id"
+                                                                 data-feature-name="Mock API flows — items, auth headers, and repeats (part 2)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651550"
+                                                                 data-duration="0.002244234085083008"
+                                                                 data-worker-id="0">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 0.93%; width: 1.0%;"
+                                                                 data-scenario-name="Login as charlie"
+                                                                 data-feature-name="Mock API flows — items, auth headers, and repeats (part 2)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651553"
+                                                                 data-duration="0.0011048316955566406"
+                                                                 data-worker-id="0">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 0.97%; width: 1.0%;"
+                                                                 data-scenario-name="Login as dana"
+                                                                 data-feature-name="Mock API flows — items, auth headers, and repeats (part 2)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651554"
+                                                                 data-duration="0.0009253025054931641"
+                                                                 data-worker-id="0">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 1.07%; width: 1.0%;"
+                                                                 data-scenario-name="Secure with invalid bearer returns 401"
+                                                                 data-feature-name="Mock API flows — items, auth headers, and repeats (part 2)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651556"
+                                                                 data-duration="0.0009331703186035156"
+                                                                 data-worker-id="0">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 1.12%; width: 1.0%;"
+                                                                 data-scenario-name="Admin with malformed bearer returns 401"
+                                                                 data-feature-name="Mock API flows — items, auth headers, and repeats (part 2)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651557"
+                                                                 data-duration="0.0009076595306396484"
+                                                                 data-worker-id="0">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 1.17%; width: 1.0%;"
+                                                                 data-scenario-name="Submit empty object"
+                                                                 data-feature-name="Mock API flows — items, auth headers, and repeats (part 2)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651558"
+                                                                 data-duration="0.0008878707885742188"
+                                                                 data-worker-id="0">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 1.27%; width: 1.0%;"
+                                                                 data-scenario-name="Submit nested object"
+                                                                 data-feature-name="Mock API flows — items, auth headers, and repeats (part 2)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651560"
+                                                                 data-duration="0.0008821487426757812"
+                                                                 data-worker-id="0">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 1.31%; width: 1.0%;"
+                                                                 data-scenario-name="Create item with default name"
+                                                                 data-feature-name="Mock API flows — items, auth headers, and repeats (part 2)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651561"
+                                                                 data-duration="0.0008511543273925781"
+                                                                 data-worker-id="0">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 1.36%; width: 1.0%;"
+                                                                 data-scenario-name="Another flaky sample"
+                                                                 data-feature-name="Mock API flows — items, auth headers, and repeats (part 2)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651562"
+                                                                 data-duration="0.0010418891906738281"
+                                                                 data-worker-id="0">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 1.46%; width: 1.0%;"
+                                                                 data-scenario-name="Another chaos sample"
+                                                                 data-feature-name="Mock API flows — items, auth headers, and repeats (part 2)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651564"
+                                                                 data-duration="0.0010111331939697266"
+                                                                 data-worker-id="0">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 1.51%; width: 1.0%;"
+                                                                 data-scenario-name="Delete missing item returns 404"
+                                                                 data-feature-name="Mock API flows — items, auth headers, and repeats (part 2)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651565"
+                                                                 data-duration="0.001043558120727539"
+                                                                 data-worker-id="0">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 1.61%; width: 1.0%;"
+                                                                 data-scenario-name="Get missing item returns 404"
+                                                                 data-feature-name="Mock API flows — items, auth headers, and repeats (part 2)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651567"
+                                                                 data-duration="0.0007863044738769531"
+                                                                 data-worker-id="0">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 1.66%; width: 1.0%;"
+                                                                 data-scenario-name="Login default username path"
+                                                                 data-feature-name="Mock API flows — items, auth headers, and repeats (part 2)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651568"
+                                                                 data-duration="0.001173257827758789"
+                                                                 data-worker-id="0">
+                                                            </div>
+                                                    </div>
+                                                </div><div class="worker-timeline-row">
+                                                    <div class="worker-label">Worker 1</div>
+                                                    <div class="worker-timeline"><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 0.0%; width: 1.0%;"
+                                                                 data-scenario-name="Root returns 200"
+                                                                 data-feature-name="Mock API flows — health, errors, and auth (part 1)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651534"
+                                                                 data-duration="0.0062563419342041016"
+                                                                 data-worker-id="1">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 0.34%; width: 97.53%;"
+                                                                 data-scenario-name="Slow endpoint completes with 200"
+                                                                 data-feature-name="Mock API flows — health, errors, and auth (part 1)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598651541"
+                                                                 data-duration="2.0032217502593994"
+                                                                 data-worker-id="1">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 97.91%; width: 1.0%;"
+                                                                 data-scenario-name="Forced error endpoint returns 500"
+                                                                 data-feature-name="Mock API flows — health, errors, and auth (part 1)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598653545"
+                                                                 data-duration="0.002634763717651367"
+                                                                 data-worker-id="1">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 98.1%; width: 1.0%;"
+                                                                 data-scenario-name="Flaky endpoint returns 200 or 500"
+                                                                 data-feature-name="Mock API flows — health, errors, and auth (part 1)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598653549"
+                                                                 data-duration="0.0020852088928222656"
+                                                                 data-worker-id="1">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 98.25%; width: 1.0%;"
+                                                                 data-scenario-name="Chaos endpoint returns 200, 401, or 500"
+                                                                 data-feature-name="Mock API flows — health, errors, and auth (part 1)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598653552"
+                                                                 data-duration="0.0019404888153076172"
+                                                                 data-worker-id="1">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 98.39%; width: 1.0%;"
+                                                                 data-scenario-name="Secure without token returns 401"
+                                                                 data-feature-name="Mock API flows — health, errors, and auth (part 1)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598653555"
+                                                                 data-duration="0.0018644332885742188"
+                                                                 data-worker-id="1">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 98.54%; width: 1.0%;"
+                                                                 data-scenario-name="Admin without token returns 401"
+                                                                 data-feature-name="Mock API flows — health, errors, and auth (part 1)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598653558"
+                                                                 data-duration="0.001981973648071289"
+                                                                 data-worker-id="1">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 98.68%; width: 1.0%;"
+                                                                 data-scenario-name="Login returns 200 and a token"
+                                                                 data-feature-name="Mock API flows — health, errors, and auth (part 1)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598653561"
+                                                                 data-duration="0.0019860267639160156"
+                                                                 data-worker-id="1">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 98.83%; width: 1.0%;"
+                                                                 data-scenario-name="Secure with bearer returns 200"
+                                                                 data-feature-name="Mock API flows — health, errors, and auth (part 1)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598653564"
+                                                                 data-duration="0.003061532974243164"
+                                                                 data-worker-id="1">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 99.03%; width: 1.0%;"
+                                                                 data-scenario-name="Admin with bearer returns 200"
+                                                                 data-feature-name="Mock API flows — health, errors, and auth (part 1)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598653568"
+                                                                 data-duration="0.0027458667755126953"
+                                                                 data-worker-id="1">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 99.22%; width: 1.0%;"
+                                                                 data-scenario-name="Submit accepts JSON payload"
+                                                                 data-feature-name="Mock API flows — health, errors, and auth (part 1)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598653572"
+                                                                 data-duration="0.0014231204986572266"
+                                                                 data-worker-id="1">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 99.32%; width: 1.0%;"
+                                                                 data-scenario-name="Items list is empty initially"
+                                                                 data-feature-name="Mock API flows — health, errors, and auth (part 1)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598653574"
+                                                                 data-duration="0.0012836456298828125"
+                                                                 data-worker-id="1">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 99.41%; width: 1.0%;"
+                                                                 data-scenario-name="Create item returns 200"
+                                                                 data-feature-name="Mock API flows — health, errors, and auth (part 1)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598653576"
+                                                                 data-duration="0.0014824867248535156"
+                                                                 data-worker-id="1">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 99.51%; width: 1.0%;"
+                                                                 data-scenario-name="Get created item by id"
+                                                                 data-feature-name="Mock API flows — health, errors, and auth (part 1)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598653578"
+                                                                 data-duration="0.002454519271850586"
+                                                                 data-worker-id="1">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 99.66%; width: 1.0%;"
+                                                                 data-scenario-name="Delete item returns 200"
+                                                                 data-feature-name="Mock API flows — health, errors, and auth (part 1)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598653581"
+                                                                 data-duration="0.0025196075439453125"
+                                                                 data-worker-id="1">
+                                                            </div><div class="scenario-segment scenario-passed"
+                                                                 style="position: absolute; left: 99.85%; width: 1.0%;"
+                                                                 data-scenario-name="Deleted item returns 404"
+                                                                 data-feature-name="Mock API flows — health, errors, and auth (part 1)"
+                                                                 data-status="passed"
+                                                                 data-start="1778598653585"
+                                                                 data-duration="0.003020763397216797"
+                                                                 data-worker-id="1">
+                                                            </div>
+                                                    </div>
+                                                </div></div>
+                                                                        <div class="timeline-summary"><small>34 scenarios across 2 workers| 34 passed</small><br>
+                                        <small style="color: #888; font-style: italic;">
+                                            💡 Tip: If execution appears unbalanced across workers, consider using @ORDER tags to control test execution sequence for better load distribution.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-12" style="margin-bottom: 30px;">
+                                <!-- Extra space after timeline -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="collapse-filters" class="behavex-big-row panel-collapse collapse in"
+                     role="tabpanel" aria-labelledby="headingOne">
+                    <div class="panel-body">
+                        <div class="container-fluid behavex-row-total">
+                            <div class="row"><br>
+                                <div class="col-sm-3 pull-left report-filter">
+                                    <div class="form-group form-group-sm">
+                                        <b>
+                                        <label class="control-label pull-left"
+                                               style="padding-top: 5px;padding-right:3px;font-size: 12px;">Search</label>
+                                        <input placeholder="Scenario name..."
+                                               type="text"
+                                               class="input-group form-control-static input-search"
+                                               style="height: 25px"
+                                               data-search>
+                                        </b>
+                                    </div>
+                                </div>
+                                <div class="col-sm-3 pull-left report-filter">
+                                    <div class="form-group form-group-sm">
+                                        <label class="control-label pull-left"
+                                               style="padding-top: 5px;padding-right:3px;font-size: 12px;">
+                                            Tag
+                                        </label>
+                                        <select class="select-filter  form-control-static"
+                                                style="height: 25px"
+                                                data-select-filter-tags>
+                                            <option value="all">All</option></select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-3 pull-left report-filter">
+                                    <div class="form-group form-group-sm">
+                                        <label class="control-label pull-left"
+                                               style="padding-top: 5px;padding-right:3px;font-size: 12px;">
+                                            Status
+                                        </label>
+                                        <select class="select-filter  form-control-static"
+                                                style="height: 25px"
+                                                data-select-filter-status>
+                                            <option value="all">All</option>
+                                            <option value="failed">Failed</option>
+                                            <option value="skipped">Not Run</option>
+                                            <option value="passed">Passed</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-3 pull-left" >
+                                    <div class="form-group form-group-sm">
+                                        <button type="button" class="btn btn-info btn-xs"
+                                                id="button-reset-filter" data-reset-filter>
+                                            <b>Reset</b>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <table class="table table-bordered behavex_letter" id="summary">
+                <thead>
+                    <tr class="table-header"><th>Feature (2 features)</th><th style="width:120px">Total</th>
+                        <th style="width:120px">Executed</th>
+                        <th style="width:180px">Status</th>
+                        <th style="width:100px">Duration</th>
+                    </tr>
+                </thead><!--<tr class="table_row_passed data_feature feature-scenario"
+                        data-feature-tags="[]">-->
+                    <tr class="table_row_passed data_feature feature-scenario"
+                        data-feature-tags="[]" feature_passed>
+                        <td title="Feature" class="green-behavex">
+                             <span class="glyphicon glyphicon-menu-right pull-left"
+                                   data-feature-id="49699"
+                                   data-feature title="Expand the scenarios information">
+                                   <b class="span-behavex">Mock API flows — health, errors, and auth (part 1)</b>
+                             </span>
+                        </td>
+                        <td title="Total">
+                            16</td>
+                        <td title="Executed">
+                            16 (100%)
+                        </td>
+                        <td title="Status">
+                            <table><tr>
+                                <td style="width:40px" class="green-behavex">100%&nbsp;</td>
+                                <td style="width:140px">
+                                    <div class="progress  progress-expand-steps"><div class="progress-bar progress-bar-default progress-behavex-passed" role="progressbar" style="width:100%" title="Passed: 16, Failed: 0, Not&nbsp;Run: 0 "></div>
+                                    </div>
+                                </td>
+                            </tr></table>
+                        </td>
+                        <td title="Duration">  2s</td>
+                    </tr>
+                    <tr style="display: None" data-feature-id="49699">
+                        <td colspan="5">
+                            <div class="panel-default feature behavex_letter">
+                <div class="panel-body">
+                    <table class="table table-bordered behavex_letter table-scenario" >
+                    <colgroup>
+                        <col><col style="width: 80px"><col style="width: 80px"><col style="width: 80px"><col style="width: 180px">
+                    </colgroup><tr style="display: none" data-info-background="Mock API flows — health, errors, and auth (part 1)"
+                            class="panel-header">
+                            <td colspan="5">
+                                <ul class="background-scenario list-unstyled behavex_letter ul-background-behavex"><li><b>Given </b> the mock API client is ready</li></ul>
+                            </td>
+                        </tr><tr class="table-header">
+                        <th style="width: auto">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Scenario&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-name-background="Mock API flows — health, errors, and auth (part 1)" style="cursor:pointer;"
+                                   data-background data-show="false"
+                                   title="Expand the background information"><small
+                                        class="behavex-letter" data-name-background="Mock API flows — health, errors, and auth (part 1)"
+                                           data-background>(show background)</small>
+                                </a></th>
+                        <th style="width: 80px;height: 24px" class="text-center">Type</th>
+                        <th style="width: 80px;height: 24px" class="text-center">Status</th>
+                        <th style="width: 80px;height: 24px" class="text-center">Duration</th>
+                        <th style="width: 180px;height: 24px" class="text-center">Evidence</th>
+                    </tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="763f8a9be0ba4b1fabd98aa98c0a31c5"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Root returns 200</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Root returns 200"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="763f8a9be0ba4b1fabd98aa98c0a31c5"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="763f8a9be0ba4b1fabd98aa98c0a31c5"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="77e12d8904ac4cb1901b620a56047ed4"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Slow endpoint completes with 200</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Slow endpoint completes with 200"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="77e12d8904ac4cb1901b620a56047ed4"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="77e12d8904ac4cb1901b620a56047ed4"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/slow&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>  2s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="d0526d54048942d4af9ab2b153afbcec"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Forced error endpoint returns 500</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Forced error endpoint returns 500"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="d0526d54048942d4af9ab2b153afbcec"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="d0526d54048942d4af9ab2b153afbcec"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/error&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 500</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="456b00da1cdb4626909d8257abf1cd00"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Flaky endpoint returns 200 or 500</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Flaky endpoint returns 200 or 500"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="456b00da1cdb4626909d8257abf1cd00"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="456b00da1cdb4626909d8257abf1cd00"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/flaky&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be one of 200, 500</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="12d79690e43c464d8fcd63c053d26cfc"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Chaos endpoint returns 200, 401, or 500</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Chaos endpoint returns 200, 401, or 500"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="12d79690e43c464d8fcd63c053d26cfc"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="12d79690e43c464d8fcd63c053d26cfc"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/chaos&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be one of 200, 401, 500</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="c190e0ff50aa41209767080bdc18cce1"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Secure without token returns 401</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Secure without token returns 401"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="c190e0ff50aa41209767080bdc18cce1"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="c190e0ff50aa41209767080bdc18cce1"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/secure&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 401</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="78dbde8106194c87bbd687edf56bed33"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Admin without token returns 401</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Admin without token returns 401"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="78dbde8106194c87bbd687edf56bed33"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="78dbde8106194c87bbd687edf56bed33"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/admin&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 401</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="88378a689b68406ea31d30f18ea75153"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Login returns 200 and a token</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Login returns 200 and a token"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="88378a689b68406ea31d30f18ea75153"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="88378a689b68406ea31d30f18ea75153"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I POST to &#34;/login&#34; with JSON
+            <div>
+                <pre class="small behavex_letter">{&#34;username&#34;: &#34;alice&#34;}</pre>
+            </div>
+
+            </li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li><li style="width: 100%;float: left;"><b>And</b> the JSON field &#34;token&#34; should exist</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="4e5c65b9ef1e4f85b96714b1928258f3"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Secure with bearer returns 200</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Secure with bearer returns 200"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="4e5c65b9ef1e4f85b96714b1928258f3"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="4e5c65b9ef1e4f85b96714b1928258f3"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>Given</b> I am logged in as &#34;alice&#34;</li><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/secure&#34; as authenticated user</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="cc63052012d84175ac7958a153a76e40"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Admin with bearer returns 200</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Admin with bearer returns 200"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="cc63052012d84175ac7958a153a76e40"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="cc63052012d84175ac7958a153a76e40"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>Given</b> I am logged in as &#34;bob&#34;</li><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/admin&#34; as authenticated user</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="fde930df6aea438a83a216485af49a9e"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Submit accepts JSON payload</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Submit accepts JSON payload"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="fde930df6aea438a83a216485af49a9e"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="fde930df6aea438a83a216485af49a9e"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I POST to &#34;/submit&#34; with JSON
+            <div>
+                <pre class="small behavex_letter">{&#34;kind&#34;: &#34;test&#34;, &#34;value&#34;: 42}</pre>
+            </div>
+
+            </li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li><li style="width: 100%;float: left;"><b>And</b> the JSON field &#34;received&#34; should be true</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="e066101dd88e4bb49e0ce956e61921d9"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Items list is empty initially</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Items list is empty initially"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="e066101dd88e4bb49e0ce956e61921d9"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="e066101dd88e4bb49e0ce956e61921d9"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/items&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="5ec7cec783704f51943715494edd4f0b"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Create item returns 200</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Create item returns 200"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="5ec7cec783704f51943715494edd4f0b"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="5ec7cec783704f51943715494edd4f0b"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I POST to &#34;/items&#34; with JSON
+            <div>
+                <pre class="small behavex_letter">{&#34;name&#34;: &#34;alpha&#34;, &#34;meta&#34;: {&#34;tier&#34;: &#34;gold&#34;}}</pre>
+            </div>
+
+            </li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li><li style="width: 100%;float: left;"><b>And</b> the JSON field &#34;created&#34; should be true</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="91364172f9aa409892ff500d5196da87"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Get created item by id</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Get created item by id"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="91364172f9aa409892ff500d5196da87"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="91364172f9aa409892ff500d5196da87"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I POST to &#34;/items&#34; with JSON
+            <div>
+                <pre class="small behavex_letter">{&#34;name&#34;: &#34;beta&#34;}</pre>
+            </div>
+
+            </li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/items/1&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="fb8177e3cfc949ecbcbae84297a14f80"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Delete item returns 200</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Delete item returns 200"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="fb8177e3cfc949ecbcbae84297a14f80"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="fb8177e3cfc949ecbcbae84297a14f80"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I POST to &#34;/items&#34; with JSON
+            <div>
+                <pre class="small behavex_letter">{&#34;name&#34;: &#34;gamma&#34;}</pre>
+            </div>
+
+            </li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li><li style="width: 100%;float: left;"><b>When</b> I DELETE &#34;/items/1&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="624fa0f8e8f14aa299f3b36bb701e9a6"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Deleted item returns 404</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Deleted item returns 404"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="624fa0f8e8f14aa299f3b36bb701e9a6"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="624fa0f8e8f14aa299f3b36bb701e9a6"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I POST to &#34;/items&#34; with JSON
+            <div>
+                <pre class="small behavex_letter">{&#34;name&#34;: &#34;delta&#34;}</pre>
+            </div>
+
+            </li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li><li style="width: 100%;float: left;"><b>When</b> I DELETE &#34;/items/1&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/items/1&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 404</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr></table>
+            </div>
+        </div>
+                        </td>
+                    </tr><!--<tr class="table_row_passed data_feature feature-scenario"
+                        data-feature-tags="[]">-->
+                    <tr class="table_row_passed data_feature feature-scenario"
+                        data-feature-tags="[]" feature_passed>
+                        <td title="Feature" class="green-behavex">
+                             <span class="glyphicon glyphicon-menu-right pull-left"
+                                   data-feature-id="61931"
+                                   data-feature title="Expand the scenarios information">
+                                   <b class="span-behavex">Mock API flows — items, auth headers, and repeats (part 2)</b>
+                             </span>
+                        </td>
+                        <td title="Total">
+                            18</td>
+                        <td title="Executed">
+                            18 (100%)
+                        </td>
+                        <td title="Status">
+                            <table><tr>
+                                <td style="width:40px" class="green-behavex">100%&nbsp;</td>
+                                <td style="width:140px">
+                                    <div class="progress  progress-expand-steps"><div class="progress-bar progress-bar-default progress-behavex-passed" role="progressbar" style="width:100%" title="Passed: 18, Failed: 0, Not&nbsp;Run: 0 "></div>
+                                    </div>
+                                </td>
+                            </tr></table>
+                        </td>
+                        <td title="Duration">0s</td>
+                    </tr>
+                    <tr style="display: None" data-feature-id="61931">
+                        <td colspan="5">
+                            <div class="panel-default feature behavex_letter">
+                <div class="panel-body">
+                    <table class="table table-bordered behavex_letter table-scenario" >
+                    <colgroup>
+                        <col><col style="width: 80px"><col style="width: 80px"><col style="width: 80px"><col style="width: 180px">
+                    </colgroup><tr style="display: none" data-info-background="Mock API flows — items, auth headers, and repeats (part 2)"
+                            class="panel-header">
+                            <td colspan="5">
+                                <ul class="background-scenario list-unstyled behavex_letter ul-background-behavex"><li><b>Given </b> the mock API client is ready</li></ul>
+                            </td>
+                        </tr><tr class="table-header">
+                        <th style="width: auto">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Scenario&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-name-background="Mock API flows — items, auth headers, and repeats (part 2)" style="cursor:pointer;"
+                                   data-background data-show="false"
+                                   title="Expand the background information"><small
+                                        class="behavex-letter" data-name-background="Mock API flows — items, auth headers, and repeats (part 2)"
+                                           data-background>(show background)</small>
+                                </a></th>
+                        <th style="width: 80px;height: 24px" class="text-center">Type</th>
+                        <th style="width: 80px;height: 24px" class="text-center">Status</th>
+                        <th style="width: 80px;height: 24px" class="text-center">Duration</th>
+                        <th style="width: 180px;height: 24px" class="text-center">Evidence</th>
+                    </tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="981769c4716d402a9f2aa38255154b03"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Root still returns 200 after other calls</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Root still returns 200 after other calls"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="981769c4716d402a9f2aa38255154b03"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="981769c4716d402a9f2aa38255154b03"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="b0fdec572241428a9a9524a33ebab60b"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Second root check</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Second root check"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="b0fdec572241428a9a9524a33ebab60b"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="b0fdec572241428a9a9524a33ebab60b"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="c28d8dd6d0104846b58f0103e19ccfa5"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Items endpoint returns 200 with empty list after reset</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Items endpoint returns 200 with empty list after reset"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="c28d8dd6d0104846b58f0103e19ccfa5"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="c28d8dd6d0104846b58f0103e19ccfa5"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/items&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="16e2fa38139f4c6abb2cb0cfbee0e193"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Create two items and list them</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Create two items and list them"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="16e2fa38139f4c6abb2cb0cfbee0e193"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="16e2fa38139f4c6abb2cb0cfbee0e193"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I POST to &#34;/items&#34; with JSON
+            <div>
+                <pre class="small behavex_letter">{&#34;name&#34;: &#34;one&#34;}</pre>
+            </div>
+
+            </li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li><li style="width: 100%;float: left;"><b>When</b> I POST to &#34;/items&#34; with JSON
+            <div>
+                <pre class="small behavex_letter">{&#34;name&#34;: &#34;two&#34;}</pre>
+            </div>
+
+            </li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/items&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="1a530cfe1d6c4eee8c78ef9156920b1d"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Get first item by id</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Get first item by id"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="1a530cfe1d6c4eee8c78ef9156920b1d"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="1a530cfe1d6c4eee8c78ef9156920b1d"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I POST to &#34;/items&#34; with JSON
+            <div>
+                <pre class="small behavex_letter">{&#34;name&#34;: &#34;first&#34;}</pre>
+            </div>
+
+            </li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/items/1&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="24cbb5a9131c4b4ebb60f3b990e3eab2"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Get second item by id</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Get second item by id"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="24cbb5a9131c4b4ebb60f3b990e3eab2"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="24cbb5a9131c4b4ebb60f3b990e3eab2"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I POST to &#34;/items&#34; with JSON
+            <div>
+                <pre class="small behavex_letter">{&#34;name&#34;: &#34;a&#34;}</pre>
+            </div>
+
+            </li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li><li style="width: 100%;float: left;"><b>When</b> I POST to &#34;/items&#34; with JSON
+            <div>
+                <pre class="small behavex_letter">{&#34;name&#34;: &#34;b&#34;}</pre>
+            </div>
+
+            </li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/items/2&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="30eebfbd54674b6f972dd897209b4b63"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Login as charlie</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Login as charlie"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="30eebfbd54674b6f972dd897209b4b63"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="30eebfbd54674b6f972dd897209b4b63"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I POST to &#34;/login&#34; with JSON
+            <div>
+                <pre class="small behavex_letter">{&#34;username&#34;: &#34;charlie&#34;}</pre>
+            </div>
+
+            </li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="a892e177bbdb4df3a72630b3194181ab"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Login as dana</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Login as dana"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="a892e177bbdb4df3a72630b3194181ab"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="a892e177bbdb4df3a72630b3194181ab"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I POST to &#34;/login&#34; with JSON
+            <div>
+                <pre class="small behavex_letter">{&#34;username&#34;: &#34;dana&#34;}</pre>
+            </div>
+
+            </li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="61093606a4644338a50fe1d1f83a6e0a"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Secure with invalid bearer returns 401</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Secure with invalid bearer returns 401"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="61093606a4644338a50fe1d1f83a6e0a"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="61093606a4644338a50fe1d1f83a6e0a"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I request GET &#34;/secure&#34; with Authorization &#34;Bearer invalid-token&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 401</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="bedf89c0c0944f69884cc7ac9db5dc4a"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Admin with malformed bearer returns 401</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Admin with malformed bearer returns 401"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="bedf89c0c0944f69884cc7ac9db5dc4a"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="bedf89c0c0944f69884cc7ac9db5dc4a"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I request GET &#34;/admin&#34; with Authorization &#34;not-bearer xyz&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 401</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="fda39d5809784446bdd86b2805aff85b"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Submit empty object</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Submit empty object"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="fda39d5809784446bdd86b2805aff85b"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="fda39d5809784446bdd86b2805aff85b"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I POST to &#34;/submit&#34; with JSON
+            <div>
+                <pre class="small behavex_letter">{}</pre>
+            </div>
+
+            </li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="93203fcadf2a408db9052cf082a65bd3"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Submit nested object</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Submit nested object"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="93203fcadf2a408db9052cf082a65bd3"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="93203fcadf2a408db9052cf082a65bd3"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I POST to &#34;/submit&#34; with JSON
+            <div>
+                <pre class="small behavex_letter">{&#34;a&#34;: {&#34;b&#34;: [1, 2, 3]}}</pre>
+            </div>
+
+            </li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="b58b0c0a370d4f6b836ea7a1052071a1"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Create item with default name</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Create item with default name"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="b58b0c0a370d4f6b836ea7a1052071a1"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="b58b0c0a370d4f6b836ea7a1052071a1"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I POST to &#34;/items&#34; with JSON
+            <div>
+                <pre class="small behavex_letter">{}</pre>
+            </div>
+
+            </li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="0e7bab677fc34c03ba6a81d6461a3adb"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Another flaky sample</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Another flaky sample"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="0e7bab677fc34c03ba6a81d6461a3adb"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="0e7bab677fc34c03ba6a81d6461a3adb"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/flaky&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be one of 200, 500</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="1f3f0fcc1eae45b299d5035b5c12d241"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Another chaos sample</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Another chaos sample"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="1f3f0fcc1eae45b299d5035b5c12d241"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="1f3f0fcc1eae45b299d5035b5c12d241"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/chaos&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be one of 200, 401, 500</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="5fa000d672074e0b8d3bfa9accc01478"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Delete missing item returns 404</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Delete missing item returns 404"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="5fa000d672074e0b8d3bfa9accc01478"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="5fa000d672074e0b8d3bfa9accc01478"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I DELETE &#34;/items/999&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 404</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="e766309cb6dd4f3092c2eab243ef0995"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Get missing item returns 404</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Get missing item returns 404"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="e766309cb6dd4f3092c2eab243ef0995"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="e766309cb6dd4f3092c2eab243ef0995"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I GET &#34;/items/999&#34;</li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 404</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr><!-- scenario_hash has been forced to be a string --><tr class="table_row_commons behavex_letter feature-scenario text-center"
+                                data-scenario-tags="[]">
+                            <td class="text-left grey-behavex">
+                                <div class="green-behavex alert-success behavex_letter alert-behavex scenario-step">
+                                    &nbsp;
+                                    <span class="glyphicon glyphicon-menu-right" data-id-hash="0da6b4f87a4648ffb3d57415bb0e8fb3"
+                                          title="Expand the scenario information" data-scenario>
+                                          <b class="span-behavex" style="cursor: pointer;">Login default username path</b>&nbsp;<b class="glyphicon glyphicon-copy glyphicon-scenario link-cursor"
+                                             title="Copy scenario name" data-copy-text="Login default username path"></b></span>
+                                    
+                                </div>
+                                <div data-div-id_hash="0da6b4f87a4648ffb3d57415bb0e8fb3"
+                                     style="display: None" class="pull-left gherkin">
+                                    <br><ul class='list-unstyled scenario-step'
+                                        data-div-id_hash="0da6b4f87a4648ffb3d57415bb0e8fb3"
+                                        style="display: None;width: 100%"><li style="width: 100%;float: left;"><b>When</b> I POST to &#34;/login&#34; with JSON
+            <div>
+                <pre class="small behavex_letter">{}</pre>
+            </div>
+
+            </li><li style="width: 100%;float: left;"><b>Then</b> the status code should be 200</li><li style="width: 100%;float: left;"><b>And</b> the JSON field &#34;token&#34; should exist</li></ul>
+                                </div>
+                            </td>
+                            <td><p class="text-center">Automated</p>
+                                    </td><td><p><b>&nbsp;Passed</b></p></td>
+                                        <td>
+                                            <p class="text-center" title="Total execution time">
+                                                <b>0s</b>
+                                            </p>
+                                        </td><td style="width: 190px;">
+                                        <div class="btn-group text-left">
+                                            <a charset=utf-8 class="btn btn-info btn-xs" title="Copy link to this scenario" data-share>
+                                                <span class="glyphicon glyphicon-share"></span>
+                                            </a>
+                                        </div>
+                                    </td></tr></table>
+            </div>
+        </div>
+                        </td>
+                    </tr><tr class="behavex-row-total">
+                    <!-- iteritems has been changed to items -->
+                    <td><b>Totals</b></td>
+                    <td><b>34</b></td>
+                    <td><b>34 (100%)</b></td>
+                    <td>
+                        <table><tr>
+                            <td style="width:40px" class="green-behavex"><b>100%&nbsp;</b></td>
+                            <td style="width:140px">
+                                <div class="progress progress-expand-steps"><div class="progress-bar progress-bar-default progress-behavex-passed" role="progressbar" style="width:100%" title="Passed: 34, Failed: 0, Not&nbsp;Run: 0 "></div>
+                                </div>
+                            </td>
+                        </tr></table>
+                    </td>
+                    <td><b>  2.1s</b></td>
+                </tr>
+            </table>
+
+            
+             <div class="modal fade " id="modal-logs" style="display: None">
+                <div class="modal-dialog modal-dialog-style">
+                    <div class="modal-content modal-style">
+                        <div class="modal-header">
+                            <a class="close" data-dismiss="modal">&times;</a>
+                        </div>
+                        <div class="modal-body modal-style-body">
+                        </div>
+                    </div>
+                </div>
+            </div>
+    <div id="fill-for-fix"></div>
+    
+    <div class="modal fade" id="report_modal" style="display: None">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a class="close" data-dismiss="modal">&times;</a>
+                    <h3></h3>
+                </div>
+                <div class="modal-body modal-style-body">
+                    
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn" data-dismiss="modal">Close</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <nav class="navbar navbar navbar-bottom"  style="display: none">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12 text-center">
+                    <h6 id='footer-header'>
+                        BehaveX -
+                        Agile test wrapper on top of Behave (BDD)</h6>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+<!-- Script block for JavaScript defined in child templates -->
+<script type="text/javascript">
+//<![CDATA[
+ 
+
+//<![CDATA[
+        // This JavaScript has been refactored to:
+        // 1. Use proper CDATA markers to prevent minification issues
+        // 2. Replace inline onclick handlers with data-* attributes
+        // 3. Add event delegation using $(document).on() to handle dynamically added elements
+        // 4. Move handlers into the document.ready function for better organization
+        // 5. Ensure all JavaScript is properly encapsulated and follows best practices
+
+        $(document).ready(function(){
+            iframe = false;
+
+            // Debug: Check if scenario segments exist
+            console.log('Found', $('.scenario-segment').length, 'scenario segments');
+            $('.scenario-segment').each(function(i) {
+                console.log('Segment', i, ':', $(this).data('scenario-name'));
+            });
+
+            // Remove any existing title attributes to prevent dual tooltips
+            $('.scenario-segment').removeAttr('title');
+
+            // Enhanced tooltips for timeline segments with debouncing for fast mouse movement
+            var tooltipTimeout;
+            var currentTooltipElement = null;
+
+            $('.scenario-segment').on('mouseenter', function() {
+                var $this = $(this);
+
+                // Clear any existing timeout
+                if (tooltipTimeout) {
+                    clearTimeout(tooltipTimeout);
+                }
+
+                // Destroy any existing tooltip immediately
+                if (currentTooltipElement && currentTooltipElement.get(0) !== $this.get(0)) {
+                    try {
+                        currentTooltipElement.tooltip('hide').tooltip('destroy');
+                    } catch (e) { /* ignore */ }
+                }
+
+                currentTooltipElement = $this;
+
+                // Debounce tooltip creation to prevent rapid fire events
+                tooltipTimeout = setTimeout(function() {
+                    try {
+                        var scenarioName = $this.data('scenario-name') || 'Unknown Scenario';
+                        var featureName = $this.data('feature-name') || 'Unknown Feature';
+                        var status = $this.data('status') || 'unknown';
+                        var start = $this.data('start');
+                        var duration = $this.data('duration');
+
+                        // Ensure we have valid numeric values
+                        start = (start !== undefined && start !== null && !isNaN(start)) ? parseFloat(start) : 0;
+                        duration = (duration !== undefined && duration !== null && !isNaN(duration)) ? parseFloat(duration) : 0;
+
+                        // Format duration like "1m 0.4s" or "11h 18m 12.3s"
+                        function formatDuration(seconds) {
+                            if (isNaN(seconds) || seconds < 0) return '0s';
+
+                            var hours = Math.floor(seconds / 3600);
+                            var minutes = Math.floor((seconds % 3600) / 60);
+                            var secs = (seconds % 60);
+
+                            var result = '';
+                            if (hours > 0) result += hours + 'h ';
+                            if (minutes > 0) result += minutes + 'm ';
+                            if (secs > 0 || result === '') {
+                                if (secs % 1 === 0) {
+                                    result += secs + 's';
+                                } else {
+                                    result += secs.toFixed(1) + 's';
+                                }
+                            }
+                            return result.trim();
+                        }
+
+
+
+                        // Format start time as HH:MM:SS only (no date)
+                        function formatStartTime(timestamp) {
+                            if (isNaN(timestamp) || timestamp <= 0) return 'N/A';
+
+                            try {
+                                var date;
+                                // Handle milliseconds timestamp (like 1755135608226)
+                                if (timestamp > 1000000000000) {
+                                    date = new Date(timestamp);
+                                }
+                                // Handle seconds timestamp
+                                else if (timestamp > 1600000000) {
+                                    date = new Date(timestamp * 1000);
+                                }
+                                // Small numbers are relative time
+                                else {
+                                    return formatDuration(timestamp) + ' from start';
+                                }
+
+
+
+                                // Format as HH:MM:SS only (no date)
+                                return String(date.getHours()).padStart(2, '0') + ':' +
+                                       String(date.getMinutes()).padStart(2, '0') + ':' +
+                                       String(date.getSeconds()).padStart(2, '0');
+                            } catch (e) {
+                                return 'N/A';
+                            }
+                        }
+
+                        var formattedDuration = formatDuration(duration);
+                        var formattedStartTime = formatStartTime(start);
+
+                        // Format status safely
+                        var formattedStatus = 'Unknown';
+                        if (status && typeof status === 'string') {
+                            if (status === 'idle') {
+                                formattedStatus = 'Idle';
+                            } else {
+                                formattedStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+                            }
+                        }
+
+                        var tooltipContent = [
+                            '<div style="background: rgba(0,0,0,1.0); color: white; padding: 15px; border-radius: 6px; font-size: 13px; max-width: 600px; min-width: 300px; line-height: 1.5; white-space: normal; word-wrap: break-word; border: 1px solid #333; box-shadow: 0 4px 8px rgba(0,0,0,0.3); text-align: left;">',
+                            '<strong>' + featureName + '</strong><br/>',
+                            '<strong>Scenario:</strong> ' + scenarioName + '<br/>',
+                            '<strong>Status:</strong> ' + formattedStatus + '<br/>',
+                            '<strong>Start time:</strong> ' + formattedStartTime + '<br/>',
+                            '<strong>Duration:</strong> ' + formattedDuration,
+                            '</div>'
+                        ].join('');
+
+                        // Safely destroy any existing tooltip first
+                        try {
+                            $this.tooltip('hide').tooltip('destroy');
+                        } catch (e) { /* ignore */ }
+
+                        // Clear any existing title attributes
+                        $this.removeAttr('title').removeAttr('data-original-title');
+
+                        // Create and show new tooltip
+                        $this.tooltip({
+                            title: tooltipContent,
+                            html: true,
+                            placement: 'auto top',
+                            trigger: 'manual',
+                            container: 'body',
+                            template: '<div class="tooltip" role="tooltip" style="z-index: 10000;"><div class="tooltip-arrow"></div><div class="tooltip-inner" style="background: transparent; border: none; padding: 0; max-width: none; min-width: 300px;"></div></div>'
+                        }).tooltip('show');
+
+                    } catch (error) {
+                        console.warn('Tooltip error:', error);
+                        // Fallback to simple title attribute
+                        var fallbackTitle = scenarioName + ' (' + formattedStatus + ') - ' + formattedDuration;
+                        $this.attr('title', fallbackTitle);
+                    }
+                }, 150); // 150ms delay to prevent rapid fire events
+            }).on('mouseleave', function() {
+                var $this = $(this);
+
+                // Clear the timeout to prevent tooltip creation if mouse left quickly
+                if (tooltipTimeout) {
+                    clearTimeout(tooltipTimeout);
+                    tooltipTimeout = null;
+                }
+
+                // Hide and destroy tooltip with delay to allow mouse to reach tooltip
+                setTimeout(function() {
+                    try {
+                        $this.tooltip('hide').tooltip('destroy');
+                        $this.removeAttr('title').removeAttr('data-original-title');
+                    } catch (e) { /* ignore */ }
+                }, 100);
+
+                // Clear current element reference
+                if (currentTooltipElement && currentTooltipElement.get(0) === $this.get(0)) {
+                    currentTooltipElement = null;
+                }
+            });
+
+            // Event handler for copy buttons
+            $(document).on('click', '[data-copy-text]', function(e){
+                e.stopPropagation();
+                var text = $(this).attr('data-copy-text');
+                copyToClipboard(text);
+            });
+
+            // Event handler for tag links
+            $(document).on('click', '[data-tag]', function(e){
+                e.preventDefault();
+                var tag = $(this).attr('data-tag');
+                show_tag(tag);
+            });
+
+            // Event handler for share buttons
+            $(document).on('click', '[data-share]', function(e){
+                e.preventDefault();
+                var scenario = $(this).closest('tr').find("td:first").find('span:first');
+                var feature_id = scenario.parents('div.feature').parents('tr[data-feature-id]').attr('data-feature-id');
+                var url = $(location).attr('href').split('#')[0];
+                result = url + '#scenario=' + feature_id + '-' + scenario.attr('data-id-hash');
+                copyToClipboard(result);
+                alert("Test scenario link copied!");
+            });
+
+            // Event handler for scenario expand/collapse
+            $(document).on('click', '[data-scenario]', function(e){
+                e.stopPropagation();
+                var element = $(this);
+                var id = element.attr('data-id-hash');
+                var div = $('[data-div-id_hash='+ id +']');
+                if (element.hasClass('glyphicon-menu-right')) {
+                    div.css('display', '');
+                    element.removeClass('glyphicon-menu-right');
+                    element.addClass('glyphicon-menu-down');
+                    element.attr('title', "Collapse the scenario information");
+                } else {
+                    div.css('display', 'None')
+                    element.removeClass('glyphicon-menu-down');
+                    element.addClass('glyphicon-menu-right');
+                    element.attr('title', "Expand the scenario information");
+                    element.parent().parent().parent().find('div.list-extra-log').css('display', 'none');
+                }
+            });
+
+            // Event handler for feature expand/collapse
+            $(document).on('click', '[data-feature]', function(e){
+                e.stopPropagation();
+                var element = $(this);
+                click_data_feature(element, true);
+            });
+
+            // Event handler for background expand/collapse
+            $(document).on('click', '[data-background]', function(e){
+                e.stopPropagation();
+                var element = $(this);
+                var name = element.attr('data-name-background');
+                var tr = $('[data-info-background="'+ name +'"]');
+                if(element.hasClass('panel-header')) {
+                    // this for click of the tr
+                    var tr = element;
+                    element = element.find('+ tr').find('small');
+                }
+                if (element.text().trim() == '(show background)') {
+                    tr.css('display', '')
+                    element.text('(hide background)')
+                    element.attr('title', "Collapse the background information");
+                    element.parent('a').attr('data-show', 'true');
+                } else {
+                    tr.css('display', 'None')
+                    element.text('(show background)');
+                    element.attr('title', "Expand the background information");
+                    element.parent('a').attr('data-show', 'false');
+                }
+            });
+
+            // Event handler for view elements
+            $(document).on('click', '[view]', function(e){
+                e.stopPropagation();
+                var element = $(this);
+                var find  = element.attr('find');
+                var finder = $(find);
+                var word = element.attr('word') || 'scenario';
+                if (element.hasClass('glyphicon-menu-right')) {
+                    finder.css('display', '')
+                    element.removeClass('glyphicon-menu-right');
+                    element.addClass('glyphicon-menu-down');
+                    element.attr('title', "Collapse the  information");
+                } else {
+                    finder.css('display', 'None')
+                    element.removeClass('glyphicon-menu-down');
+                    element.addClass('glyphicon-menu-right');
+                    element.attr('title', "Expand the  information");
+                }
+            });
+
+            // Event handler for log and image links
+            $(document).on('click', '[data-log],[data-image]', function(e){
+                e.preventDefault();
+                iframe = true;
+                var link = $(this);
+                var url = decodeURI(link.attr('href')).replace('C:\\', 'file:///C:/');
+                var modal = $('#modal-logs');
+                var body_modal = modal.find('div.modal-body');
+                body_modal.html('<iframe style="width:100%;height:100%;" frameborder="0" src="' + url + '" />');
+                modal.modal('show');
+            });
+
+            // Event handler for closing iframe
+            $(document).on('click', '[data-close-iframe]', function(){
+                iframe = false;
+                $('#iframe-container').css('display', 'none');
+                $('div.container_body').show();
+                $('nav.nav-behavex').show();
+                $('html, body').animate({scrollTop: $('tr[data-feature-id='+ scenario_frame+']').offset().top});
+            });
+
+            // Event handler for extra logs
+            $(document).on('click', '[data-path-extra]', function(e){
+                e.preventDefault();
+                var div = $($(this).find(" + div")[0]);
+
+                var modal = $('#modal-logs');
+                var body_modal = modal.find('div.modal-body');
+                var clone_div = div.clone();
+                clone_div.css('display', '');
+
+                body_modal.html(clone_div);
+                modal.modal('show');
+            });
+
+            // Event handler for filter status
+            $(document).on('change', '[data-select-filter-status]', function(){
+                var selected = $(this).val();
+                if (selected == 'all') {
+                    show_all();
+                } else {
+                    filter_status(selected);
+                }
+            });
+
+            // Event handler for filter tags
+            $(document).on('change', '[data-select-filter-tags]', function(){
+                var selected = $(this).val();
+                if (selected == 'all') {
+                    show_all();
+                } else {
+                    show_tag(selected);
+                }
+            });
+
+            // Event handler for reset filter
+            $(document).on('click', '[data-reset-filter]', function(){
+                reset_filters();
+                show_all();
+            });
+
+            var ua = navigator.userAgent.toLowerCase();
+            if (ua.indexOf('safari') != -1) {
+                if (ua.indexOf('chrome') == -1) {
+                    $('span.glyphicon-share').hide();
+                }
+            }
+            var url = $(location).attr('href');
+            var list_url = url.split('#');
+            if (list_url.length < 2 || (list_url.length == 2 && list_url[1] == '') ){
+                var aux= 0;
+                return 0;
+            }
+            if (list_url.length > 1) {
+                var filter = list_url[1].split('=');
+            } else {
+                return 0;
+            }
+            if (filter.length > 1) {
+                if (filter[0] == 'tag'){
+                    show_tag(filter[1]);
+                } else if (filter[0] == 'scenario'){
+                    show_scenario(filter[1]);
+                }
+            }
+        })
+
+        $("[data-path-extra]").click(function(e){
+            e.preventDefault();
+            var div = $($(this).find(" + div")[0]);
+
+            var modal = $('#modal-logs');
+            var body_modal = modal.find('div.modal-body');
+            var clone_div = div.clone();
+            clone_div.css('display', '');
+
+            body_modal.html(clone_div);
+            modal.modal('show');
+        })
+
+        // Old event handlers have been moved to use event delegation in document.ready
+
+        function filter_status(status){
+            show_all()
+            if (status == 'failed'){
+                $('tr[feature_failed] span').click();
+                $('tr[feature_error] span').click();  // Also expand features with error status
+                $('tr[feature_passed]').hide();
+                $('tr[feature_skipped]').hide();
+                $($('tr[feature_passed] + tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons')).has('div.alert-warning').hide();
+                $($('tr[feature_passed] + tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons')).has('div.alert-success').hide();
+                $($('tr[feature_failed] + tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-success')).parents('tr.feature-scenario').hide();
+                $($('tr[feature_failed] + tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-warning')).parents('tr.feature-scenario').hide();
+                $($('tr[feature_error] + tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-success')).parents('tr.feature-scenario').hide();
+                $($('tr[feature_error] + tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-warning')).parents('tr.feature-scenario').hide();
+            } else if (status == 'passed'){
+                $('tr[feature_failed]').hide();
+                $('tr[feature_error]').hide();  // Also hide features with error status
+                $('tr[feature_skipped]').hide();
+                $('tr[feature_skipped] + tr[data-feature-id] td');
+                $($('tr[feature_passed] + tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons')).has('div.alert-warning').hide();
+                $($('tr[feature_passed] + tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons')).has('div.alert-danger').hide();
+                $('tr[feature_failed]').each(function(){
+                    var clickear = false;
+                    var div = $(this);
+                    if (div.find(' +  tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-success').length > 0) {
+                        div.find('span').click();
+                        div.show();
+                        div.find(' +  tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-success').parents('tr.feature-scenario').show();
+                        div.find(' +  tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-danger').parents('tr.feature-scenario').hide();
+                        div.find(' +  tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-warning').parents('tr.feature-scenario').hide();
+                    }
+                });
+                $('tr[feature_error]').each(function(){
+                    var clickear = false;
+                    var div = $(this);
+                    if (div.find(' +  tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-success').length > 0) {
+                        div.find('span').click();
+                        div.show();
+                        div.find(' +  tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-success').parents('tr.feature-scenario').show();
+                        div.find(' +  tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-danger').parents('tr.feature-scenario').hide();
+                        div.find(' +  tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-warning').parents('tr.feature-scenario').hide();
+                    }
+                });
+                $('tr[feature_passed]').each(function(){
+                    var clickear = false;
+                    var div = $(this);
+                    if (div.find(' +  tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-success').length > 0) {
+                        div.find('span').click();
+                        div.show();
+                        div.find(' +  tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-success').parents('tr.feature-scenario').show();
+                        div.find(' +  tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-danger').parents('tr.feature-scenario').hide();
+                        div.find(' +  tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-warning').parents('tr.feature-scenario').hide();
+                    }
+                });
+            } else if (status == 'skipped'){
+                $('tr[feature_skipped]  span').click();
+                $('div.alert-danger').parents('tr.feature-scenario').hide();
+                $('div.alert-success').parents('tr.feature-scenario').hide();
+                $('tr[feature_failed]').each(function(){
+                    var div = $(this);
+                    if (div.find(' +  tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-warning').length > 0){
+                        div.find('span').click();
+                        div.show();
+                    } else {
+                        div.hide();
+                        div.next().hide();
+                    }
+                });
+                $('tr[feature_error]').each(function(){
+                    var div = $(this);
+                    if (div.find(' +  tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-warning').length > 0){
+                        div.find('span').click();
+                        div.show();
+                    } else {
+                        div.hide();
+                        div.next().hide();
+                    }
+                });
+                $('tr[feature_passed]').each(function(){
+                    var div = $(this);
+                    if (div.find(' +  tr[data-feature-id] td[colspan=5] div.panel-default div.panel-body table tr.table_row_commons div.alert-warning').length > 0) {
+                        div.find('span').click();
+                        div.show();
+                    } else {
+                        div.hide();
+                        div.next().hide();
+                    }
+                });
+
+            }
+        }
+
+        function reset_filters(filters){
+            var filters = filters || [];
+            if (!(filters.indexOf('tags') >= 0)){
+                $('select[data-select-filter-tags] option[selected]').removeAttr('selected');
+                $('select[data-select-filter-tags] option[value=all]').attr('selected', 'selected');
+            }
+            if (!(filters.indexOf('search') >= 0)){
+                $('[data-search]').val('');
+            }
+            if (!(filters.indexOf('status') >= 0)){
+                $('select[data-select-filter-status] option[selected]').removeAttr('selected');
+                $('select[data-select-filter-status] option[value=all]').attr('selected', 'selected');
+            }
+        }
+
+        $('[data-reset-filter]').click(function(){
+            reset_filters();
+            show_all();
+         });
+
+        function show_all(){
+            $('tr.feature_passed').show();
+            $('tr.feature_failed').show();
+            $('tr.feature_error').show();  // Also show features with error status
+            $('tr.feature_skipped').show();
+            $('tr[data-feature-tags]').show();
+            $('tr[data-feature-id]').hide();
+            $('span.glyphicon-menu-down').click();
+            $('tr[class=behavex-row-total]').show();
+            $('a[data-show=true]').click();
+            $('.feature-scenario').show();
+            $('span[data-feature-id]').parents('tr').find('tr').show();
+        }
+
+        function show_scenario(id_hash_){
+            $('.feature-scenario').hide();
+            $('span.glyphicon-menu-down').click();
+            $('a[data-show=true]').click();
+            reset_filters();
+            var id_feature = id_hash_.split('-')[0];
+            var id_hash = id_hash_.split('-')[1];
+            var span_feature = $('span[data-feature-id="'+ id_feature+'"]');
+            span_feature.parents('tr').show();
+            click_data_feature(span_feature, false);
+            var span_scenario = span_feature.parents('tr').find('+ tr').hide()
+            var span_scenario = span_feature.parents('tr').find('+ tr').find('span[data-id-hash='+ id_hash+']');
+            span_scenario.parents('tr').show();
+            span_scenario.click();
+            span_scenario.parents('tr').focus();
+            $('tr[class=behavex-row-total]').hide();
+        }
+
+        function show_tag(tag){
+            features = $('tr[data-feature-tags]');
+            features.show()
+            $('span.glyphicon-menu-down').click();
+            $('tr[data-scenario-tags]').show();
+            $('a[data-show=true]').click();
+            $('select[data-select-filter-tags] option[value='+ tag +']').attr('selected', 'selected');
+            reset_filters(['tags']);
+
+            for (index = 0; index < features.length; ++index) {
+                var feature = $(features[index]);
+                if (eval(feature.attr('data-feature-tags')).indexOf(tag) < 0) {
+                    feature.hide();
+                } else {
+                    feature.find('span[data-feature]').click();
+                }
+            }
+            scenarios = $('tr[data-scenario-tags]');
+            for (index = 0; index < scenarios.length; ++index) {
+                var scenario = $(scenarios[index]);
+                if (eval(scenario.attr('data-scenario-tags')).indexOf(tag) < 0){
+                    scenario.hide();
+                }
+            }
+            $('tr[class=behavex-row-total]').hide();
+            expanded = document.querySelectorAll("button[aria-controls='collapse-filters']")[0].getAttribute("aria-expanded")
+            if(expanded=="false") {
+                document.querySelectorAll("button[aria-controls='collapse-filters']")[0].click()
+            }
+        }
+
+        function click_data_feature(element, all) {
+            element.children('tr .feature-scenario').show();
+
+            var id = element.attr('data-feature-id');
+            var tr = $('tr[data-feature-id='+ id +']');
+            if (element.hasClass('glyphicon-menu-right')) {
+                tr.css('display', '')
+                element.removeClass('glyphicon-menu-right');
+                element.addClass('glyphicon-menu-down');
+                element.attr('title', "Collapse the scenarios information");
+            } else {
+                tr.css('display', 'None')
+                element.removeClass('glyphicon-menu-down');
+                element.addClass('glyphicon-menu-right');
+                element.attr('title', "Expand the scenarios information");
+            }
+
+        }
+        function copyToClipboard(value) {
+              // Create a "hidden" input
+              var aux = document.createElement("input");
+
+              // Assign it the value of the specified element
+              aux.setAttribute("value", value);
+
+              // Append it to the body
+              document.body.appendChild(aux);
+
+              // Highlight its content
+              aux.select();
+
+              // Copy the highlighted text
+              document.execCommand("copy");
+
+              // Remove it from the body
+              document.body.removeChild(aux);
+        }
+
+        var scenario_frame = '';
+        // These direct event bindings have been replaced with event delegation in document.ready
+        // $('[data-log],[data-image]').click(function(e){ ... });
+        // $('[data-close-iframe]').click(function(){ ... });
+        var scenarios_autocomplete = Array();scenarios_autocomplete.push({'label':'Root returns 200',
+            'desc':'49699-763f8a9be0ba4b1fabd98aa98c0a31c5','value': 'Root returns 200' });scenarios_autocomplete.push({'label':'Slow endpoint completes with 200',
+            'desc':'49699-77e12d8904ac4cb1901b620a56047ed4','value': 'Slow endpoint completes with 200' });scenarios_autocomplete.push({'label':'Forced error endpoint returns 500',
+            'desc':'49699-d0526d54048942d4af9ab2b153afbcec','value': 'Forced error endpoint returns 500' });scenarios_autocomplete.push({'label':'Flaky endpoint returns 200 or 500',
+            'desc':'49699-456b00da1cdb4626909d8257abf1cd00','value': 'Flaky endpoint returns 200 or 500' });scenarios_autocomplete.push({'label':'Chaos endpoint returns 200, 401, or 500',
+            'desc':'49699-12d79690e43c464d8fcd63c053d26cfc','value': 'Chaos endpoint returns 200, 401, or 500' });scenarios_autocomplete.push({'label':'Secure without token returns 401',
+            'desc':'49699-c190e0ff50aa41209767080bdc18cce1','value': 'Secure without token returns 401' });scenarios_autocomplete.push({'label':'Admin without token returns 401',
+            'desc':'49699-78dbde8106194c87bbd687edf56bed33','value': 'Admin without token returns 401' });scenarios_autocomplete.push({'label':'Login returns 200 and a token',
+            'desc':'49699-88378a689b68406ea31d30f18ea75153','value': 'Login returns 200 and a token' });scenarios_autocomplete.push({'label':'Secure with bearer returns 200',
+            'desc':'49699-4e5c65b9ef1e4f85b96714b1928258f3','value': 'Secure with bearer returns 200' });scenarios_autocomplete.push({'label':'Admin with bearer returns 200',
+            'desc':'49699-cc63052012d84175ac7958a153a76e40','value': 'Admin with bearer returns 200' });scenarios_autocomplete.push({'label':'Submit accepts JSON payload',
+            'desc':'49699-fde930df6aea438a83a216485af49a9e','value': 'Submit accepts JSON payload' });scenarios_autocomplete.push({'label':'Items list is empty initially',
+            'desc':'49699-e066101dd88e4bb49e0ce956e61921d9','value': 'Items list is empty initially' });scenarios_autocomplete.push({'label':'Create item returns 200',
+            'desc':'49699-5ec7cec783704f51943715494edd4f0b','value': 'Create item returns 200' });scenarios_autocomplete.push({'label':'Get created item by id',
+            'desc':'49699-91364172f9aa409892ff500d5196da87','value': 'Get created item by id' });scenarios_autocomplete.push({'label':'Delete item returns 200',
+            'desc':'49699-fb8177e3cfc949ecbcbae84297a14f80','value': 'Delete item returns 200' });scenarios_autocomplete.push({'label':'Deleted item returns 404',
+            'desc':'49699-624fa0f8e8f14aa299f3b36bb701e9a6','value': 'Deleted item returns 404' });scenarios_autocomplete.push({'label':'Root still returns 200 after other calls',
+            'desc':'61931-981769c4716d402a9f2aa38255154b03','value': 'Root still returns 200 after other calls' });scenarios_autocomplete.push({'label':'Second root check',
+            'desc':'61931-b0fdec572241428a9a9524a33ebab60b','value': 'Second root check' });scenarios_autocomplete.push({'label':'Items endpoint returns 200 with empty list after reset',
+            'desc':'61931-c28d8dd6d0104846b58f0103e19ccfa5','value': 'Items endpoint returns 200 with empty list after reset' });scenarios_autocomplete.push({'label':'Create two items and list them',
+            'desc':'61931-16e2fa38139f4c6abb2cb0cfbee0e193','value': 'Create two items and list them' });scenarios_autocomplete.push({'label':'Get first item by id',
+            'desc':'61931-1a530cfe1d6c4eee8c78ef9156920b1d','value': 'Get first item by id' });scenarios_autocomplete.push({'label':'Get second item by id',
+            'desc':'61931-24cbb5a9131c4b4ebb60f3b990e3eab2','value': 'Get second item by id' });scenarios_autocomplete.push({'label':'Login as charlie',
+            'desc':'61931-30eebfbd54674b6f972dd897209b4b63','value': 'Login as charlie' });scenarios_autocomplete.push({'label':'Login as dana',
+            'desc':'61931-a892e177bbdb4df3a72630b3194181ab','value': 'Login as dana' });scenarios_autocomplete.push({'label':'Secure with invalid bearer returns 401',
+            'desc':'61931-61093606a4644338a50fe1d1f83a6e0a','value': 'Secure with invalid bearer returns 401' });scenarios_autocomplete.push({'label':'Admin with malformed bearer returns 401',
+            'desc':'61931-bedf89c0c0944f69884cc7ac9db5dc4a','value': 'Admin with malformed bearer returns 401' });scenarios_autocomplete.push({'label':'Submit empty object',
+            'desc':'61931-fda39d5809784446bdd86b2805aff85b','value': 'Submit empty object' });scenarios_autocomplete.push({'label':'Submit nested object',
+            'desc':'61931-93203fcadf2a408db9052cf082a65bd3','value': 'Submit nested object' });scenarios_autocomplete.push({'label':'Create item with default name',
+            'desc':'61931-b58b0c0a370d4f6b836ea7a1052071a1','value': 'Create item with default name' });scenarios_autocomplete.push({'label':'Another flaky sample',
+            'desc':'61931-0e7bab677fc34c03ba6a81d6461a3adb','value': 'Another flaky sample' });scenarios_autocomplete.push({'label':'Another chaos sample',
+            'desc':'61931-1f3f0fcc1eae45b299d5035b5c12d241','value': 'Another chaos sample' });scenarios_autocomplete.push({'label':'Delete missing item returns 404',
+            'desc':'61931-5fa000d672074e0b8d3bfa9accc01478','value': 'Delete missing item returns 404' });scenarios_autocomplete.push({'label':'Get missing item returns 404',
+            'desc':'61931-e766309cb6dd4f3092c2eab243ef0995','value': 'Get missing item returns 404' });scenarios_autocomplete.push({'label':'Login default username path',
+            'desc':'61931-0da6b4f87a4648ffb3d57415bb0e8fb3','value': 'Login default username path' });var search = $('[data-search]');
+        search.autocomplete({
+            source: scenarios_autocomplete,
+            select: function(event, ui){
+                show_scenario(ui.item.desc);
+            }
+        });
+
+        $(document.querySelectorAll("button[aria-controls='collapse-metrics']")).on('click', function(e){
+            metrics_panel = document.getElementById("collapse-metrics")
+            if(metrics_panel.classList.contains('metrics-hidden')) {
+                e.stopPropagation();
+                metrics_panel.classList.remove('metrics-hidden');
+                var ctxAutomationRate = document.getElementById("chart-automation-rate").getContext("2d");
+                var ctxPassRate = document.getElementById("chart-pass-rate").getContext("2d");
+                var ctxSteps = document.getElementById("chart-steps").getContext("2d");
+                window.pieChart1 = new Chart(ctxAutomationRate, pieDataAutomationRate);
+                window.pieChart2 = new Chart(ctxPassRate, pieDataPassRate);
+                window.scatterChart1 = new Chart(ctxSteps, scatterDataSteps);
+            }
+         });
+
+        //CHARTS SECTION
+        var
+        green = '#71C176';
+        high_green = '#61B566';
+        red = '#F7819F';
+        high_red = '#E87296';
+        grey = '#999';
+        high_grey = '#777'
+        muted_failed = '0' || 1;
+
+        var decodeHtmlEntity = function(x) {
+          return x.replace(/&#(\d+);/g, function(match, dec) {
+            return String.fromCharCode(dec);
+          });
+        };
+
+        var scatterDataSteps = {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    labels: [decodeHtmlEntity('I GET &#34;{path}&#34;'),decodeHtmlEntity('the status code should be {code:d}'),decodeHtmlEntity('the mock API client is ready'),decodeHtmlEntity('I POST to &#34;{path}&#34; with JSON'),decodeHtmlEntity('I request GET &#34;{path}&#34; with Authorization &#34;{value}&#34;'),decodeHtmlEntity('the status code should be one of {codes}'),decodeHtmlEntity('I DELETE &#34;{path}&#34;'),decodeHtmlEntity('the JSON field &#34;{key}&#34; should exist'),decodeHtmlEntity('I am logged in as &#34;{username}&#34;'),decodeHtmlEntity('I GET &#34;{path}&#34; as authenticated user'),decodeHtmlEntity('the JSON field &#34;{key}&#34; should be true'),],
+                    label: 'Passed',
+                    data: [{ x: 19, y: 0.1 },{ x: 39, y: 0.0 },{ x: 34, y: 0.0 },{ x: 17, y: 0.0 },{ x: 2, y: 0.0 },{ x: 4, y: 0.0 },{ x: 3, y: 0.0 },{ x: 2, y: 0.0 },{ x: 2, y: 0.0 },{ x: 2, y: 0.0 },{ x: 2, y: 0.0 },],
+                    backgroundColor: green
+                },{
+                    labels: [],
+                    label: 'Failed',
+                    data: [],
+                    backgroundColor: red
+                }],
+            },
+            options: {
+                scales: {
+                    x: {
+                        min: 0,
+                        title: {
+                            display: true,
+                            text: 'Executions'
+                        },
+                        ticks: {
+                            stepSize: 1
+                        }
+                    },
+                    y: {
+                        min: 0,
+                        title: {
+                            display: true,
+                            text: 'Duration (avg)'
+                        },
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                // console.log(ctx);
+                                var label = [ctx.dataset.labels[ctx.dataIndex]];
+                                label.push("- Executions: " + ctx.parsed.x);
+                                label.push("- Duration (avg): " + ctx.parsed.y + "s");
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        var pieDataAutomationRate = {
+            type: 'pie',
+            data: {
+                labels: ['Automated', 'Manual'],
+                datasets: [{
+                    data: [34, 0],
+                    backgroundColor: [green, grey],
+                    borderWidth: 0.5 ,
+                    borderColor: '#ddd'
+                }]
+            }
+        };
+
+
+        var pieDataPassRate = {
+            type: 'pie',
+            data: {
+                labels: ['Passed', 'Failed'],
+                datasets: [{
+                    data: [34, 0],
+                    backgroundColor: [green, red],
+                    borderWidth: 0.5 ,
+                    borderColor: '#ddd'
+                }]
+            }
+        };document.getElementById("reusability").innerHTML = "&nbsp;&nbsp;&nbsp;(Executions: 126, Avg. Reusability: 11.5)";//]]>
+
+//]]>
+</script>
+
+<!-- Script block for base template JavaScript -->
+<script type="text/javascript">
+//<![CDATA[
+$(window).load(function() {
+    
+    $('.container_body').css('display','');
+    $('.nav-behavex').css('display','');
+    $('.navbar-bottom').css('display','');
+    $('#help-report').click(function($this){
+        if ($('#report_modal').hasClass('in')){
+            $('#report_modal').modal('hide');
+        } else {
+            $('#report_modal').modal('show');
+        }
+    });
+    $('.tr-progress').hover(
+        function(){
+            tr = $(this);
+            tr.find('.progress').css('border', '2px solid #66c4e0');
+        },
+        function(){
+            tr = $(this);
+            tr.find('.progress').css('border', '1px solid #ccc');
+        }
+    );
+});
+
+$(document).ready(function() {
+    // Create tooltip content as a variable first to improve readability and minification
+    var tooltipContent = '<b>Execution Details:</b>' +
+               '<br>&nbsp;&nbsp;&nbsp;&nbsp;<b>Parallel processes:</b> 1' +
+               '<br>&nbsp;&nbsp;&nbsp;&nbsp;<b>Parallel scheme:</b> scenario' +'<br><br><b>Execution Times:</b>' +
+               '<br>&nbsp;&nbsp;&nbsp;&nbsp;<b>Execution start time:</b> 2026-05-12 18:10:53' +
+               '<br>&nbsp;&nbsp;&nbsp;&nbsp;<b>Execution end time:</b> 2026-05-12 18:10:53' +
+               '<br>&nbsp;&nbsp;&nbsp;&nbsp;<b>Total execution time:</b> 0s' +
+               '<br>&nbsp;&nbsp;&nbsp;&nbsp;<b>Total scenarios duration:</b>   2.1s';
+
+    $('[data-toggle="tooltip_info"]').tooltip({
+        title: tooltipContent,
+        placement: "bottom",
+        template: '<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner tooltip-info textarea"></div></div>',
+        html: true
+    });
+});
+//]]>
+</script>
+    </body>
+</html>

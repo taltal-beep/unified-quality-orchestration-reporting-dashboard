@@ -1,0 +1,71 @@
+{
+  "aggregate_returncode": 1,
+  "cycle": "all",
+  "duration_s": 3.3744640350341797,
+  "exit_code": 1,
+  "finished_at": 1778580047.7807271,
+  "plan": "all",
+  "stages": [
+    {
+      "duration_s": 0.820875883102417,
+      "equipment": "pytest",
+      "error": null,
+      "errors": 0,
+      "failed": 0,
+      "framework": "pytest",
+      "log_path": "/Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/artifacts/all/all-unit-pytest/run.log",
+      "name": "all-unit-pytest",
+      "passed": 100,
+      "returncode": 0,
+      "routine": "all-unit-pytest",
+      "skipped": 0,
+      "timed_out": false
+    },
+    {
+      "duration_s": 0.620579719543457,
+      "equipment": "pytest",
+      "error": null,
+      "errors": 0,
+      "failed": 0,
+      "framework": "pytest",
+      "log_path": "/Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/artifacts/all/all-flow-inproc-pytest/run.log",
+      "name": "all-flow-inproc-pytest",
+      "passed": 8,
+      "returncode": 0,
+      "routine": "all-flow-inproc-pytest",
+      "skipped": 0,
+      "timed_out": false
+    },
+    {
+      "duration_s": 0.7255411148071289,
+      "equipment": "pytest",
+      "error": null,
+      "errors": 0,
+      "failed": 0,
+      "framework": "pytest",
+      "log_path": "/Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/artifacts/all/all-flow-live-pytest/run.log",
+      "name": "all-flow-live-pytest",
+      "passed": 22,
+      "returncode": 0,
+      "routine": "all-flow-live-pytest",
+      "skipped": 0,
+      "timed_out": false
+    },
+    {
+      "duration_s": 1.1805949211120605,
+      "equipment": "behave",
+      "error": null,
+      "errors": null,
+      "failed": null,
+      "framework": "behave",
+      "log_path": "/Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/artifacts/all/all-flow-behave/run.log",
+      "name": "all-flow-behave",
+      "passed": null,
+      "returncode": 1,
+      "routine": "all-flow-behave",
+      "skipped": null,
+      "timed_out": false
+    }
+  ],
+  "started_at": 1778580044.406263
+}

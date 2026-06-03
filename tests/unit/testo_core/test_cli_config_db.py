@@ -1,4 +1,4 @@
-"""Tests for ``testo config-db``."""
+"""Tests for ``testo config db`` (and deprecated ``config-db``)."""
 
 from __future__ import annotations
 
@@ -26,7 +26,8 @@ def test_config_db_writes_yaml(runner: CliRunner, tmp_path: Path, monkeypatch: p
     result = runner.invoke(
         app,
         [
-            "config-db",
+            "config",
+            "db",
             "--config",
             str(cfg),
             "--url",
@@ -60,7 +61,8 @@ def test_config_db_connection_probe_failure(runner: CliRunner, tmp_path: Path, m
         result = runner.invoke(
             app,
             [
-                "config-db",
+                "config",
+                "db",
                 "--config",
                 str(cfg),
                 "--url",
@@ -83,6 +85,28 @@ def test_config_db_rejects_bad_url(runner: CliRunner, tmp_path: Path, monkeypatc
     )
     result = runner.invoke(
         app,
-        ["config-db", "--config", str(cfg), "--url", "oracle://nope"],
+        ["config", "db", "--config", str(cfg), "--url", "oracle://nope"],
     )
     assert result.exit_code != 0
+
+
+def test_config_db_hidden_alias_config_db(runner: CliRunner, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    cfg = tmp_path / "testosterone.yaml"
+    cfg.write_text(
+        "version: 1\ndefaults: {target_repo: ., artifacts_root: artifacts}\n"
+        "cycles:\n  c:\n    stages:\n      - {name: s, equipment: pytest, args: ['-q']}\n",
+        encoding="utf-8",
+    )
+    result = runner.invoke(
+        app,
+        [
+            "config-db",
+            "--config",
+            str(cfg),
+            "--url",
+            "sqlite:///legacy_alias.db",
+        ],
+    )
+    assert result.exit_code == 0, result.stdout + result.stderr
+    assert "legacy_alias.db" in cfg.read_text(encoding="utf-8")

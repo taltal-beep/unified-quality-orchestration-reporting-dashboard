@@ -15,6 +15,16 @@ from pathlib import Path
 # Supported frameworks. Add new ones in :mod:`testo_core.frameworks` and append here.
 SUPPORTED_FRAMEWORKS: frozenset[str] = frozenset({"pytest", "behave", "behavex"})
 
+SUPPORTED_REPORTER_TYPES: frozenset[str] = frozenset({
+    "allure",
+    "extent",
+    "reportportal",
+    "testbeats",
+})
+
+# Option keys resolved as paths relative to the config file directory at load time.
+_REPORTER_PATH_OPTION_KEYS: frozenset[str] = frozenset({"output_dir", "out_dir"})
+
 
 @dataclass(frozen=True)
 class Defaults:
@@ -57,6 +67,14 @@ class Stage:
 
 
 @dataclass(frozen=True)
+class ReporterSpec:
+    """One post-run reporter entry from the top-level ``reporters:`` list."""
+
+    type: str
+    options: tuple[tuple[str, str], ...] = ()
+
+
+@dataclass(frozen=True)
 class Plan:
     """A named sequence of stages executed in order by ``testo run --cycle <name>``."""
 
@@ -64,6 +82,7 @@ class Plan:
     description: str | None
     stages: tuple[Stage, ...]
     trigger: CycleTrigger | None = None
+    tags: frozenset[str] = field(default_factory=frozenset)
 
 
 @dataclass(frozen=True)
@@ -73,6 +92,7 @@ class TestosteroneConfig:
     version: int
     defaults: Defaults
     cycles: dict[str, Plan] = field(default_factory=dict)
+    reporters: tuple[ReporterSpec, ...] = ()
     source_path: Path | None = None
 
     @property

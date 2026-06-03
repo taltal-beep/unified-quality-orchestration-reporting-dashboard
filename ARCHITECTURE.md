@@ -1,6 +1,6 @@
 # Unified Quality Orchestration & Reporting Dashboard — Architecture
 
-UQO is a shared-engine test orchestration system with adapter surfaces for Streamlit UI, FastAPI API, React frontend, and a headless CLI. It builds framework-specific commands, runs them in one-off Docker containers, persists run history in Postgres, stores report artifacts in MinIO, and exposes per-run Allure reports through Allure Docker Service.
+UQO is a shared-engine test orchestration system with adapter surfaces for Streamlit UI, FastAPI API, React frontend, and a headless CLI. It builds framework-specific commands, runs them in one-off Docker containers, persists run history in Postgres, stores report artifacts in MinIO, and exposes per-run Allure Report 3 HTML through a static nginx host.
 
 ## Design goals
 
@@ -16,8 +16,8 @@ UQO is a shared-engine test orchestration system with adapter surfaces for Strea
 - **Postgres (`uqo-postgres`)**: canonical run lifecycle storage used by `testo_core/run_history.py`.
 - **MinIO (`uqo-minio`)**: S3-compatible storage for raw results and report snapshots. The default bucket is `uqo-artifacts`.
 - **MinIO init (`uqo-minio-init`)**: creates the bucket and sets anonymous download policy for report links.
-- **Allure Docker Service (`uqo-allure`)**: renders `projects/<run_id>/reports/latest/index.html`.
-- **Allure sync (`uqo-allure-sync`)**: continuously mirrors `s3://<bucket>/projects` into Allure's `/app/projects`.
+- **Allure static host (`uqo-allure-static`)**: nginx serving pre-generated Allure 3 HTML at `/reports/<run_id>/index.html`.
+- **Allure reports sync (`uqo-allure-reports-sync`)**: continuously mirrors `s3://<bucket>/reports` into the nginx volume.
 
 The Streamlit UI (`streamlit run app.py`), FastAPI (`uvicorn testo_api.main:app ...`), React frontend (`npm --prefix frontend run dev`), and CLI (`uqo run ...`) run on the host, not in Compose.
 
@@ -66,7 +66,7 @@ Runtime output directories such as `artifacts/`, `logs/`, and `static/` are gene
    - BehaveX JSON may be copied from known BehaveX output locations into the shared Allure directory.
    - Locust HTML is mirrored from the isolated results directory into the artifacts/static layout.
 7. Reports are synchronized into `static/`, run metadata is persisted, raw Allure results are uploaded to `projects/<run_id>/results/`, and report snapshots are uploaded under `runs/<run_id>/artifacts/`.
-8. `uqo-allure-sync` mirrors `projects/` from MinIO into Allure Docker Service. The UI links to `ALLURE_SERVER_URL/allure-docker-service/projects/<run_id>/reports/latest/index.html`.
+8. Run sync generates Allure 3 HTML and uploads to `reports/<run_id>/` in MinIO; `uqo-allure-reports-sync` mirrors into nginx. The UI links to `ALLURE_SERVER_URL/reports/<run_id>/index.html`.
 
 ## Headless CLI output + exit-code contract
 
@@ -153,7 +153,7 @@ Each phase writes to `artifacts/allure-results/<framework>/`. A non-zero phase i
 - Raw local results: `artifacts/allure-results/<framework>/`.
 - Archived previous local results: `artifacts/allure-results-archive/<timestamp>_<run_id>/`.
 - Local static report mirrors: `static/allure_reports/<framework>/index.html`, `static/locust_report.html`, and `static/behave/`.
-- MinIO raw results for Allure Docker Service: `projects/<run_id>/results/<files>`.
+- MinIO Allure HTML bundles: `reports/<run_id>/` (optional raw JSON: `projects/<run_id>/results/<files>`).
 - MinIO downloadable snapshots: `runs/<run_id>/artifacts/...`.
 
 `testo_core/run_history.py` stores run metadata in Postgres and builds history links from either local static history or MinIO snapshot prefixes.
@@ -163,7 +163,7 @@ Each phase writes to `artifacts/allure-results/<framework>/`. A non-zero phase i
 - Core source of truth: `testo_core/services/delta_service.py`.
 - Delta endpoint: `GET /api/v1/analytics/delta?current_run_id=...&baseline_run_id=...`.
 - Frontend adapter: `frontend/src/features/compare/ComparePage.tsx` with API wiring in `frontend/src/lib/api-client.ts`.
-- Deterministic direction/classification policy table: `docs/delta_comparison_policy.md`.
+- Deterministic direction/classification policy table: `docs/Release Management/Delta Comparison Policy.md`.
 
 ## Unified dashboard architecture
 
@@ -230,6 +230,6 @@ The current Streamlit workflow uses the built-in `TestType` command builders. Cu
 
 - Start infrastructure with `docker compose up -d` and verify `docker compose ps` before launching Streamlit.
 - The execution container uses Docker network `uqo-net`; Compose must be running so the network exists.
-- If Allure links 404 immediately after a run, wait for the 5-second `allure-sync` mirror loop, then check that MinIO contains `projects/<run_id>/results/` and `uqo-allure-sync` is healthy.
+- If Allure links 404 immediately after a run, wait for the 5-second `allure-reports-sync` mirror loop, then check that MinIO contains `reports/<run_id>/index.html` and `uqo-allure-reports-sync` is healthy.
 - If history downloads or S3 snapshots are missing, verify `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `BUCKET_NAME`, and optionally `MINIO_PUBLIC_BASE_URL`.
 - Metrics pushes are optional. Configure `INFLUXDB_URL`, `INFLUXDB_TOKEN`, `INFLUXDB_ORG`, `INFLUXDB_BUCKET`, and/or `PROMETHEUS_PUSHGATEWAY_URL` plus optional `PROMETHEUS_JOB_NAME`.

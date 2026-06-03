@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 
 from rich.console import Console
@@ -25,6 +24,8 @@ def dispatch_report(
     fmt: str,
     summary_out: Path | None,
     inject_history: bool = True,
+    open_browser: bool = True,
+    trend_depth: int = 1,
 ) -> int:
     """Wire one ``testo report`` invocation to the right backend."""
     results = collect_results(artifacts_root, plan_name=plan_name)
@@ -58,39 +59,35 @@ def dispatch_report(
         console.print(f"[fail]unknown --format {fmt_normalised!r}[/]")
         return int(EngineExitCode.INVALID_INPUT)
 
-    from testo_core.reporting.history_inject import try_inject_prior_history
+    from testo_core.reporting.reporters.allure_reporter import AllureReporter
+    from testo_core.reporting.reporters.base import ReportContext
 
-    if inject_history:
-        try_inject_prior_history(
-            artifacts_root=artifacts_root,
-            plan_name=plan_name,
-            console=console,
-            enabled=True,
-        )
-
-    from testo_core.reporting.allure import (
-        AllureCLINotFoundError,
-        generate_html,
+    context = ReportContext(
+        artifacts_root=artifacts_root.expanduser().resolve(),
+        plan_name=plan_name,
+        layout="cycle",
+        ci=False,
+        generate_only=generate_only,
+        inject_history=inject_history,
+        trend_depth=trend_depth,
+        out_dir=out_dir,
+        host=host,
+        port=port,
+        open_browser=open_browser,
     )
-    from testo_core.reporting.server import open_generated_report, resolve_serve_port
-
-    try:
-        outcome = generate_html(result_dirs=results.result_dirs, out_dir=out_dir)
-    except AllureCLINotFoundError as exc:
-        console.print(f"[fail]{exc}[/]")
-        return int(EngineExitCode.INFRA_FAILURE)
+    reporter = AllureReporter(options={})
+    outcome = reporter.publish(results=results, context=context, console=console)
 
     if not outcome.ok:
-        console.print(f"[fail]allure generate failed:[/] {outcome.message}")
+        console.print(f"[fail]{outcome.message}[/]")
         return int(EngineExitCode.INFRA_FAILURE)
 
-    out_resolved = outcome.out_dir.resolve()
-    index_path = out_resolved / "index.html"
-    rel_idx = relpath_for_display(index_path)
-    idx_uri = index_path.resolve().as_uri()
-
-    console.print("[ok]Workout summary compiled. Open the dashboard to see your gains.[/]")
-    console.print(f"[muted]index.html[/] [link={idx_uri}]{rel_idx}[/]")
+    if outcome.artifacts:
+        index_path = outcome.artifacts[0]
+        rel_idx = relpath_for_display(index_path)
+        idx_uri = index_path.resolve().as_uri()
+        console.print("[ok]Workout summary compiled. Open the dashboard to see your gains.[/]")
+        console.print(f"[muted]index.html[/] [link={idx_uri}]{rel_idx}[/]")
 
     if generate_only:
         console.print(
@@ -99,26 +96,10 @@ def dispatch_report(
         )
         return int(EngineExitCode.SUCCESS)
 
-    if shutil.which("allure") is None:
+    if not open_browser:
         console.print(
-            "[fail]Allure CLI is required to open the dashboard after ``allure generate``. "
-            "Install from https://allurereport.org/docs/install/ or use ``--generate-only``.[/]"
+            "[dim]``--no-open``: HTML generated; skipping the local Allure dashboard server.[/]"
         )
-        return int(EngineExitCode.INFRA_FAILURE)
+        return int(EngineExitCode.SUCCESS)
 
-    serve_port = resolve_serve_port(host, port)
-    if serve_port != port:
-        console.print(
-            f"[muted]Port {port} is in use; serving the dashboard on[/] [bold]{serve_port}[/] instead."
-        )
-    url = f"http://{host}:{serve_port}/"
-    console.print(f"[bold]Dashboard[/] [link={url}]{url}[/]")
-    console.print("[dim]Press Ctrl+C here to stop the server when you are done.[/]")
-
-    code = open_generated_report(report_dir=out_resolved, host=host, port=serve_port)
-    if code == 127:
-        console.print("[fail]``allure`` CLI was not found on PATH.[/]")
-        return int(EngineExitCode.INFRA_FAILURE)
-    if code not in (0, 130):
-        return int(EngineExitCode.INFRA_FAILURE)
-    return int(code)
+    return int(EngineExitCode.SUCCESS)

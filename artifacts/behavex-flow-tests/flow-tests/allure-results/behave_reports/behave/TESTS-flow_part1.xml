@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite time="2.052902936935425" tests='16' skipped='0'
+name="Flow_Part1" failures='0' errors='0'><testcase time="0.006464958190917969" name="Root_Returns_200" status="passed"
+         classname="Mock_Api_Flows__Health,_Errors,_And_Auth_(Part_1)"><system-out>
+            <![CDATA[
+            @scenario.begin
+                
+                scenario: Root returns 200
+                given the mock API client is ready ... Status.passed in 0.0002041s 
+                when I GET "/" ... Status.passed in 0.006208s 
+                then the status code should be 200 ... Status.passed in 5.293e-05s 
+@scenario.end
+            ----------------------------------------------------------------------------------------------------
+            ]]>
+            </system-out>
+        </testcase><testcase time="2.0065579414367676" name="Slow_Endpoint_Completes_With_200" status="passed"
+         classname="Mock_Api_Flows__Health,_Errors,_And_Auth_(Part_1)"><system-out>
+            <![CDATA[
+            @scenario.begin
+                
+                scenario: Slow endpoint completes with 200
+                given the mock API client is ready ... Status.passed in 0.000128s 
+                when I GET "/slow" ... Status.passed in 2.006s 
+                then the status code should be 200 ... Status.passed in 0.0001969s 
+@scenario.end
+            ----------------------------------------------------------------------------------------------------
+            ]]>
+            </system-out>
+        </testcase><testcase time="0.003887176513671875" name="Forced_Error_Endpoint_Returns_500" status="passed"
+         classname="Mock_Api_Flows__Health,_Errors,_And_Auth_(Part_1)"><system-out>
+            <![CDATA[
+            @scenario.begin
+                
+                scenario: Forced error endpoint returns 500
+                given the mock API client is ready ... Status.passed in 0.0007279s 
+                when I GET "/error" ... Status.passed in 0.003048s 
+                then the status code should be 500 ... Status.passed in 0.0001111s 
+@scenario.end
+            ----------------------------------------------------------------------------------------------------
+            ]]>
+            </system-out>
+        </testcase><testcase time="0.002749204635620117" name="Flaky_Endpoint_Returns_200_Or_500" status="passed"
+         classname="Mock_Api_Flows__Health,_Errors,_And_Auth_(Part_1)"><system-out>
+            <![CDATA[
+            @scenario.begin
+                
+                scenario: Flaky endpoint returns 200 or 500
+                given the mock API client is ready ... Status.passed in 0.0003109s 
+                when I GET "/flaky" ... Status.passed in 0.002326s 
+                then the status code should be one of 200, 500 ... Status.passed in 0.0001123s 
+@scenario.end
+            ----------------------------------------------------------------------------------------------------
+            ]]>
+            </system-out>
+        </testcase><testcase time="0.0025739669799804688" name="Chaos_Endpoint_Returns_200,_401,_Or_500" status="passed"
+         classname="Mock_Api_Flows__Health,_Errors,_And_Auth_(Part_1)"><system-out>
+            <![CDATA[
+            @scenario.begin
+                
+                scenario: Chaos endpoint returns 200, 401, or 500
+                given the mock API client is ready ... Status.passed in 0.000304s 
+                when I GET "/chaos" ... Status.passed in 0.002178s 
+                then the status code should be one of 200, 401, 500 ... Status.passed in 9.203e-05s 
+@scenario.end
+            ----------------------------------------------------------------------------------------------------
+            ]]>
+            </system-out>
+        </testcase><testcase time="0.0024306774139404297" name="Secure_Without_Token_Returns_401" status="passed"
+         classname="Mock_Api_Flows__Health,_Errors,_And_Auth_(Part_1)"><system-out>
+            <![CDATA[
+            @scenario.begin
+                
+                scenario: Secure without token returns 401
+                given the mock API client is ready ... Status.passed in 0.0002189s 
+                when I GET "/secure" ... Status.passed in 0.002128s 
+                then the status code should be 401 ... Status.passed in 8.392e-05s 
+@scenario.end
+            ----------------------------------------------------------------------------------------------------
+            ]]>
+            </system-out>
+        </testcase><testcase time="0.0021593570709228516" name="Admin_Without_Token_Returns_401" status="passed"
+         classname="Mock_Api_Flows__Health,_Errors,_And_Auth_(Part_1)"><system-out>
+            <![CDATA[
+            @scenario.begin
+                
+                scenario: Admin without token returns 401
+                given the mock API client is ready ... Status.passed in 0.0002382s 
+                when I GET "/admin" ... Status.passed in 0.001841s 
+                then the status code should be 401 ... Status.passed in 8.011e-05s 
+@scenario.end
+            ----------------------------------------------------------------------------------------------------
+            ]]>
+            </system-out>
+        </testcase><testcase time="0.0025904178619384766" name="Login_Returns_200_And_A_Token" status="passed"
+         classname="Mock_Api_Flows__Health,_Errors,_And_Auth_(Part_1)"><system-out>
+            <![CDATA[
+            @scenario.begin
+                
+                scenario: Login returns 200 and a token
+                given the mock API client is ready ... Status.passed in 0.0002077s 
+                when I POST to "/login" with JSON ... Status.passed in 0.002207s 
+                then the status code should be 200 ... Status.passed in 9.489e-05s 
+                then the JSON field "token" should exist ... Status.passed in 8.106e-05s 
+@scenario.end
+            ----------------------------------------------------------------------------------------------------
+            ]]>
+            </system-out>
+        </testcase><testcase time="0.003759145736694336" name="Secure_With_Bearer_Returns_200" status="passed"
+         classname="Mock_Api_Flows__Health,_Errors,_And_Auth_(Part_1)"><system-out>
+            <![CDATA[
+            @scenario.begin
+                
+                scenario: Secure with bearer returns 200
+                given the mock API client is ready ... Status.passed in 0.0001941s 
+                given I am logged in as "alice" ... Status.passed in 0.001618s 
+                when I GET "/secure" as authenticated user ... Status.passed in 0.001878s 
+                then the status code should be 200 ... Status.passed in 6.914e-05s 
+@scenario.end
+            ----------------------------------------------------------------------------------------------------
+            ]]>
+            </system-out>
+        </testcase><testcase time="0.0031812191009521484" name="Admin_With_Bearer_Returns_200" status="passed"
+         classname="Mock_Api_Flows__Health,_Errors,_And_Auth_(Part_1)"><system-out>
+            <![CDATA[
+            @scenario.begin
+                
+                scenario: Admin with bearer returns 200
+                given the mock API client is ready ... Status.passed in 0.0001862s 
+                given I am logged in as "bob" ... Status.passed in 0.001622s 
+                when I GET "/admin" as authenticated user ... Status.passed in 0.00131s 
+                then the status code should be 200 ... Status.passed in 6.294e-05s 
+@scenario.end
+            ----------------------------------------------------------------------------------------------------
+            ]]>
+            </system-out>
+        </testcase><testcase time="0.0016179084777832031" name="Submit_Accepts_Json_Payload" status="passed"
+         classname="Mock_Api_Flows__Health,_Errors,_And_Auth_(Part_1)"><system-out>
+            <![CDATA[
+            @scenario.begin
+                
+                scenario: Submit accepts JSON payload
+                given the mock API client is ready ... Status.passed in 0.0001669s 
+                when I POST to "/submit" with JSON ... Status.passed in 0.00133s 
+                then the status code should be 200 ... Status.passed in 5.889e-05s 
+                then the JSON field "received" should be true ... Status.passed in 6.199e-05s 
+@scenario.end
+            ----------------------------------------------------------------------------------------------------
+            ]]>
+            </system-out>
+        </testcase><testcase time="0.0014286041259765625" name="Items_List_Is_Empty_Initially" status="passed"
+         classname="Mock_Api_Flows__Health,_Errors,_And_Auth_(Part_1)"><system-out>
+            <![CDATA[
+            @scenario.begin
+                
+                scenario: Items list is empty initially
+                given the mock API client is ready ... Status.passed in 0.0001552s 
+                when I GET "/items" ... Status.passed in 0.001215s 
+                then the status code should be 200 ... Status.passed in 5.817e-05s 
+@scenario.end
+            ----------------------------------------------------------------------------------------------------
+            ]]>
+            </system-out>
+        </testcase><testcase time="0.002146482467651367" name="Create_Item_Returns_200" status="passed"
+         classname="Mock_Api_Flows__Health,_Errors,_And_Auth_(Part_1)"><system-out>
+            <![CDATA[
+            @scenario.begin
+                
+                scenario: Create item returns 200
+                given the mock API client is ready ... Status.passed in 0.0001543s 
+                when I POST to "/items" with JSON ... Status.passed in 0.001867s 
+                then the status code should be 200 ... Status.passed in 6.318e-05s 
+                then the JSON field "created" should be true ... Status.passed in 6.199e-05s 
+@scenario.end
+            ----------------------------------------------------------------------------------------------------
+            ]]>
+            </system-out>
+        </testcase><testcase time="0.005155801773071289" name="Get_Created_Item_By_Id" status="passed"
+         classname="Mock_Api_Flows__Health,_Errors,_And_Auth_(Part_1)"><system-out>
+            <![CDATA[
+            @scenario.begin
+                
+                scenario: Get created item by id
+                given the mock API client is ready ... Status.passed in 0.00016s 
+                when I POST to "/items" with JSON ... Status.passed in 0.001351s 
+                then the status code should be 200 ... Status.passed in 6.485e-05s 
+                when I GET "/items/1" ... Status.passed in 0.00353s 
+                then the status code should be 200 ... Status.passed in 5.007e-05s 
+@scenario.end
+            ----------------------------------------------------------------------------------------------------
+            ]]>
+            </system-out>
+        </testcase><testcase time="0.0026810169219970703" name="Delete_Item_Returns_200" status="passed"
+         classname="Mock_Api_Flows__Health,_Errors,_And_Auth_(Part_1)"><system-out>
+            <![CDATA[
+            @scenario.begin
+                
+                scenario: Delete item returns 200
+                given the mock API client is ready ... Status.passed in 0.0001411s 
+                when I POST to "/items" with JSON ... Status.passed in 0.001244s 
+                then the status code should be 200 ... Status.passed in 6.39e-05s 
+                when I DELETE "/items/1" ... Status.passed in 0.001177s 
+                then the status code should be 200 ... Status.passed in 5.507e-05s 
+@scenario.end
+            ----------------------------------------------------------------------------------------------------
+            ]]>
+            </system-out>
+        </testcase><testcase time="0.0035190582275390625" name="Deleted_Item_Returns_404" status="passed"
+         classname="Mock_Api_Flows__Health,_Errors,_And_Auth_(Part_1)"><system-out>
+            <![CDATA[
+            @scenario.begin
+                
+                scenario: Deleted item returns 404
+                given the mock API client is ready ... Status.passed in 0.0001459s 
+                when I POST to "/items" with JSON ... Status.passed in 0.001117s 
+                then the status code should be 200 ... Status.passed in 6.413e-05s 
+                when I DELETE "/items/1" ... Status.passed in 0.00103s 
+                then the status code should be 200 ... Status.passed in 6.008e-05s 
+                when I GET "/items/1" ... Status.passed in 0.00105s 
+                then the status code should be 404 ... Status.passed in 5.198e-05s 
+@scenario.end
+            ----------------------------------------------------------------------------------------------------
+            ]]>
+            </system-out>
+        </testcase></testsuite>

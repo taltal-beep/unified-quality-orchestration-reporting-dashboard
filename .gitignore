@@ -37,6 +37,9 @@ artifacts/uqo_run_history.sqlite
 artifacts/testo_sandbox.db
 artifacts/history/
 
+# ReportPortal local stack Postgres data
+data/reportportal/postgres/
+
 # Local/generated artifacts
 .coverage
 artifacts/allure-report/
@@ -49,4 +52,8 @@ logs/
 # Frontend workspace artifacts
 frontend/node_modules/
 frontend/dist/
+
+# Allure Report 3 (repo root)
+node_modules/
+.testo/
 

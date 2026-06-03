@@ -17,8 +17,8 @@ from testo_core.engine.exit_codes import EngineExitCode
 report_app = typer.Typer(
     name="report",
     help=(
-        "Build unified Allure reports from the latest cycle, or access raw, framework-specific "
-        "reports (e.g. BehaveX HTML) from the latest run."
+        "Build unified Allure Report 3 HTML from the latest cycle (requires Node.js 18+ and "
+        "`npm install` in the repo root), or access raw framework reports (e.g. BehaveX HTML)."
     ),
     invoke_without_command=True,
     no_args_is_help=False,
@@ -83,10 +83,26 @@ def report_callback(
         "--no-history",
         help="Do not inject Allure history/ from a prior DB-archived run before ``allure generate``.",
     ),
+    open_browser: bool = typer.Option(
+        True,
+        "--open/--no-open",
+        help="After ``allure generate`` (HTML), start the local dashboard (default) or stop after writing files.",
+    ),
+    trend: int = typer.Option(
+        1,
+        "--trend",
+        help="Merge Allure history from up to this many prior archived runs before generate (>=1).",
+    ),
 ) -> None:
     """Build a unified Allure report from the latest (or selected) cycle, then open it locally."""
     resolved_cycle = cycle if cycle is not None else plan
-    ctx.obj = {"artifacts_root": artifacts_root, "resolved_cycle": resolved_cycle}
+    trend_depth = max(1, int(trend))
+    ctx.obj = {
+        "artifacts_root": artifacts_root,
+        "resolved_cycle": resolved_cycle,
+        "open_browser": open_browser,
+        "trend_depth": trend_depth,
+    }
 
     if ctx.invoked_subcommand is not None:
         return
@@ -106,8 +122,77 @@ def report_callback(
         fmt=fmt,
         summary_out=summary_out,
         inject_history=not no_history,
+        open_browser=open_browser,
+        trend_depth=trend_depth,
     )
     raise typer.Exit(code=int(exit_code))
+
+
+@report_app.command(
+    "compare",
+    help=(
+        "Rich diff plus Allure comparison for two archived runs "
+        "(omit UUIDs for latest pair; use ``--no-open`` to generate HTML only)."
+    ),
+)
+def report_compare(
+    ctx: typer.Context,
+    baseline_id: str | None = typer.Argument(
+        None,
+        metavar="[BASELINE_ID]",
+        help="Optional older archive UUID (``testo report list`` id column).",
+    ),
+    current_id: str | None = typer.Argument(
+        None,
+        metavar="[CURRENT_ID]",
+        help="Optional newer archive UUID.",
+    ),
+    cycle: str | None = typer.Option(
+        None,
+        "--cycle",
+        help="When no UUIDs: pick the two most recent rows for this cycle name.",
+    ),
+    open_browser: bool = typer.Option(
+        True,
+        "--open/--no-open",
+        help="After prepare, run ``allure serve`` (default) or only ``allure generate``.",
+    ),
+) -> None:
+    """Archived baseline vs current: Rich dashboard then Allure (moved from ``testo summary``)."""
+    from testo_core.cli.commands.archive_pick import ArchivePickError, resolve_archived_pair
+    from testo_core.cli.commands.diff_cli import _render_diff
+    from testo_core.cli.ui.console import default_console
+    from testo_core.db import get_report_archive_repository
+    from testo_core.reporting.allure_history_serve import run_summary_allure_pipeline
+
+    _ = ctx
+    console = default_console()
+    repo = get_report_archive_repository()
+
+    if baseline_id and str(baseline_id).strip() and current_id and str(current_id).strip() and cycle and str(cycle).strip():
+        console.print("[dim]Ignoring ``--cycle`` because explicit archive UUIDs were provided.[/]")
+
+    try:
+        pair = resolve_archived_pair(
+            repo,
+            baseline_id=baseline_id,
+            current_id=current_id,
+            cycle=cycle,
+        )
+    except ArchivePickError as exc:
+        console.print(f"[fail]{exc.message}[/]")
+        raise typer.Exit(code=int(exc.exit_code)) from exc
+
+    baseline, current = pair.baseline, pair.current
+    if baseline is not None:
+        console.print(f"[muted]Comparing[/] [bold]{baseline.id}[/] (baseline) → [bold]{current.id}[/] (current)")
+        _render_diff(console=console, baseline=baseline, current=current, metrics_only=False)
+    else:
+        console.print("[dim]Baseline archive not found; Allure will use current results only.[/]")
+
+    console.print("[muted]Generating visual comparison report...[/]")
+    run_summary_allure_pipeline(baseline=baseline, current=current, console=console, serve=open_browser)
+    raise typer.Exit(code=0)
 
 
 @report_app.command(

@@ -1,0 +1,1281 @@
+........................................................................ [ 55%]
+..........................................................               [100%]
+=============================== warnings summary ===============================
+tests/flow/test_api_flow.py:47
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:47: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:54
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:54: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:65
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:65: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:74
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:74: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:81
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:81: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:87
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:87: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:93
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:93: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:101
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:101: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:111
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:111: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:122
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:122: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:128
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:128: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:151
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:151: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:158
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:158: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:168
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:168: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:175
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:175: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:183
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:183: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:189
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:189: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:197
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:197: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:203
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:203: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:217
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:217: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:227
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:227: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:236
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:236: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:246
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:246: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:259
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:259: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:268
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:268: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:282
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:282: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:297
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:297: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/unit/test_unit_example.py:50
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:50: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:75
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:75: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:96
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:96: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:120
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:120: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:125
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:125: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:132
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:132: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:148
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:148: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:156
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:156: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:178
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:178: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:191
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:191: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:199
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:199: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:216
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:216: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:227
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:227: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:251
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:251: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:262
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:262: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/flow/test_api_flow.py: 6 warnings
+tests/unit/test_unit_example.py: 35 warnings
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    return self._jws.encode(
+
+tests/flow/test_api_flow.py: 2 warnings
+tests/unit/test_unit_example.py: 30 warnings
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    decoded = self.decode_complete(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+130 passed, 115 warnings in 0.24s
+........................................................................ [ 55%]
+..........................................................               [100%]
+=============================== warnings summary ===============================
+tests/flow/test_api_flow.py:47
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:47: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:54
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:54: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:65
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:65: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:74
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:74: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:81
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:81: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:87
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:87: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:93
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:93: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:101
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:101: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:111
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:111: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:122
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:122: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:128
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:128: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:151
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:151: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:158
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:158: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:168
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:168: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:175
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:175: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:183
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:183: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:189
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:189: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:197
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:197: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:203
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:203: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:217
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:217: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:227
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:227: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:236
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:236: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:246
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:246: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:259
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:259: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:268
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:268: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:282
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:282: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:297
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:297: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/unit/test_unit_example.py:50
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:50: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:75
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:75: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:96
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:96: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:120
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:120: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:125
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:125: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:132
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:132: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:148
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:148: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:156
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:156: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:178
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:178: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:191
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:191: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:199
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:199: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:216
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:216: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:227
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:227: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:251
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:251: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:262
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:262: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/flow/test_api_flow.py: 6 warnings
+tests/unit/test_unit_example.py: 35 warnings
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    return self._jws.encode(
+
+tests/flow/test_api_flow.py: 2 warnings
+tests/unit/test_unit_example.py: 30 warnings
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    decoded = self.decode_complete(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+130 passed, 115 warnings in 0.21s
+........................................................................ [ 55%]
+..........................................................               [100%]
+=============================== warnings summary ===============================
+tests/flow/test_api_flow.py:47
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:47: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:54
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:54: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:65
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:65: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:74
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:74: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:81
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:81: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:87
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:87: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:93
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:93: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:101
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:101: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:111
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:111: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:122
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:122: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:128
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:128: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:151
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:151: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:158
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:158: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:168
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:168: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:175
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:175: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:183
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:183: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:189
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:189: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:197
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:197: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:203
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:203: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:217
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:217: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:227
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:227: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:236
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:236: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:246
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:246: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:259
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:259: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:268
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:268: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:282
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:282: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:297
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:297: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/unit/test_unit_example.py:50
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:50: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:75
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:75: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:96
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:96: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:120
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:120: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:125
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:125: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:132
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:132: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:148
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:148: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:156
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:156: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:178
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:178: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:191
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:191: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:199
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:199: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:216
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:216: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:227
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:227: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:251
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:251: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:262
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:262: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/flow/test_api_flow.py: 6 warnings
+tests/unit/test_unit_example.py: 35 warnings
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    return self._jws.encode(
+
+tests/flow/test_api_flow.py: 2 warnings
+tests/unit/test_unit_example.py: 30 warnings
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    decoded = self.decode_complete(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+130 passed, 115 warnings in 0.21s
+........................................................................ [ 55%]
+..........................................................               [100%]
+=============================== warnings summary ===============================
+tests/flow/test_api_flow.py:47
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:47: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:54
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:54: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:65
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:65: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:74
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:74: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:81
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:81: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:87
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:87: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:93
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:93: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:101
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:101: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:111
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:111: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:122
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:122: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:128
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:128: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:151
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:151: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:158
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:158: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:168
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:168: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:175
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:175: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:183
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:183: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:189
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:189: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:197
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:197: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:203
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:203: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:217
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:217: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:227
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:227: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:236
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:236: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:246
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:246: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:259
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:259: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:268
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:268: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:282
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:282: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:297
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:297: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/unit/test_unit_example.py:50
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:50: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:75
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:75: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:96
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:96: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:120
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:120: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:125
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:125: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:132
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:132: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:148
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:148: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:156
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:156: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:178
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:178: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:191
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:191: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:199
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:199: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:216
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:216: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:227
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:227: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:251
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:251: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:262
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:262: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/flow/test_api_flow.py: 6 warnings
+tests/unit/test_unit_example.py: 35 warnings
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    return self._jws.encode(
+
+tests/flow/test_api_flow.py: 2 warnings
+tests/unit/test_unit_example.py: 30 warnings
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    decoded = self.decode_complete(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+130 passed, 115 warnings in 0.21s
+........................................................................ [ 55%]
+..........................................................               [100%]
+=============================== warnings summary ===============================
+tests/flow/test_api_flow.py:47
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:47: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:54
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:54: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:65
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:65: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:74
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:74: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:81
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:81: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:87
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:87: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:93
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:93: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:101
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:101: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:111
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:111: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:122
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:122: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:128
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:128: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:151
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:151: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:158
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:158: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:168
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:168: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:175
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:175: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:183
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:183: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:189
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:189: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:197
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:197: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:203
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:203: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:217
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:217: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:227
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:227: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:236
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:236: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:246
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:246: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:259
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:259: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:268
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:268: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:282
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:282: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:297
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:297: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/unit/test_unit_example.py:50
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:50: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:75
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:75: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:96
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:96: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:120
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:120: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:125
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:125: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:132
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:132: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:148
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:148: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:156
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:156: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:178
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:178: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:191
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:191: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:199
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:199: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:216
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:216: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:227
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:227: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:251
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:251: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:262
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:262: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/flow/test_api_flow.py: 6 warnings
+tests/unit/test_unit_example.py: 35 warnings
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    return self._jws.encode(
+
+tests/flow/test_api_flow.py: 2 warnings
+tests/unit/test_unit_example.py: 30 warnings
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    decoded = self.decode_complete(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+130 passed, 115 warnings in 0.22s
+........................................................................ [ 55%]
+..........................................................               [100%]
+=============================== warnings summary ===============================
+tests/flow/test_api_flow.py:47
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:47: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:54
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:54: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:65
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:65: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:74
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:74: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:81
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:81: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:87
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:87: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:93
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:93: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:101
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:101: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:111
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:111: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:122
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:122: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:128
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:128: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:151
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:151: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:158
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:158: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:168
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:168: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:175
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:175: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:183
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:183: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:189
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:189: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:197
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:197: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:203
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:203: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:217
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:217: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:227
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:227: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:236
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:236: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:246
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:246: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:259
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:259: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:268
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:268: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:282
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:282: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:297
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:297: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/unit/test_unit_example.py:50
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:50: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:75
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:75: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:96
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:96: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:120
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:120: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:125
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:125: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:132
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:132: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:148
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:148: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:156
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:156: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:178
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:178: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:191
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:191: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:199
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:199: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:216
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:216: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:227
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:227: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:251
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:251: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:262
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:262: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/flow/test_api_flow.py: 6 warnings
+tests/unit/test_unit_example.py: 35 warnings
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    return self._jws.encode(
+
+tests/flow/test_api_flow.py: 2 warnings
+tests/unit/test_unit_example.py: 30 warnings
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    decoded = self.decode_complete(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+130 passed, 115 warnings in 0.22s
+........................................................................ [ 55%]
+..........................................................               [100%]
+=============================== warnings summary ===============================
+tests/flow/test_api_flow.py:47
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:47: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:54
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:54: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:65
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:65: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:74
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:74: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:81
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:81: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:87
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:87: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:93
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:93: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:101
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:101: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:111
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:111: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:122
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:122: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:128
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:128: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:151
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:151: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:158
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:158: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:168
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:168: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:175
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:175: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:183
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:183: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:189
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:189: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:197
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:197: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:203
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:203: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:217
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:217: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:227
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:227: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:236
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:236: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:246
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:246: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:259
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:259: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:268
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:268: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:282
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:282: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/flow/test_api_flow.py:297
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/flow/test_api_flow.py:297: PytestUnknownMarkWarning: Unknown pytest.mark.flow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.flow
+
+tests/unit/test_unit_example.py:50
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:50: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:75
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:75: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:96
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:96: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:120
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:120: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:125
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:125: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:132
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:132: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:148
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:148: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:156
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:156: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:178
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:178: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:191
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:191: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:199
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:199: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:216
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:216: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:227
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:227: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:251
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:251: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/unit/test_unit_example.py:262
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/sample_target_repo/tests/unit/test_unit_example.py:262: PytestUnknownMarkWarning: Unknown pytest.mark.unit - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.unit
+
+tests/flow/test_api_flow.py: 6 warnings
+tests/unit/test_unit_example.py: 35 warnings
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    return self._jws.encode(
+
+tests/flow/test_api_flow.py: 2 warnings
+tests/unit/test_unit_example.py: 30 warnings
+  /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    decoded = self.decode_complete(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+130 passed, 115 warnings in 0.22s

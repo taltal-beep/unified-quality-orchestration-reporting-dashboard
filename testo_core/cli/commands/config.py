@@ -38,6 +38,10 @@ cycles:
         equipment: behavex
         workers: 8
         timeout_s: 1800
+
+# reporters:
+#   - type: extent
+#     output_dir: ./reports/extent
 """
 
 
@@ -77,9 +81,33 @@ def validate(
                 "[muted]hint:[/] install dependencies (e.g. `pip install -e .`) or ensure the active environment's bin/ is on PATH."
             )
             raise typer.Exit(code=2)
+
+    reporter_warnings = _reporter_option_warnings(cfg)
+    for warning in reporter_warnings:
+        console.print(f"[warn]{warning}[/]")
+
     console.print(
-        f"[ok]ok[/] — version={cfg.version} cycles={len(cfg.cycles)} defaults_target={cfg.defaults.target_repo}"
+        f"[ok]ok[/] — version={cfg.version} cycles={len(cfg.cycles)} "
+        f"reporters={len(cfg.reporters)} defaults_target={cfg.defaults.target_repo}"
     )
+
+
+def _reporter_option_warnings(cfg) -> list[str]:  # type: ignore[no-untyped-def]
+    warnings: list[str] = []
+    for spec in cfg.reporters:
+        opts = dict(spec.options)
+        if spec.type == "testbeats" and not opts.get("slack_webhook") and not opts.get("teams_webhook"):
+            warnings.append(
+                f"reporter {spec.type!r} has no slack_webhook or teams_webhook; "
+                "preview JSON will be written but nothing will be sent."
+            )
+        if spec.type == "reportportal" and not all(opts.get(k) for k in ("endpoint", "project", "token")):
+            warnings.append(
+                f"reporter {spec.type!r} is missing endpoint, project, or token; upload will be skipped."
+            )
+        if spec.type == "extent" and not opts.get("output_dir"):
+            warnings.append(f"reporter {spec.type!r} has no output_dir; will use artifacts/reports/extent.")
+    return warnings
 
 
 def _missing_executables(cfg) -> list[str]:  # type: ignore[no-untyped-def]
@@ -115,7 +143,7 @@ def init(
     ),
     force: bool = typer.Option(False, "--force", "-f", help="Overwrite an existing file."),
 ) -> None:
-    """Write a starter testosterone.yaml at ``path``."""
+    """Write a starter testosterone.yaml at ``path`` (non-interactive). For prompts, use ``testo init``."""
     from testo_core.cli.ui.console import default_console
 
     console = default_console()
@@ -124,3 +152,12 @@ def init(
         raise typer.Exit(code=2)
     path.write_text(_STARTER_YAML, encoding="utf-8")
     console.print(f"[ok]wrote starter config to[/] {path}")
+
+
+# Registered after package load to keep ``config_db`` in its own module (DB merge helpers).
+from testo_core.cli.commands.config_db import config_db as _config_db_handler  # noqa: E402
+
+app.command(
+    "db",
+    help="Set database.url in testosterone.yaml or pyproject [tool.testosterone] (probe before write).",
+)(_config_db_handler)

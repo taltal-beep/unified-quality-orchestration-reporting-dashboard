@@ -137,6 +137,7 @@ class CIRenderer:
                 "duration_s": float(event.result.duration_s),
                 "log_path": str(event.result.log_path) if event.result.log_path else None,
                 "timed_out": bool(event.result.timed_out),
+                "internal_failure": bool(event.result.internal_failure),
             }
             self._stages.append(stage_payload)
             emit_ndjson({"event": "stage_finished", **stage_payload})

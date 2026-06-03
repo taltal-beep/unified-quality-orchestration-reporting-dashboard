@@ -1,0 +1,656 @@
+|--------------------| ------------------------------------------------------------|
+|ENV. VARIABLE       | VALUE                                                       |
+|--------------------| ------------------------------------------------------------|
+|HOME                | /Users/taltal                                               |
+|CONFIG              | /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/behavex/conf_behavex.cfg|
+|OUTPUT              | /Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks-stochastic/flow-tests/behave_reports|
+|TAGS                | ----                                                        |
+|PARALLEL_SCHEME     | feature                                                     |
+|PARALLEL_PROCESSES  | 4                                                           |
+|FEATURES_PATH       | features                                                    |
+|TEMP                | /Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks-stochastic/flow-tests/behave_reports/temp|
+|LOGS                | /Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks-stochastic/flow-tests/allure-results/behavex|
+|LOGGING_LEVEL       | INFO                                                        |
+|--------------------| ------------------------------------------------------------|
+
+************************************************************
+Running parallel features.
+************************************************************
+
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/error "HTTP/1.1 500 Internal Server Error"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/flaky "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/2 "HTTP/1.1 200 OK"
+/Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/flaky "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/chaos "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/999 "HTTP/1.1 404 Not Found"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/chaos "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 401 Unauthorized"
+/Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+/Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  decoded = self.decode_complete(
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 404 Not Found"
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Get first item by id
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Login as charlie
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Admin with malformed bearer returns 401
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Submit empty object
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Delete missing item returns 404
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Slow endpoint completes with 200
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Login returns 200 and a token
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Secure with bearer returns 200
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Submit accepts JSON payload
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Items list is empty initially
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create item returns 200
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Delete item returns 200
+
+Failing scenarios:
+  features/flow_part2.feature:6  Root still returns 200 after other calls
+  features/flow_part2.feature:10  Second root check
+  features/flow_part2.feature:14  Items endpoint returns 200 with empty list after reset
+  features/flow_part2.feature:18  Create two items and list them
+  features/flow_part2.feature:32  Get first item by id
+  features/flow_part2.feature:41  Get second item by id
+  features/flow_part2.feature:55  Login as charlie
+  features/flow_part2.feature:62  Login as dana
+  features/flow_part2.feature:69  Secure with invalid bearer returns 401
+  features/flow_part2.feature:73  Admin with malformed bearer returns 401
+  features/flow_part2.feature:77  Submit empty object
+  features/flow_part2.feature:84  Submit nested object
+  features/flow_part2.feature:91  Create item with default name
+  features/flow_part2.feature:98  Another flaky sample
+  features/flow_part2.feature:102  Another chaos sample
+  features/flow_part2.feature:106  Delete missing item returns 404
+  features/flow_part2.feature:110  Get missing item returns 404
+  features/flow_part2.feature:114  Login default username path
+  features/flow_part1.feature:6  Root returns 200
+  features/flow_part1.feature:10  Slow endpoint completes with 200
+  features/flow_part1.feature:14  Forced error endpoint returns 500
+  features/flow_part1.feature:18  Flaky endpoint returns 200 or 500
+  features/flow_part1.feature:22  Chaos endpoint returns 200, 401, or 500
+  features/flow_part1.feature:26  Secure without token returns 401
+  features/flow_part1.feature:30  Admin without token returns 401
+  features/flow_part1.feature:34  Login returns 200 and a token
+  features/flow_part1.feature:42  Secure with bearer returns 200
+  features/flow_part1.feature:47  Admin with bearer returns 200
+  features/flow_part1.feature:52  Submit accepts JSON payload
+  features/flow_part1.feature:60  Items list is empty initially
+  features/flow_part1.feature:64  Create item returns 200
+  features/flow_part1.feature:72  Get created item by id
+  features/flow_part1.feature:81  Delete item returns 200
+  features/flow_part1.feature:90  Deleted item returns 404
+
+
+0 features passed, 2 failed, 0 skipped
+0 scenarios passed, 34 failed, 0 skipped
+0 steps passed, 0 failed, 0 skipped, 92 untested
+Took:   4.9s
+Exit code: 1
+|--------------------| ------------------------------------------------------------|
+|ENV. VARIABLE       | VALUE                                                       |
+|--------------------| ------------------------------------------------------------|
+|HOME                | /Users/taltal                                               |
+|CONFIG              | /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/behavex/conf_behavex.cfg|
+|OUTPUT              | /Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks-stochastic/flow-tests/behave_reports|
+|TAGS                | ----                                                        |
+|PARALLEL_SCHEME     | feature                                                     |
+|PARALLEL_PROCESSES  | 4                                                           |
+|FEATURES_PATH       | features                                                    |
+|TEMP                | /Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks-stochastic/flow-tests/behave_reports/temp|
+|LOGS                | /Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks-stochastic/flow-tests/allure-results/behavex|
+|LOGGING_LEVEL       | INFO                                                        |
+|--------------------| ------------------------------------------------------------|
+
+************************************************************
+Running parallel features.
+************************************************************
+
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+/Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+/Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  decoded = self.decode_complete(
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/2 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 200 OK"
+/Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/999 "HTTP/1.1 404 Not Found"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 404 Not Found"
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Items endpoint returns 200 with empty list after reset
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create two items and list them
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Get first item by id
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Secure with invalid bearer returns 401
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Submit nested object
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create item with default name
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Another flaky sample
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Another chaos sample
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Get missing item returns 404
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Slow endpoint completes with 200
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Forced error endpoint returns 500
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Flaky endpoint returns 200 or 500
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Chaos endpoint returns 200, 401, or 500
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Secure without token returns 401
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Login returns 200 and a token
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create item returns 200
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Get created item by id
+
+Failing scenarios:
+  features/flow_part1.feature:6  Root returns 200
+  features/flow_part1.feature:10  Slow endpoint completes with 200
+  features/flow_part1.feature:14  Forced error endpoint returns 500
+  features/flow_part1.feature:18  Flaky endpoint returns 200 or 500
+  features/flow_part1.feature:22  Chaos endpoint returns 200, 401, or 500
+  features/flow_part1.feature:26  Secure without token returns 401
+  features/flow_part1.feature:30  Admin without token returns 401
+  features/flow_part1.feature:34  Login returns 200 and a token
+  features/flow_part1.feature:42  Secure with bearer returns 200
+  features/flow_part1.feature:47  Admin with bearer returns 200
+  features/flow_part1.feature:52  Submit accepts JSON payload
+  features/flow_part1.feature:60  Items list is empty initially
+  features/flow_part1.feature:64  Create item returns 200
+  features/flow_part1.feature:72  Get created item by id
+  features/flow_part1.feature:81  Delete item returns 200
+  features/flow_part1.feature:90  Deleted item returns 404
+  features/flow_part2.feature:6  Root still returns 200 after other calls
+  features/flow_part2.feature:10  Second root check
+  features/flow_part2.feature:14  Items endpoint returns 200 with empty list after reset
+  features/flow_part2.feature:18  Create two items and list them
+  features/flow_part2.feature:32  Get first item by id
+  features/flow_part2.feature:41  Get second item by id
+  features/flow_part2.feature:55  Login as charlie
+  features/flow_part2.feature:62  Login as dana
+  features/flow_part2.feature:69  Secure with invalid bearer returns 401
+  features/flow_part2.feature:73  Admin with malformed bearer returns 401
+  features/flow_part2.feature:77  Submit empty object
+  features/flow_part2.feature:84  Submit nested object
+  features/flow_part2.feature:91  Create item with default name
+  features/flow_part2.feature:98  Another flaky sample
+  features/flow_part2.feature:102  Another chaos sample
+  features/flow_part2.feature:106  Delete missing item returns 404
+  features/flow_part2.feature:110  Get missing item returns 404
+  features/flow_part2.feature:114  Login default username path
+
+
+0 features passed, 2 failed, 0 skipped
+0 scenarios passed, 34 failed, 0 skipped
+0 steps passed, 0 failed, 0 skipped, 92 untested
+Took:   0.6s
+Exit code: 1
+|--------------------| ------------------------------------------------------------|
+|ENV. VARIABLE       | VALUE                                                       |
+|--------------------| ------------------------------------------------------------|
+|HOME                | /Users/taltal                                               |
+|CONFIG              | /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/behavex/conf_behavex.cfg|
+|OUTPUT              | /Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks-stochastic/flow-tests/behave_reports|
+|TAGS                | ----                                                        |
+|PARALLEL_SCHEME     | feature                                                     |
+|PARALLEL_PROCESSES  | 4                                                           |
+|FEATURES_PATH       | features                                                    |
+|TEMP                | /Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks-stochastic/flow-tests/behave_reports/temp|
+|LOGS                | /Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks-stochastic/flow-tests/allure-results/behavex|
+|LOGGING_LEVEL       | INFO                                                        |
+|--------------------| ------------------------------------------------------------|
+
+************************************************************
+Running parallel features.
+************************************************************
+
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/2 "HTTP/1.1 200 OK"
+/Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/flaky "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/chaos "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/999 "HTTP/1.1 404 Not Found"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/999 "HTTP/1.1 404 Not Found"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/slow "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/flaky "HTTP/1.1 500 Internal Server Error"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/chaos "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 401 Unauthorized"
+/Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+/Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  decoded = self.decode_complete(
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 404 Not Found"
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Root returns 200
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Forced error endpoint returns 500
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Secure without token returns 401
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Login returns 200 and a token
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Secure with bearer returns 200
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Submit accepts JSON payload
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Get created item by id
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Items endpoint returns 200 with empty list after reset
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create two items and list them
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Get first item by id
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Login default username path
+
+Failing scenarios:
+  features/flow_part2.feature:6  Root still returns 200 after other calls
+  features/flow_part2.feature:10  Second root check
+  features/flow_part2.feature:14  Items endpoint returns 200 with empty list after reset
+  features/flow_part2.feature:18  Create two items and list them
+  features/flow_part2.feature:32  Get first item by id
+  features/flow_part2.feature:41  Get second item by id
+  features/flow_part2.feature:55  Login as charlie
+  features/flow_part2.feature:62  Login as dana
+  features/flow_part2.feature:69  Secure with invalid bearer returns 401
+  features/flow_part2.feature:73  Admin with malformed bearer returns 401
+  features/flow_part2.feature:77  Submit empty object
+  features/flow_part2.feature:84  Submit nested object
+  features/flow_part2.feature:91  Create item with default name
+  features/flow_part2.feature:98  Another flaky sample
+  features/flow_part2.feature:102  Another chaos sample
+  features/flow_part2.feature:106  Delete missing item returns 404
+  features/flow_part2.feature:110  Get missing item returns 404
+  features/flow_part2.feature:114  Login default username path
+  features/flow_part1.feature:6  Root returns 200
+  features/flow_part1.feature:10  Slow endpoint completes with 200
+  features/flow_part1.feature:14  Forced error endpoint returns 500
+  features/flow_part1.feature:18  Flaky endpoint returns 200 or 500
+  features/flow_part1.feature:22  Chaos endpoint returns 200, 401, or 500
+  features/flow_part1.feature:26  Secure without token returns 401
+  features/flow_part1.feature:30  Admin without token returns 401
+  features/flow_part1.feature:34  Login returns 200 and a token
+  features/flow_part1.feature:42  Secure with bearer returns 200
+  features/flow_part1.feature:47  Admin with bearer returns 200
+  features/flow_part1.feature:52  Submit accepts JSON payload
+  features/flow_part1.feature:60  Items list is empty initially
+  features/flow_part1.feature:64  Create item returns 200
+  features/flow_part1.feature:72  Get created item by id
+  features/flow_part1.feature:81  Delete item returns 200
+  features/flow_part1.feature:90  Deleted item returns 404
+
+
+0 features passed, 2 failed, 0 skipped
+0 scenarios passed, 34 failed, 0 skipped
+0 steps passed, 0 failed, 0 skipped, 92 untested
+Took:   2.5s
+Exit code: 1
+|--------------------| ------------------------------------------------------------|
+|ENV. VARIABLE       | VALUE                                                       |
+|--------------------| ------------------------------------------------------------|
+|HOME                | /Users/taltal                                               |
+|CONFIG              | /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/behavex/conf_behavex.cfg|
+|OUTPUT              | /Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks-stochastic/flow-tests/behave_reports|
+|TAGS                | ----                                                        |
+|PARALLEL_SCHEME     | feature                                                     |
+|PARALLEL_PROCESSES  | 4                                                           |
+|FEATURES_PATH       | features                                                    |
+|TEMP                | /Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks-stochastic/flow-tests/behave_reports/temp|
+|LOGS                | /Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks-stochastic/flow-tests/allure-results/behavex|
+|LOGGING_LEVEL       | INFO                                                        |
+|--------------------| ------------------------------------------------------------|
+
+************************************************************
+Running parallel features.
+************************************************************
+
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/error "HTTP/1.1 500 Internal Server Error"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/flaky "HTTP/1.1 500 Internal Server Error"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+/Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 200 OK"
+/Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  decoded = self.decode_complete(
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 200 OK"
+/Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/flaky "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/chaos "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/999 "HTTP/1.1 404 Not Found"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/999 "HTTP/1.1 404 Not Found"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Get second item by id
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Login as charlie
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Submit nested object
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Slow endpoint completes with 200
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Chaos endpoint returns 200, 401, or 500
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Login returns 200 and a token
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Submit accepts JSON payload
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create item returns 200
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Deleted item returns 404
+
+Failing scenarios:
+  features/flow_part1.feature:6  Root returns 200
+  features/flow_part1.feature:10  Slow endpoint completes with 200
+  features/flow_part1.feature:14  Forced error endpoint returns 500
+  features/flow_part1.feature:18  Flaky endpoint returns 200 or 500
+  features/flow_part1.feature:22  Chaos endpoint returns 200, 401, or 500
+  features/flow_part1.feature:26  Secure without token returns 401
+  features/flow_part1.feature:30  Admin without token returns 401
+  features/flow_part1.feature:34  Login returns 200 and a token
+  features/flow_part1.feature:42  Secure with bearer returns 200
+  features/flow_part1.feature:47  Admin with bearer returns 200
+  features/flow_part1.feature:52  Submit accepts JSON payload
+  features/flow_part1.feature:60  Items list is empty initially
+  features/flow_part1.feature:64  Create item returns 200
+  features/flow_part1.feature:72  Get created item by id
+  features/flow_part1.feature:81  Delete item returns 200
+  features/flow_part1.feature:90  Deleted item returns 404
+  features/flow_part2.feature:6  Root still returns 200 after other calls
+  features/flow_part2.feature:10  Second root check
+  features/flow_part2.feature:14  Items endpoint returns 200 with empty list after reset
+  features/flow_part2.feature:18  Create two items and list them
+  features/flow_part2.feature:32  Get first item by id
+  features/flow_part2.feature:41  Get second item by id
+  features/flow_part2.feature:55  Login as charlie
+  features/flow_part2.feature:62  Login as dana
+  features/flow_part2.feature:69  Secure with invalid bearer returns 401
+  features/flow_part2.feature:73  Admin with malformed bearer returns 401
+  features/flow_part2.feature:77  Submit empty object
+  features/flow_part2.feature:84  Submit nested object
+  features/flow_part2.feature:91  Create item with default name
+  features/flow_part2.feature:98  Another flaky sample
+  features/flow_part2.feature:102  Another chaos sample
+  features/flow_part2.feature:106  Delete missing item returns 404
+  features/flow_part2.feature:110  Get missing item returns 404
+  features/flow_part2.feature:114  Login default username path
+
+
+0 features passed, 2 failed, 0 skipped
+0 scenarios passed, 34 failed, 0 skipped
+0 steps passed, 0 failed, 0 skipped, 92 untested
+Took:   4.7s
+Exit code: 1
+|--------------------| ------------------------------------------------------------|
+|ENV. VARIABLE       | VALUE                                                       |
+|--------------------| ------------------------------------------------------------|
+|HOME                | /Users/taltal                                               |
+|CONFIG              | /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/behavex/conf_behavex.cfg|
+|OUTPUT              | /Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks-stochastic/flow-tests/behave_reports|
+|TAGS                | ----                                                        |
+|PARALLEL_SCHEME     | feature                                                     |
+|PARALLEL_PROCESSES  | 4                                                           |
+|FEATURES_PATH       | features                                                    |
+|TEMP                | /Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks-stochastic/flow-tests/behave_reports/temp|
+|LOGS                | /Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks-stochastic/flow-tests/allure-results/behavex|
+|LOGGING_LEVEL       | INFO                                                        |
+|--------------------| ------------------------------------------------------------|
+
+************************************************************
+Running parallel features.
+************************************************************
+
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/error "HTTP/1.1 500 Internal Server Error"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/flaky "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/chaos "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/2 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 401 Unauthorized"
+/Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 401 Unauthorized"
+/Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+/Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  decoded = self.decode_complete(
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/chaos "HTTP/1.1 500 Internal Server Error"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/999 "HTTP/1.1 404 Not Found"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 404 Not Found"
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Root still returns 200 after other calls
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Items endpoint returns 200 with empty list after reset
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create two items and list them
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Get first item by id
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Login as charlie
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Another flaky sample
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Get missing item returns 404
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Root returns 200
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Slow endpoint completes with 200
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Secure with bearer returns 200
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create item returns 200
+
+Failing scenarios:
+  features/flow_part2.feature:6  Root still returns 200 after other calls
+  features/flow_part2.feature:10  Second root check
+  features/flow_part2.feature:14  Items endpoint returns 200 with empty list after reset
+  features/flow_part2.feature:18  Create two items and list them
+  features/flow_part2.feature:32  Get first item by id
+  features/flow_part2.feature:41  Get second item by id
+  features/flow_part2.feature:55  Login as charlie
+  features/flow_part2.feature:62  Login as dana
+  features/flow_part2.feature:69  Secure with invalid bearer returns 401
+  features/flow_part2.feature:73  Admin with malformed bearer returns 401
+  features/flow_part2.feature:77  Submit empty object
+  features/flow_part2.feature:84  Submit nested object
+  features/flow_part2.feature:91  Create item with default name
+  features/flow_part2.feature:98  Another flaky sample
+  features/flow_part2.feature:102  Another chaos sample
+  features/flow_part2.feature:106  Delete missing item returns 404
+  features/flow_part2.feature:110  Get missing item returns 404
+  features/flow_part2.feature:114  Login default username path
+  features/flow_part1.feature:6  Root returns 200
+  features/flow_part1.feature:10  Slow endpoint completes with 200
+  features/flow_part1.feature:14  Forced error endpoint returns 500
+  features/flow_part1.feature:18  Flaky endpoint returns 200 or 500
+  features/flow_part1.feature:22  Chaos endpoint returns 200, 401, or 500
+  features/flow_part1.feature:26  Secure without token returns 401
+  features/flow_part1.feature:30  Admin without token returns 401
+  features/flow_part1.feature:34  Login returns 200 and a token
+  features/flow_part1.feature:42  Secure with bearer returns 200
+  features/flow_part1.feature:47  Admin with bearer returns 200
+  features/flow_part1.feature:52  Submit accepts JSON payload
+  features/flow_part1.feature:60  Items list is empty initially
+  features/flow_part1.feature:64  Create item returns 200
+  features/flow_part1.feature:72  Get created item by id
+  features/flow_part1.feature:81  Delete item returns 200
+  features/flow_part1.feature:90  Deleted item returns 404
+
+
+0 features passed, 2 failed, 0 skipped
+0 scenarios passed, 34 failed, 0 skipped
+0 steps passed, 0 failed, 0 skipped, 92 untested
+Took:   0.5s
+Exit code: 1
+|--------------------| ------------------------------------------------------------|
+|ENV. VARIABLE       | VALUE                                                       |
+|--------------------| ------------------------------------------------------------|
+|HOME                | /Users/taltal                                               |
+|CONFIG              | /Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/behavex/conf_behavex.cfg|
+|OUTPUT              | /Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks-stochastic/flow-tests/behave_reports|
+|TAGS                | ----                                                        |
+|PARALLEL_SCHEME     | feature                                                     |
+|PARALLEL_PROCESSES  | 4                                                           |
+|FEATURES_PATH       | features                                                    |
+|TEMP                | /Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks-stochastic/flow-tests/behave_reports/temp|
+|LOGS                | /Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks-stochastic/flow-tests/allure-results/behavex|
+|LOGGING_LEVEL       | INFO                                                        |
+|--------------------| ------------------------------------------------------------|
+
+************************************************************
+Running parallel features.
+************************************************************
+
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/error "HTTP/1.1 500 Internal Server Error"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/flaky "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/chaos "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+/Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/2 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+/Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+/Users/taltal/unified-quality-orchestration-reporting-dashboard/.venv/lib/python3.13/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 18 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  decoded = self.decode_complete(
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/flaky "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/chaos "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/999 "HTTP/1.1 404 Not Found"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/999 "HTTP/1.1 404 Not Found"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 404 Not Found"
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Slow endpoint completes with 200
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Secure without token returns 401
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Admin without token returns 401
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Items list is empty initially
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Get created item by id
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Root still returns 200 after other calls
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Second root check
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Get first item by id
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Login as dana
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Secure with invalid bearer returns 401
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Submit empty object
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create item with default name
+
+Failing scenarios:
+  features/flow_part1.feature:6  Root returns 200
+  features/flow_part1.feature:10  Slow endpoint completes with 200
+  features/flow_part1.feature:14  Forced error endpoint returns 500
+  features/flow_part1.feature:18  Flaky endpoint returns 200 or 500
+  features/flow_part1.feature:22  Chaos endpoint returns 200, 401, or 500
+  features/flow_part1.feature:26  Secure without token returns 401
+  features/flow_part1.feature:30  Admin without token returns 401
+  features/flow_part1.feature:34  Login returns 200 and a token
+  features/flow_part1.feature:42  Secure with bearer returns 200
+  features/flow_part1.feature:47  Admin with bearer returns 200
+  features/flow_part1.feature:52  Submit accepts JSON payload
+  features/flow_part1.feature:60  Items list is empty initially
+  features/flow_part1.feature:64  Create item returns 200
+  features/flow_part1.feature:72  Get created item by id
+  features/flow_part1.feature:81  Delete item returns 200
+  features/flow_part1.feature:90  Deleted item returns 404
+  features/flow_part2.feature:6  Root still returns 200 after other calls
+  features/flow_part2.feature:10  Second root check
+  features/flow_part2.feature:14  Items endpoint returns 200 with empty list after reset
+  features/flow_part2.feature:18  Create two items and list them
+  features/flow_part2.feature:32  Get first item by id
+  features/flow_part2.feature:41  Get second item by id
+  features/flow_part2.feature:55  Login as charlie
+  features/flow_part2.feature:62  Login as dana
+  features/flow_part2.feature:69  Secure with invalid bearer returns 401
+  features/flow_part2.feature:73  Admin with malformed bearer returns 401
+  features/flow_part2.feature:77  Submit empty object
+  features/flow_part2.feature:84  Submit nested object
+  features/flow_part2.feature:91  Create item with default name
+  features/flow_part2.feature:98  Another flaky sample
+  features/flow_part2.feature:102  Another chaos sample
+  features/flow_part2.feature:106  Delete missing item returns 404
+  features/flow_part2.feature:110  Get missing item returns 404
+  features/flow_part2.feature:114  Login default username path
+
+
+0 features passed, 2 failed, 0 skipped
+0 scenarios passed, 34 failed, 0 skipped
+0 steps passed, 0 failed, 0 skipped, 92 untested
+Took:   0.5s
+Exit code: 1

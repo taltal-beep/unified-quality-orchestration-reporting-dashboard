@@ -26,9 +26,12 @@ import yaml
 from testo_core.config.errors import ConfigDiscoveryError, ConfigValidationError
 from testo_core.config.schema import (
     SUPPORTED_FRAMEWORKS,
+    SUPPORTED_REPORTER_TYPES,
+    _REPORTER_PATH_OPTION_KEYS,
     CycleTrigger,
     Defaults,
     Plan,
+    ReporterSpec,
     Stage,
     TestosteroneConfig,
 )
@@ -147,7 +150,14 @@ def _build_cycle_config(raw: dict[str, Any], *, config_dir: Path, source: Path) 
             config_dir=config_dir,
         )
         cycles[cycle.name] = cycle
-    return TestosteroneConfig(version=version, defaults=defaults, cycles=cycles, source_path=source)
+    reporters = _parse_reporters(raw.get("reporters"), config_dir=config_dir)
+    return TestosteroneConfig(
+        version=version,
+        defaults=defaults,
+        cycles=cycles,
+        reporters=reporters,
+        source_path=source,
+    )
 
 
 def _build_legacy_runs_config(
@@ -185,13 +195,54 @@ def _build_legacy_runs_config(
             config_dir=config_dir,
         )
         stages.append(stage)
-    plan = Plan(name=_DEFAULT_PLAN_NAME, description="Legacy 'runs:' shim.", stages=tuple(stages), trigger=None)
+    plan = Plan(
+        name=_DEFAULT_PLAN_NAME,
+        description="Legacy 'runs:' shim.",
+        stages=tuple(stages),
+        trigger=None,
+        tags=frozenset(),
+    )
+    reporters = _parse_reporters(raw.get("reporters"), config_dir=config_dir)
     return TestosteroneConfig(
         version=int(raw.get("version", 1)),
         defaults=defaults,
         cycles={plan.name: plan},
+        reporters=reporters,
         source_path=source,
     )
+
+
+def _parse_reporters(raw: Any, *, config_dir: Path) -> tuple[ReporterSpec, ...]:
+    if raw is None:
+        return ()
+    if not isinstance(raw, list):
+        raise ConfigValidationError("'reporters:' must be a list.")
+    out: list[ReporterSpec] = []
+    for idx, item in enumerate(raw, start=1):
+        if not isinstance(item, dict):
+            raise ConfigValidationError(f"reporters[{idx}] must be a mapping.")
+        reporter_type = str(item.get("type") or item.get("name") or "").strip().lower()
+        if not reporter_type:
+            raise ConfigValidationError(f"reporters[{idx}] is missing 'type'.")
+        if reporter_type not in SUPPORTED_REPORTER_TYPES:
+            raise ConfigValidationError(
+                f"reporters[{idx}] has unsupported type {reporter_type!r}; "
+                f"supported: {sorted(SUPPORTED_REPORTER_TYPES)}"
+            )
+        options: list[tuple[str, str]] = []
+        for key, value in item.items():
+            if key in ("type", "name"):
+                continue
+            if value is None:
+                continue
+            key_str = str(key)
+            if key_str in _REPORTER_PATH_OPTION_KEYS:
+                resolved = str(_resolve_path(value, config_dir=config_dir))
+                options.append((key_str, resolved))
+            else:
+                options.append((key_str, str(value)))
+        out.append(ReporterSpec(type=reporter_type, options=tuple(options)))
+    return tuple(out)
 
 
 def _parse_defaults(raw: Any, *, config_dir: Path) -> Defaults:
@@ -223,7 +274,18 @@ def _parse_cycle(*, cycle_name: str, cycle_raw: dict[str, Any], defaults: Defaul
         for item in stages_raw
     )
     trigger = _parse_trigger(cycle_raw.get("trigger"), cycle_name=cycle_name)
-    return Plan(name=cycle_name, description=description, stages=stages, trigger=trigger)
+    tags_raw = cycle_raw.get("tags")
+    tags: frozenset[str] = frozenset()
+    if tags_raw is not None:
+        if not isinstance(tags_raw, list):
+            raise ConfigValidationError(f"cycle {cycle_name!r}: 'tags' must be a list of strings.")
+        norm: list[str] = []
+        for i, t in enumerate(tags_raw):
+            if not isinstance(t, str) or not str(t).strip():
+                raise ConfigValidationError(f"cycle {cycle_name!r}: tags[{i}] must be a non-empty string.")
+            norm.append(str(t).strip().lower())
+        tags = frozenset(norm)
+    return Plan(name=cycle_name, description=description, stages=stages, trigger=trigger, tags=tags)
 
 
 def _parse_trigger(raw: Any, *, cycle_name: str) -> CycleTrigger | None:

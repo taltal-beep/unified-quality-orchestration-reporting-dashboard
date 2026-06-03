@@ -1,0 +1,602 @@
+LOG_INFO:httpx: HTTP Request: GET http://testserver/error "HTTP/1.1 500 Internal Server Error"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/flaky "HTTP/1.1 500 Internal Server Error"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/chaos "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/2 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/flaky "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/999 "HTTP/1.1 404 Not Found"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+USING RUNNER: behave.runner:Runner
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Root returns 200
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Slow endpoint completes with 200
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Secure with bearer returns 200
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Submit accepts JSON payload
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Delete item returns 200
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Deleted item returns 404
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create two items and list them
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Login as dana
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Admin with malformed bearer returns 401
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Submit nested object
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create item with default name
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Another chaos sample
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Delete missing item returns 404
+----
+
+Errored scenarios:
+  features/flow_part1.feature:6  Root returns 200
+  features/flow_part1.feature:10  Slow endpoint completes with 200
+  features/flow_part1.feature:42  Secure with bearer returns 200
+  features/flow_part1.feature:52  Submit accepts JSON payload
+  features/flow_part1.feature:81  Delete item returns 200
+  features/flow_part1.feature:90  Deleted item returns 404
+  features/flow_part2.feature:18  Create two items and list them
+  features/flow_part2.feature:62  Login as dana
+  features/flow_part2.feature:73  Admin with malformed bearer returns 401
+  features/flow_part2.feature:84  Submit nested object
+  features/flow_part2.feature:91  Create item with default name
+  features/flow_part2.feature:102  Another chaos sample
+  features/flow_part2.feature:106  Delete missing item returns 404
+
+0 features passed, 0 failed, 2 error, 0 skipped
+21 scenarios passed, 0 failed, 13 hook_error, 0 skipped
+75 steps passed, 0 failed, 0 skipped, 51 untested
+Took 0min 0.042s
+LOG_INFO:httpx: HTTP Request: GET http://testserver/slow "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/error "HTTP/1.1 500 Internal Server Error"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/flaky "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/chaos "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 404 Not Found"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/2 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/flaky "HTTP/1.1 500 Internal Server Error"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/999 "HTTP/1.1 404 Not Found"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+USING RUNNER: behave.runner:Runner
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Root returns 200
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Admin without token returns 401
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Items list is empty initially
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Delete item returns 200
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Items endpoint returns 200 with empty list after reset
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Get first item by id
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Login as charlie
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Secure with invalid bearer returns 401
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Admin with malformed bearer returns 401
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Submit empty object
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Submit nested object
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create item with default name
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Another chaos sample
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Delete missing item returns 404
+----
+
+Errored scenarios:
+  features/flow_part1.feature:6  Root returns 200
+  features/flow_part1.feature:30  Admin without token returns 401
+  features/flow_part1.feature:60  Items list is empty initially
+  features/flow_part1.feature:81  Delete item returns 200
+  features/flow_part2.feature:14  Items endpoint returns 200 with empty list after reset
+  features/flow_part2.feature:32  Get first item by id
+  features/flow_part2.feature:55  Login as charlie
+  features/flow_part2.feature:69  Secure with invalid bearer returns 401
+  features/flow_part2.feature:73  Admin with malformed bearer returns 401
+  features/flow_part2.feature:77  Submit empty object
+  features/flow_part2.feature:84  Submit nested object
+  features/flow_part2.feature:91  Create item with default name
+  features/flow_part2.feature:102  Another chaos sample
+  features/flow_part2.feature:106  Delete missing item returns 404
+
+0 features passed, 0 failed, 2 error, 0 skipped
+20 scenarios passed, 0 failed, 14 hook_error, 0 skipped
+80 steps passed, 0 failed, 0 skipped, 46 untested
+Took 0min 2.052s
+LOG_INFO:httpx: HTTP Request: GET http://testserver/error "HTTP/1.1 500 Internal Server Error"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/chaos "HTTP/1.1 500 Internal Server Error"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 404 Not Found"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/2 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/flaky "HTTP/1.1 500 Internal Server Error"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/999 "HTTP/1.1 404 Not Found"
+USING RUNNER: behave.runner:Runner
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Root returns 200
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Slow endpoint completes with 200
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Flaky endpoint returns 200 or 500
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Login returns 200 and a token
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Secure with bearer returns 200
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Admin with bearer returns 200
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Submit accepts JSON payload
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create item returns 200
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Items endpoint returns 200 with empty list after reset
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create two items and list them
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Login as dana
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create item with default name
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Another chaos sample
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Get missing item returns 404
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Login default username path
+----
+
+Errored scenarios:
+  features/flow_part1.feature:6  Root returns 200
+  features/flow_part1.feature:10  Slow endpoint completes with 200
+  features/flow_part1.feature:18  Flaky endpoint returns 200 or 500
+  features/flow_part1.feature:34  Login returns 200 and a token
+  features/flow_part1.feature:42  Secure with bearer returns 200
+  features/flow_part1.feature:47  Admin with bearer returns 200
+  features/flow_part1.feature:52  Submit accepts JSON payload
+  features/flow_part1.feature:64  Create item returns 200
+  features/flow_part2.feature:14  Items endpoint returns 200 with empty list after reset
+  features/flow_part2.feature:18  Create two items and list them
+  features/flow_part2.feature:62  Login as dana
+  features/flow_part2.feature:91  Create item with default name
+  features/flow_part2.feature:102  Another chaos sample
+  features/flow_part2.feature:110  Get missing item returns 404
+  features/flow_part2.feature:114  Login default username path
+
+0 features passed, 0 failed, 2 error, 0 skipped
+19 scenarios passed, 0 failed, 15 hook_error, 0 skipped
+71 steps passed, 0 failed, 0 skipped, 55 untested
+Took 0min 0.029s
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/slow "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/error "HTTP/1.1 500 Internal Server Error"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/flaky "HTTP/1.1 500 Internal Server Error"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/chaos "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 404 Not Found"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/flaky "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/chaos "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/999 "HTTP/1.1 404 Not Found"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+USING RUNNER: behave.runner:Runner
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Secure without token returns 401
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Admin without token returns 401
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Submit accepts JSON payload
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Second root check
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create two items and list them
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Get second item by id
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Login as charlie
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Get missing item returns 404
+----
+
+Errored scenarios:
+  features/flow_part1.feature:26  Secure without token returns 401
+  features/flow_part1.feature:30  Admin without token returns 401
+  features/flow_part1.feature:52  Submit accepts JSON payload
+  features/flow_part2.feature:10  Second root check
+  features/flow_part2.feature:18  Create two items and list them
+  features/flow_part2.feature:41  Get second item by id
+  features/flow_part2.feature:55  Login as charlie
+  features/flow_part2.feature:110  Get missing item returns 404
+
+0 features passed, 0 failed, 2 error, 0 skipped
+26 scenarios passed, 0 failed, 8 hook_error, 0 skipped
+93 steps passed, 0 failed, 0 skipped, 33 untested
+Took 0min 2.098s
+LOG_INFO:httpx: HTTP Request: GET http://testserver/slow "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/2 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/flaky "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/999 "HTTP/1.1 404 Not Found"
+USING RUNNER: behave.runner:Runner
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Root returns 200
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Forced error endpoint returns 500
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Flaky endpoint returns 200 or 500
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Chaos endpoint returns 200, 401, or 500
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Admin without token returns 401
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Admin with bearer returns 200
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Submit accepts JSON payload
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create item returns 200
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Delete item returns 200
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Deleted item returns 404
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Second root check
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create two items and list them
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Admin with malformed bearer returns 401
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Submit nested object
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Another chaos sample
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Delete missing item returns 404
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Login default username path
+----
+
+Errored scenarios:
+  features/flow_part1.feature:6  Root returns 200
+  features/flow_part1.feature:14  Forced error endpoint returns 500
+  features/flow_part1.feature:18  Flaky endpoint returns 200 or 500
+  features/flow_part1.feature:22  Chaos endpoint returns 200, 401, or 500
+  features/flow_part1.feature:30  Admin without token returns 401
+  features/flow_part1.feature:47  Admin with bearer returns 200
+  features/flow_part1.feature:52  Submit accepts JSON payload
+  features/flow_part1.feature:64  Create item returns 200
+  features/flow_part1.feature:81  Delete item returns 200
+  features/flow_part1.feature:90  Deleted item returns 404
+  features/flow_part2.feature:10  Second root check
+  features/flow_part2.feature:18  Create two items and list them
+  features/flow_part2.feature:73  Admin with malformed bearer returns 401
+  features/flow_part2.feature:84  Submit nested object
+  features/flow_part2.feature:102  Another chaos sample
+  features/flow_part2.feature:106  Delete missing item returns 404
+  features/flow_part2.feature:114  Login default username path
+
+0 features passed, 0 failed, 2 error, 0 skipped
+17 scenarios passed, 0 failed, 17 hook_error, 0 skipped
+61 steps passed, 0 failed, 0 skipped, 65 untested
+Took 0min 2.047s
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/slow "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/error "HTTP/1.1 500 Internal Server Error"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/chaos "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 401 Unauthorized"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/secure "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/admin "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/1 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/1 "HTTP/1.1 404 Not Found"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/items "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/2 "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/submit "HTTP/1.1 200 OK"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/chaos "HTTP/1.1 500 Internal Server Error"
+LOG_INFO:httpx: HTTP Request: DELETE http://testserver/items/999 "HTTP/1.1 404 Not Found"
+LOG_INFO:httpx: HTTP Request: GET http://testserver/items/999 "HTTP/1.1 404 Not Found"
+LOG_INFO:httpx: HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+USING RUNNER: behave.runner:Runner
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Flaky endpoint returns 200 or 500
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Delete item returns 200
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Second root check
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Items endpoint returns 200 with empty list after reset
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Get first item by id
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Secure with invalid bearer returns 401
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Admin with malformed bearer returns 401
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Submit empty object
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Create item with default name
+----
+----
+CAPTURED STDOUT: before_scenario
+HOOK-ERROR in before_scenario: AssertionError: Random failure injection (TESTO_SAMPLE_RANDOM_FAIL_P=0.35): behave:Another flaky sample
+----
+
+Errored scenarios:
+  features/flow_part1.feature:18  Flaky endpoint returns 200 or 500
+  features/flow_part1.feature:81  Delete item returns 200
+  features/flow_part2.feature:10  Second root check
+  features/flow_part2.feature:14  Items endpoint returns 200 with empty list after reset
+  features/flow_part2.feature:32  Get first item by id
+  features/flow_part2.feature:69  Secure with invalid bearer returns 401
+  features/flow_part2.feature:73  Admin with malformed bearer returns 401
+  features/flow_part2.feature:77  Submit empty object
+  features/flow_part2.feature:91  Create item with default name
+  features/flow_part2.feature:98  Another flaky sample
+
+0 features passed, 0 failed, 2 error, 0 skipped
+24 scenarios passed, 0 failed, 10 hook_error, 0 skipped
+92 steps passed, 0 failed, 0 skipped, 34 untested
+Took 0min 2.052s

@@ -7,6 +7,8 @@ instance.
 
 from __future__ import annotations
 
+import shlex
+from collections.abc import Sequence
 from pathlib import Path
 
 from rich.console import Console
@@ -21,9 +23,79 @@ from testo_core.cli.ui.renderers import (
 from testo_core.config.errors import ConfigDiscoveryError, ConfigError, PlanNotFoundError
 from testo_core.config.loader import discover_and_load
 from testo_core.config.resolver import resolve_plan, resolve_stages_for_plan
-from testo_core.config.schema import Plan, TestosteroneConfig
+from testo_core.config.schema import Plan, Stage, TestosteroneConfig
 from testo_core.engine.exit_codes import EngineExitCode
 from testo_core.triggers import TriggerResult, evaluate_cycle_trigger, persist_trigger_snapshot
+
+_ARCHIVE_JOIN_TIMEOUT_S: float = 30.0
+
+
+def _normalize_tag_filter(tag: str | None) -> str | None:
+    if tag is None or not str(tag).strip():
+        return None
+    return str(tag).strip().lower()
+
+
+def _emit_dry_run_plan(
+    *,
+    console: Console,
+    cfg: TestosteroneConfig,
+    plan: Plan,
+    stages: tuple[Stage, ...],
+    ci: bool,
+) -> None:
+    from rich.table import Table
+
+    from testo_core.frameworks import get_adapter
+
+    root = cfg.defaults.artifacts_root.expanduser().resolve()
+    if ci:
+        from testo_core.cli.ui.ci_renderer import emit_ndjson
+
+        for idx, st in enumerate(stages, start=1):
+            adapter = get_adapter(st.framework)
+            stage_root = (root / plan.name / st.name).resolve()
+            results_dir = (stage_root / "allure-results" / adapter.results_subdir()).resolve()
+            argv = adapter.build_argv(
+                target_repo=st.target_repo,
+                results_dir=results_dir,
+                stage_args=st.args,
+                workers=st.workers,
+            )
+            emit_ndjson(
+                {
+                    "event": "dry_run_stage",
+                    "cycle": plan.name,
+                    "index": idx,
+                    "stage": st.name,
+                    "framework": st.framework,
+                    "cwd": str(st.target_repo.expanduser().resolve()),
+                    "argv": list(argv),
+                }
+            )
+        return
+
+    table = Table(title=f"Dry run — {plan.name}", show_lines=False)
+    table.add_column("#", justify="right", style="muted")
+    table.add_column("Stage", style="title")
+    table.add_column("Equipment", style="framework")
+    table.add_column("cwd", overflow="fold")
+    table.add_column("command", overflow="fold")
+    for idx, st in enumerate(stages, start=1):
+        adapter = get_adapter(st.framework)
+        stage_root = (root / plan.name / st.name).resolve()
+        results_dir = (stage_root / "allure-results" / adapter.results_subdir()).resolve()
+        argv = adapter.build_argv(
+            target_repo=st.target_repo,
+            results_dir=results_dir,
+            stage_args=st.args,
+            workers=st.workers,
+        )
+        cmd = shlex.join(argv)
+        cwd = str(st.target_repo.expanduser().resolve())
+        table.add_row(str(idx), st.name, st.framework, cwd, cmd)
+    console.print(table)
+    console.print("[ok]Dry-run complete[/] — no commands were executed.")
 
 
 def execute_plan_command(
@@ -38,6 +110,10 @@ def execute_plan_command(
     force: bool = False,
     report_db: bool = True,
     async_report_db: bool = False,
+    tag: str | None = None,
+    fail_fast: bool = False,
+    dry_run: bool = False,
+    reporter_override: Sequence[str] | None = None,
 ) -> int:
     """Load + resolve + execute one plan (or every cycle when ``plan_name == 'all'``)."""
     try:
@@ -45,6 +121,8 @@ def execute_plan_command(
     except (ConfigError, ConfigDiscoveryError) as exc:
         _emit_config_error(console=console, exc=exc, ci=ci)
         return int(EngineExitCode.INVALID_INPUT)
+
+    tag_key = _normalize_tag_filter(tag)
 
     if plan_name == "all":
         if not cfg.cycles:
@@ -54,8 +132,18 @@ def execute_plan_command(
                 ci=ci,
             )
             return int(EngineExitCode.INVALID_INPUT)
+        candidates = sorted(cfg.cycles.keys())
+        if tag_key:
+            candidates = [n for n in candidates if tag_key in cfg.cycles[n].tags]
+        if not candidates:
+            _emit_config_error(
+                console=console,
+                exc=ConfigError(f"No cycles match --tag {tag_key!r}."),
+                ci=ci,
+            )
+            return int(EngineExitCode.INVALID_INPUT)
         worst = 0
-        for name in sorted(cfg.cycles.keys()):
+        for name in candidates:
             ec = _execute_one_cycle(
                 cfg=cfg,
                 plan=cfg.cycles[name],
@@ -67,14 +155,27 @@ def execute_plan_command(
                 force=force,
                 report_db=report_db,
                 async_report_db=async_report_db,
+                fail_fast=fail_fast,
+                dry_run=dry_run,
+                reporter_override=reporter_override,
             )
             worst = max(worst, ec)
+            if fail_fast and ec != 0:
+                return ec
         return worst
 
     try:
         plan = resolve_plan(cfg, plan_name=plan_name)
     except PlanNotFoundError as exc:
         _emit_config_error(console=console, exc=exc, ci=ci)
+        return int(EngineExitCode.INVALID_INPUT)
+
+    if tag_key and tag_key not in plan.tags:
+        _emit_config_error(
+            console=console,
+            exc=ConfigError(f"cycle {plan.name!r} does not include tag {tag_key!r}."),
+            ci=ci,
+        )
         return int(EngineExitCode.INVALID_INPUT)
 
     return _execute_one_cycle(
@@ -88,6 +189,9 @@ def execute_plan_command(
         force=force,
         report_db=report_db,
         async_report_db=async_report_db,
+        fail_fast=fail_fast,
+        dry_run=dry_run,
+        reporter_override=reporter_override,
     )
 
 
@@ -103,6 +207,9 @@ def _execute_one_cycle(
     force: bool,
     report_db: bool = True,
     async_report_db: bool = False,
+    fail_fast: bool = False,
+    dry_run: bool = False,
+    reporter_override: Sequence[str] | None = None,
 ) -> int:
     resolved_stages = resolve_stages_for_plan(plan)
     if not resolved_stages:
@@ -112,6 +219,30 @@ def _execute_one_cycle(
             ci=ci,
         )
         return int(EngineExitCode.INVALID_INPUT)
+
+    if dry_run:
+        if plan.trigger is not None and not force:
+            tr_probe = evaluate_cycle_trigger(plan=plan, cfg=cfg)
+            if not tr_probe.stimulus:
+                if ci:
+                    from testo_core.cli.ui.ci_renderer import emit_ndjson
+
+                    emit_ndjson(
+                        {
+                            "event": "dry_run",
+                            "cycle": plan.name,
+                            "status": "skipped",
+                            "reason": "trigger",
+                        }
+                    )
+                else:
+                    console.print(
+                        f"[muted]Dry-run:[/] cycle [bold]{plan.name}[/] would be skipped "
+                        f"(no trigger stimulus — {tr_probe.reason})."
+                    )
+                return int(EngineExitCode.SUCCESS)
+        _emit_dry_run_plan(console=console, cfg=cfg, plan=plan, stages=resolved_stages, ci=ci)
+        return int(EngineExitCode.SUCCESS)
 
     tr_result: TriggerResult | None = None
     if plan.trigger is not None and not force:
@@ -134,9 +265,22 @@ def _execute_one_cycle(
         renderer=renderer,
         artifacts_root=cfg.defaults.artifacts_root,
         persist=persist,
+        fail_fast=fail_fast,
     )
     exit_int = int(result.exit_code)
-    _maybe_archive_cycle_report(
+    if cfg.reporters or reporter_override:
+        from testo_core.reporting.reporters.orchestrate import run_configured_reporters
+
+        run_configured_reporters(
+            cfg=cfg,
+            artifacts_root=cfg.defaults.artifacts_root,
+            plan_name=effective_plan.name,
+            reporter_override=reporter_override,
+            console=console,
+            ci=ci,
+            generate_only=True,
+        )
+    archive_ec = _maybe_archive_cycle_report(
         cfg=cfg,
         plan=effective_plan,
         console=console,
@@ -146,6 +290,7 @@ def _execute_one_cycle(
         async_report_db=async_report_db,
         plan_exit_code=exit_int,
     )
+    exit_int = max(exit_int, archive_ec)
     if (
         tr_result is not None
         and tr_result.persist_snapshot_after_run
@@ -172,38 +317,63 @@ def _maybe_archive_cycle_report(
     report_db: bool,
     async_report_db: bool,
     plan_exit_code: int,
-) -> None:
+) -> int:
+    """Archive cycle artifacts to the report DB; return an exit-code bump on failure."""
     if not persist or not report_db:
-        return
+        return 0
+
+    if ci:
+        async_report_db = False
 
     from testo_core.services.report_archive import try_persist_cycle_report
 
     artifacts_root = cfg.defaults.artifacts_root
+    infra_exit = int(EngineExitCode.INFRA_FAILURE)
+
     if async_report_db:
         import threading
 
+        archive_result: list[object | None] = [None]
+
         def _job() -> None:
-            try_persist_cycle_report(
+            archive_result[0] = try_persist_cycle_report(
                 artifacts_root=artifacts_root,
                 plan_name=plan.name,
                 exit_code_override=plan_exit_code,
             )
 
-        threading.Thread(target=_job, daemon=True, name="testo-report-archive").start()
-        if not ci:
+        thread = threading.Thread(
+            target=_job,
+            name="testo-report-archive",
+            daemon=False,
+        )
+        thread.start()
+        thread.join(timeout=_ARCHIVE_JOIN_TIMEOUT_S)
+        if thread.is_alive():
             console.print(
-                "[dim]Report database archive started in background "
-                "(may not complete if the process exits immediately).[/]"
+                "[fail]Report database archive did not finish within "
+                f"{_ARCHIVE_JOIN_TIMEOUT_S:.0f}s.[/]"
             )
-        return
+            return infra_exit
+        if archive_result[0] is None:
+            console.print("[fail]Report database archive failed.[/]")
+            return infra_exit
+        if not ci:
+            console.print(f"[muted]Archived cycle report[/] [bold]{archive_result[0]}[/]")
+        return 0
 
     rid = try_persist_cycle_report(
         artifacts_root=artifacts_root,
         plan_name=plan.name,
         exit_code_override=plan_exit_code,
     )
-    if rid is not None and not ci:
+    if rid is None:
+        if not ci:
+            console.print("[fail]Report database archive failed.[/]")
+        return infra_exit
+    if not ci:
         console.print(f"[muted]Archived cycle report[/] [bold]{rid}[/]")
+    return 0
 
 
 def _emit_cycle_trigger_event(*, ci: bool, plan: Plan, tr: TriggerResult) -> None:
@@ -258,6 +428,7 @@ def _apply_workers_override(plan, stages, workers_override):  # type: ignore[no-
             description=plan.description,
             stages=tuple(stages),
             trigger=plan.trigger,
+            tags=plan.tags,
         )
 
     from testo_core.config.schema import Plan, Stage
@@ -280,6 +451,7 @@ def _apply_workers_override(plan, stages, workers_override):  # type: ignore[no-
         description=plan.description,
         stages=new_stages,
         trigger=plan.trigger,
+        tags=plan.tags,
     )
 
 

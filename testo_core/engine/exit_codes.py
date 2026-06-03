@@ -27,14 +27,21 @@ def classify_exit_code(
     returncodes: list[int],
     *,
     infra_error: Exception | None,
+    internal_failure: bool = False,
 ) -> EngineExitCode:
     """Bucket a list of stage returncodes into an :class:`EngineExitCode`.
 
     Mirrors :func:`testo_core.services.headless_engine._classify_exit_code`
     so contract tests keep passing while the engine internals are migrated.
+
+    ``internal_failure`` is set when the orchestrator catches an unexpected
+    engine exception (not a framework subprocess exit).  Raw return code ``4``
+    from pytest usage errors must not be conflated with internal failures.
     """
     if infra_error is not None:
         return EngineExitCode.INFRA_FAILURE
+    if internal_failure:
+        return EngineExitCode.INTERNAL_ERROR
     if not returncodes:
         return EngineExitCode.INTERNAL_ERROR
     if any(int(rc) in (124, 127) for rc in returncodes):

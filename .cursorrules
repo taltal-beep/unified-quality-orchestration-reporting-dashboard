@@ -1,0 +1,9 @@
+# Testo Project Rules & AI Context Anchoring
+
+You have access to a complete Obsidian Second Brain knowledge base inside the `/docs` directory. 
+
+Before proposing or applying any code changes:
+1. **Architectural Alignment:** Always prioritize structural consistency with the execution lifecycles and state modules documented in `docs/Architecture/`.
+2. **Interface Rigidity:** Do not reinvent existing terminal output formats, NDJSON schemas, or exit code systems. Strictly adhere to the rules defined in `docs/CLI Commands/Troubleshooting and Error Codes.md`.
+3. **Automated Maintenance:** If your code modifications alter CLI arguments, error codes, configuration parsing (`testosterone.yaml`), or workflow lifecycles, you must modify the corresponding Markdown file in `/docs` as part of your task.
+4. **Token Efficiency:** If a technical explanation or system architecture concept is already written in the `/docs` vault, reference the filename explicitly instead of re-generating duplicate explanations in the chat panel.

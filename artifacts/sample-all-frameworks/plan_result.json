@@ -1,0 +1,37 @@
+{
+  "aggregate_returncode": 1,
+  "duration_s": 6.32181715965271,
+  "exit_code": 1,
+  "finished_at": 1778598653.945941,
+  "plan": "sample-all-frameworks",
+  "stages": [
+    {
+      "duration_s": 0.7729599475860596,
+      "error": null,
+      "framework": "pytest",
+      "log_path": "/Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks/pytest-sample/run.log",
+      "name": "pytest-sample",
+      "returncode": 1,
+      "timed_out": false
+    },
+    {
+      "duration_s": 2.446408748626709,
+      "error": null,
+      "framework": "behave",
+      "log_path": "/Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks/behave-features/run.log",
+      "name": "behave-features",
+      "returncode": 0,
+      "timed_out": false
+    },
+    {
+      "duration_s": 2.919780969619751,
+      "error": null,
+      "framework": "behavex",
+      "log_path": "/Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-all-frameworks/flow-tests/run.log",
+      "name": "flow-tests",
+      "returncode": 0,
+      "timed_out": false
+    }
+  ],
+  "started_at": 1778598647.6241238
+}

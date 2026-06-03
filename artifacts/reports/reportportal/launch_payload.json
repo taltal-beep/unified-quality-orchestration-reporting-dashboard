@@ -1,0 +1,15 @@
+{
+  "name": "sample-pytests",
+  "attributes": [
+    {
+      "key": "layout",
+      "value": "cycle"
+    }
+  ],
+  "endpoint": "http://localhost:8080",
+  "project": "superadmin_personal",
+  "stage_count": 1,
+  "result_dirs": [
+    "/Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-pytests/pytest-sample/allure-results/pytest"
+  ]
+}

@@ -28,6 +28,7 @@ class StageResult:
     command: tuple[str, ...]
     output_tail: str
     timed_out: bool = False
+    internal_failure: bool = False
     error: str | None = None
 
 

@@ -114,3 +114,47 @@ def test_dispatch_report_generate_only_does_not_open_dashboard(tmp_path: Path) -
         )
         assert code == int(EngineExitCode.SUCCESS)
         op.assert_not_called()
+
+
+def test_dispatch_report_no_open_skips_dashboard(tmp_path: Path) -> None:
+    from rich.console import Console
+
+    rd = tmp_path / "pytest_results"
+    rd.mkdir(parents=True)
+    fake = CollectedResults(
+        artifacts_root=tmp_path,
+        stages=[
+            StageCollection(
+                plan="unit",
+                stage="pytest",
+                framework="pytest",
+                results_dir=rd,
+                log_path=None,
+            )
+        ],
+    )
+    out = tmp_path / "report_out"
+    out.mkdir()
+    (out / "index.html").write_text("<html></html>", encoding="utf-8")
+    console = Console(record=True, width=120)
+    with (
+        patch("testo_core.reporting.entry.collect_results", return_value=fake),
+        patch("testo_core.reporting.allure.generate_html") as gen,
+        patch("testo_core.reporting.server.open_generated_report") as op,
+    ):
+        gen.return_value = AllureGenerateResult(ok=True, out_dir=out, message="ok")
+        code = dispatch_report(
+            console=console,
+            artifacts_root=tmp_path,
+            plan_name=None,
+            generate_only=False,
+            port=8765,
+            host="127.0.0.1",
+            out_dir=out,
+            fmt="html",
+            summary_out=None,
+            inject_history=False,
+            open_browser=False,
+        )
+        assert code == int(EngineExitCode.SUCCESS)
+        op.assert_not_called()

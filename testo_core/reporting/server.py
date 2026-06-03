@@ -1,28 +1,25 @@
 """Local HTTP dashboard for a generated Allure HTML tree.
 
-Preferred backend when the Allure CLI is installed:
+Preferred backend when the Allure 3 CLI is installed:
 
-* ``allure open`` — serves a pre-generated report directory (full SPA).
+* ``allure open`` — generates (if needed) and serves result or report directories.
 
 Fallback:
 
-* :mod:`http.server` — static files only; used when ``allure`` is missing.
-
-Blocking APIs return only after the server process exits (normally Ctrl-C).
+* :mod:`http.server` — static files only; used when ``allure`` is missing or a custom host is required.
 """
 
 from __future__ import annotations
 
 import http.server
-import shutil
-import signal
 import socket
 import socketserver
-import subprocess
 import threading
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator
+
+from testo_core.reporting.allure_cli import is_allure_available, run_open_blocking
 
 
 def find_free_port(host: str = "127.0.0.1") -> int:
@@ -32,11 +29,7 @@ def find_free_port(host: str = "127.0.0.1") -> int:
 
 
 def resolve_serve_port(host: str, preferred: int) -> int:
-    """Return ``preferred`` if it can be bound on ``host``, else an ephemeral free port.
-
-    Used so ``allure open`` does not fail with *Address already in use* when the default
-    port is occupied by a previous Allure or another process.
-    """
+    """Return ``preferred`` if it can be bound on ``host``, else an ephemeral free port."""
     if preferred == 0:
         return find_free_port(host=host)
     try:
@@ -49,56 +42,32 @@ def resolve_serve_port(host: str, preferred: int) -> int:
 
 
 def open_generated_report(*, report_dir: Path, host: str = "127.0.0.1", port: int = 8080) -> int:
-    """Run ``allure open`` on a directory produced by ``allure generate``.
+    """Run ``allure open`` on a report or results directory.
 
-    Inherits the parent stdout/stderr so Allure can print its own URLs.
-    Blocks until the Allure process exits (Ctrl-C returns 130).
-
-    Returns:
-        Process exit code, or ``130`` after SIGINT, or ``127`` if ``allure`` is missing.
+    Allure 3 binds locally; when ``host`` is not loopback, fall back to stdlib static serve.
     """
     report_dir = report_dir.expanduser().resolve()
     if not report_dir.is_dir():
         raise FileNotFoundError(f"report directory not found: {report_dir}")
-    if shutil.which("allure") is None:
-        return 127
-    proc = subprocess.Popen(  # noqa: S603 - argv is trusted
-        [
-            "allure",
-            "open",
-            str(report_dir),
-            "--host",
-            host,
-            "--port",
-            str(port),
-        ],
-        stdin=subprocess.DEVNULL,
-        stdout=None,
-        stderr=None,
-    )
-    try:
-        return int(proc.wait())
-    except KeyboardInterrupt:
-        proc.send_signal(signal.SIGTERM)
-        try:
-            return int(proc.wait(timeout=5.0))
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            return 130
+
+    chosen = resolve_serve_port(host, port)
+    if host not in ("127.0.0.1", "localhost", "::1") or not is_allure_available():
+        if not report_dir.is_dir():
+            return 127
+        return _serve_with_stdlib(report_dir=report_dir, port=chosen)
+
+    return run_open_blocking(paths=[report_dir], port=chosen)
 
 
 def serve_report(*, report_dir: Path, port: int = 8080) -> int:
-    """Block on a static HTTP server for ``report_dir``.
-
-    Returns the exit code (0 on graceful shutdown).
-    """
+    """Block on a static HTTP server for ``report_dir``."""
     report_dir = report_dir.expanduser().resolve()
     if not report_dir.is_dir():
         raise FileNotFoundError(f"report directory not found: {report_dir}")
-    if shutil.which("allure") is not None:
-        chosen = resolve_serve_port("127.0.0.1", port)
+    chosen = resolve_serve_port("127.0.0.1", port)
+    if is_allure_available():
         return open_generated_report(report_dir=report_dir, host="127.0.0.1", port=chosen)
-    return _serve_with_stdlib(report_dir=report_dir, port=resolve_serve_port("127.0.0.1", port))
+    return _serve_with_stdlib(report_dir=report_dir, port=chosen)
 
 
 def _serve_with_stdlib(*, report_dir: Path, port: int) -> int:
@@ -109,7 +78,7 @@ def _serve_with_stdlib(*, report_dir: Path, port: int) -> int:
             super().__init__(*args, directory=str(report_dir), **kwargs)  # type: ignore[arg-type]
 
         def log_message(self, format: str, *args: object) -> None:  # noqa: ARG002
-            return  # stay quiet — CI logs do not need request lines.
+            return
 
     with socketserver.TCPServer(("127.0.0.1", port), _Handler) as httpd:
         thread = threading.Thread(target=httpd.serve_forever, daemon=True)

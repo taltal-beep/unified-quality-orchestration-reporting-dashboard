@@ -10,6 +10,10 @@ import typer
 from testo_core.engine.exit_codes import EngineExitCode
 
 
+def _has_archive_id(value: str | None) -> bool:
+    return value is not None and str(value).strip() != ""
+
+
 def _render_diff(
     *,
     console,
@@ -18,6 +22,7 @@ def _render_diff(
     metrics_only: bool,
 ) -> None:
     from testo_core.cli.ui.summary_dashboard import render_full_diff
+    from testo_core.db import get_report_archive_repository
     from testo_core.services.report_archive_diff import diff_archives
 
     if metrics_only:
@@ -27,18 +32,38 @@ def _render_diff(
             current=current,
             changes=[],
             metrics_only=True,
+            diff_result=None,
         )
         return
 
+    from testo_core.repository.models import ReportArchive
+
+    repo = get_report_archive_repository()
+    seen_ids = {baseline.id, current.id}
+    flaky_extras: list[ReportArchive] = []
+    for row in repo.list_recent_for_cycle(cycle_name=current.cycle_name, limit=16):
+        if row.id in seen_ids:
+            continue
+        flaky_extras.append(row)
+        seen_ids.add(row.id)
+        if len(flaky_extras) >= 5:
+            break
+
     with tempfile.TemporaryDirectory(prefix="testo-diff-") as td:
-        changes, _meta = diff_archives(baseline=baseline, current=current, tmp=Path(td))
+        diff_res = diff_archives(
+            baseline=baseline,
+            current=current,
+            tmp=Path(td),
+            flaky_prior_archives=flaky_extras or None,
+        )
 
     render_full_diff(
         console,
         baseline=baseline,
         current=current,
-        changes=changes,
+        changes=diff_res.changes,
         metrics_only=False,
+        diff_result=diff_res,
     )
 
 
@@ -83,26 +108,59 @@ def diff_reports(
 
 
 def summary_reports(
+    baseline_id: str | None = typer.Argument(
+        None,
+        metavar="[BASELINE_ID]",
+        help=(
+            "Optional older report archive UUID (``testo report list`` id column). "
+            "Omit both UUIDs to compare the two most recent archives (newest vs previous)."
+        ),
+    ),
+    current_id: str | None = typer.Argument(
+        None,
+        metavar="[CURRENT_ID]",
+        help="Optional newer report archive UUID (required when baseline UUID is set).",
+    ),
     cycle: str | None = typer.Option(
         None,
         "--cycle",
-        help="Restrict to the two most recent archives for this cycle name.",
+        help=(
+            "When no archive UUIDs are given: use the two most recent rows for this cycle name. "
+            "Ignored when two explicit UUIDs are provided."
+        ),
     ),
 ) -> None:
-    """Diff the two most recent archived runs (newest vs previous)."""
+    """Rich terminal diff of two archived runs (use ``testo report compare`` for Allure)."""
+    from testo_core.cli.commands.archive_pick import ArchivePickError, resolve_archived_pair
     from testo_core.cli.ui.console import default_console
     from testo_core.db import get_report_archive_repository
 
     console = default_console()
     repo = get_report_archive_repository()
-    cycle_key = cycle.strip() if cycle else None
-    rows = repo.list_recent_for_cycle(cycle_name=cycle_key, limit=2) if cycle_key else repo.list_recent(limit=2)
-    if len(rows) < 2:
-        console.print("[fail]Need at least two archived runs in the database for ``summary``.[/]")
-        raise typer.Exit(code=int(EngineExitCode.INVALID_INPUT))
-    current, baseline = rows[0], rows[1]
-    console.print(
-        f"[muted]Comparing[/] [bold]{baseline.id}[/] (baseline) → [bold]{current.id}[/] (current)"
-    )
+
+    if _has_archive_id(baseline_id) and _has_archive_id(current_id) and cycle and str(cycle).strip():
+        console.print("[dim]Ignoring ``--cycle`` because explicit archive UUIDs were provided.[/]")
+
+    try:
+        pair = resolve_archived_pair(
+            repo,
+            baseline_id=baseline_id,
+            current_id=current_id,
+            cycle=cycle,
+        )
+    except ArchivePickError as exc:
+        console.print(f"[fail]{exc.message}[/]")
+        raise typer.Exit(code=int(exc.exit_code)) from exc
+
+    baseline, current = pair.baseline, pair.current
+    if baseline is None:
+        console.print(
+            "[dim]Baseline archive not found; no table diff. "
+            "Use ``testo report compare`` for an Allure view of the current archive.[/]"
+        )
+        raise typer.Exit(code=0)
+
+    console.print(f"[muted]Comparing[/] [bold]{baseline.id}[/] (baseline) → [bold]{current.id}[/] (current)")
     _render_diff(console=console, baseline=baseline, current=current, metrics_only=False)
+    console.print("[muted]Allure comparison:[/] [bold]testo report compare[/] [dim](same archive arguments).[/]")
     raise typer.Exit(code=0)

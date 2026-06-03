@@ -17,28 +17,8 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from xml.sax.saxutils import escape
 
+from testo_core.reporting.allure_results import StageSummary, parse_collected_results
 from testo_core.reporting.collector import CollectedResults
-
-
-@dataclass(frozen=True)
-class StageSummary:
-    plan: str
-    stage: str
-    framework: str
-    total: int
-    passed: int
-    failed: int
-    broken: int
-    skipped: int
-    duration_ms: int
-
-    @property
-    def status(self) -> str:
-        if self.failed or self.broken:
-            return "failed"
-        if self.total == 0:
-            return "empty"
-        return "passed"
 
 
 def write_json_summary(*, results: CollectedResults, out: Path) -> Path:
@@ -89,56 +69,7 @@ def write_junit_xml(*, results: CollectedResults, out: Path) -> Path:
 
 
 def _summarise(results: CollectedResults) -> list[StageSummary]:
-    out: list[StageSummary] = []
-    for stage in results.stages:
-        total = passed = failed = broken = skipped = 0
-        duration_ms = 0
-        for result_json in stage.results_dir.glob("*-result.json"):
-            try:
-                data = json.loads(result_json.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
-                continue
-            total += 1
-            status = str(data.get("status", "unknown")).lower()
-            if status == "passed":
-                passed += 1
-            elif status == "failed":
-                failed += 1
-            elif status == "broken":
-                broken += 1
-            elif status == "skipped":
-                skipped += 1
-            duration_ms += int(_extract_duration_ms(data))
-        out.append(
-            StageSummary(
-                plan=stage.plan,
-                stage=stage.stage,
-                framework=stage.framework,
-                total=total,
-                passed=passed,
-                failed=failed,
-                broken=broken,
-                skipped=skipped,
-                duration_ms=duration_ms,
-            )
-        )
-    return out
-
-
-def _extract_duration_ms(data: dict[str, object]) -> int:
-    """Allure result JSON stores ``start``/``stop`` epoch ms timestamps."""
-    start = _to_int(data.get("start"))
-    stop = _to_int(data.get("stop"))
-    if start and stop and stop >= start:
-        return int(stop - start)
-    return 0
-
-
-def _to_int(value: object) -> int:
-    try:
-        return int(value)  # type: ignore[arg-type]
-    except (TypeError, ValueError):
-        return 0
+    return list(parse_collected_results(results).stages)
 
 
 def _sum(items: list[StageSummary], field: str) -> int:

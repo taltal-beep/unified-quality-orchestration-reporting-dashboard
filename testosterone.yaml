@@ -1,6 +1,26 @@
 version: 1
 database:
   url: sqlite:////tmp/testo-reports.db
+
+# Post-run reporters — Allure HTML + 3 new dashboards (Extent, ReportPortal, TestBeats).
+# After `testo run`, open the paths listed in the README / terminal hints below.
+reporters:
+  - type: allure
+    out_dir: ./reports/allure
+  - type: extent
+    output_dir: ./reports/extent
+  - type: reportportal
+    endpoint: http://localhost:8080
+    project: superadmin_personal
+    token: ${env:REPORTPORTAL_TOKEN:-testo-local-validation_ERERERERQRGBEREREREREV2jef5txhXfGyP3Fw17h7wSbX5dgz7RhFB1P7mNawIW}
+    api_version: auto
+    launch_name: sample-pytests
+  - type: testbeats
+    slack_webhook: ${env:SLACK_WEBHOOK:-}
+    # teams_webhook: ${env:TEAMS_WEBHOOK}
+    report_url: file://./reports/extent/index.html
+    channel: testo-ci
+
 defaults:
   target_repo: .
   artifacts_root: artifacts
@@ -9,6 +29,7 @@ defaults:
 cycles:
   sample-pytests:
     description: Pytest suite for the sample target repo (regular pytest + Allure).
+    tags: [smoke]
     stages:
       - name: pytest-sample
         equipment: pytest
@@ -85,3 +106,4 @@ cycles:
           - features
         extra_env:
           TESTO_SAMPLE_RANDOM_FAIL_P: "0.35"
+ 

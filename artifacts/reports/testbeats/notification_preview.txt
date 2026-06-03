@@ -1,0 +1,2 @@
+*Testo run:* `sample-pytests`
+Total: 130 | Passed: 130 | Failed: 0 | Broken: 0

@@ -1,0 +1,19 @@
+{
+  "aggregate_returncode": 0,
+  "duration_s": 1.4090650081634521,
+  "exit_code": 0,
+  "finished_at": 1780313787.291383,
+  "plan": "sample-pytests",
+  "stages": [
+    {
+      "duration_s": 1.3627920150756836,
+      "error": null,
+      "framework": "pytest",
+      "log_path": "/Users/taltal/unified-quality-orchestration-reporting-dashboard/artifacts/sample-pytests/pytest-sample/run.log",
+      "name": "pytest-sample",
+      "returncode": 0,
+      "timed_out": false
+    }
+  ],
+  "started_at": 1780313785.882318
+}

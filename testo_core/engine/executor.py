@@ -34,6 +34,7 @@ from testo_core.frameworks.base import FrameworkAdapter, get_adapter
 
 _TERMINATE_GRACE_S: float = 5.0
 _DEFAULT_TAIL_LINES: int = 200
+_TIMEOUT_RETURNCODE: int = 124
 
 
 def run_stage(
@@ -113,7 +114,8 @@ def run_stage(
         except subprocess.TimeoutExpired:
             timed_out = True
             error = f"stage exceeded timeout_s={stage.timeout_s}"
-            returncode = _terminate(proc)
+            _terminate(proc)
+            returncode = _TIMEOUT_RETURNCODE
 
         reader.join(timeout=2.0)
         finished_at = time.time()

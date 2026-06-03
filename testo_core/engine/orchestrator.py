@@ -41,6 +41,7 @@ def run_plan(
     artifacts_root: Path | None = None,
     parent_env: Mapping[str, str] | None = None,
     persist: bool = True,
+    fail_fast: bool = False,
 ) -> PlanResult:
     """Execute every stage in ``plan`` sequentially.
 
@@ -84,6 +85,8 @@ def run_plan(
                     parent_env=parent_env,
                     on_chunk=on_chunk(stage.name),
                 )
+            except (KeyboardInterrupt, SystemExit):
+                raise
             except Exception as exc:  # pragma: no cover - defensive
                 stage_result = _internal_failure_result(stage=stage, exc=exc)
 
@@ -98,13 +101,28 @@ def run_plan(
                     "duration_s": stage_result.duration_s,
                     "log_path": str(stage_result.log_path) if stage_result.log_path else None,
                     "timed_out": stage_result.timed_out,
+                    "internal_failure": stage_result.internal_failure,
                     "error": stage_result.error,
                 }
             )
 
+            if fail_fast and stage_result.returncode != 0:
+                recorder.write(
+                    {
+                        "event": "plan_aborted",
+                        "plan": plan.name,
+                        "reason": "fail_fast",
+                        "completed_stages": len(stage_results),
+                    }
+                )
+                break
+
         finished_at = time.time()
         rcs = [s.returncode for s in stage_results]
-        exit_code = classify_exit_code(rcs, infra_error=None)
+        internal_failure = any(s.internal_failure for s in stage_results)
+        exit_code = classify_exit_code(
+            rcs, infra_error=None, internal_failure=internal_failure
+        )
         plan_result = PlanResult(
             plan_name=plan.name,
             started_at=started_at,
@@ -199,6 +217,7 @@ def _internal_failure_result(*, stage, exc: Exception) -> StageResult:  # type: 
         command=(),
         output_tail="",
         timed_out=False,
+        internal_failure=True,
         error=f"internal error: {exc}",
     )
 
@@ -228,6 +247,7 @@ def _try_persist(result: PlanResult, *, artifacts_root: Path) -> None:
                     "duration_s": s.duration_s,
                     "log_path": str(s.log_path) if s.log_path else None,
                     "timed_out": s.timed_out,
+                    "internal_failure": s.internal_failure,
                     "error": s.error,
                 }
                 for s in result.stages

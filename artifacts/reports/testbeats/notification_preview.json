@@ -1,0 +1,172 @@
+{
+  "slack": {
+    "blocks": [
+      {
+        "type": "header",
+        "text": {
+          "type": "plain_text",
+          "text": "[testo-ci] :white_check_mark: Testo \u2014 sample-pytests",
+          "emoji": true
+        }
+      },
+      {
+        "type": "section",
+        "fields": [
+          {
+            "type": "mrkdwn",
+            "text": "*Total*\n130"
+          },
+          {
+            "type": "mrkdwn",
+            "text": "*Passed*\n130"
+          },
+          {
+            "type": "mrkdwn",
+            "text": "*Failed*\n0"
+          },
+          {
+            "type": "mrkdwn",
+            "text": "*Duration*\n0s"
+          }
+        ]
+      },
+      {
+        "type": "context",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "*Frameworks:* pytest"
+          }
+        ]
+      },
+      {
+        "type": "actions",
+        "elements": [
+          {
+            "type": "button",
+            "text": {
+              "type": "plain_text",
+              "text": "View report",
+              "emoji": true
+            },
+            "url": "file://./reports/extent/index.html"
+          }
+        ]
+      }
+    ],
+    "attachments": [
+      {
+        "color": "#2EB67D",
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "Status: *PASSED* (130/130 passed)"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "teams": {
+    "type": "message",
+    "attachments": [
+      {
+        "contentType": "application/vnd.microsoft.card.adaptive",
+        "content": {
+          "type": "AdaptiveCard",
+          "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+          "version": "1.4",
+          "body": [
+            {
+              "type": "ColumnSet",
+              "columns": [
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": " ",
+                      "height": "stretch",
+                      "style": "emphasis"
+                    }
+                  ],
+                  "style": "emphasis",
+                  "backgroundColor": "#2EB67D",
+                  "minHeight": "48px"
+                },
+                {
+                  "type": "Column",
+                  "width": "stretch",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "sample-pytests",
+                      "weight": "Bolder",
+                      "size": "Large",
+                      "wrap": true
+                    },
+                    {
+                      "type": "TextBlock",
+                      "text": "Status: PASSED",
+                      "color": "Good",
+                      "spacing": "Small"
+                    }
+                  ],
+                  "verticalContentAlignment": "Center"
+                }
+              ]
+            },
+            {
+              "type": "TextBlock",
+              "text": "Channel: testo-ci",
+              "isSubtle": true,
+              "spacing": "Small"
+            },
+            {
+              "type": "FactSet",
+              "facts": [
+                {
+                  "title": "Total",
+                  "value": "130"
+                },
+                {
+                  "title": "Passed",
+                  "value": "130"
+                },
+                {
+                  "title": "Failed",
+                  "value": "0"
+                },
+                {
+                  "title": "Broken",
+                  "value": "0"
+                },
+                {
+                  "title": "Skipped",
+                  "value": "0"
+                },
+                {
+                  "title": "Duration",
+                  "value": "0s"
+                }
+              ]
+            },
+            {
+              "type": "ActionSet",
+              "actions": [
+                {
+                  "type": "Action.OpenUrl",
+                  "title": "View report",
+                  "url": "file://./reports/extent/index.html"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
