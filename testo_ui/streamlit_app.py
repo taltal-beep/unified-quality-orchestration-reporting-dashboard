@@ -1257,7 +1257,7 @@ with tab_history:
                     allure_base = (os.getenv("ALLURE_SERVER_URL") or "http://localhost:5050").rstrip("/")
                     st.link_button(
                         "Open Allure Server report",
-                        f"{allure_base}/allure-docker-service/projects/{s.run_id}/reports/latest/index.html",
+                        f"{allure_base.rstrip('/')}/reports/{s.run_id}/index.html",
                         type="secondary",
                     )
 

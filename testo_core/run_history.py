@@ -413,6 +413,7 @@ def record_completed_run(
         "health_pct": float(health) if health is not None else None,
         "target_repo": str(target_repo),
         "snapshot_dir": snap_prefix,
+        "allure_report_url": allure_report_url_for_run(str(run_id)) if upload_count > 0 else None,
         "audit_json": str(audit_blob) if audit_blob else None,
     }
     if metadata_context:
@@ -442,25 +443,19 @@ def record_completed_run(
     )
 
 
-def _upload_allure_results_to_s3(*, run_id: str, artifacts_root: Path, test_kind: str) -> int:
-    """
-    Upload raw Allure results into MinIO for Allure Docker Service.
+def allure_report_url_for_run(run_id: str) -> str:
+    """Public URL for a pre-generated Allure 3 HTML bundle (nginx static host)."""
+    import os
 
-    We intentionally *flatten* the framework subfolders into a single project results folder
-    for per-run Allure server reports.
-    """
-    try:
-        storage = get_artifact_s3()
-    except Exception as exc:
-        logger.warning("Raw Allure results upload skipped (MinIO not configured): %s", exc)
-        return 0
+    base = (os.getenv("ALLURE_SERVER_URL") or "http://localhost:5050").rstrip("/")
+    return f"{base}/reports/{run_id}/index.html"
 
+
+def _collect_allure_input_dirs(*, artifacts_root: Path, test_kind: str) -> list[Path]:
     ar = artifacts_root.expanduser().resolve()
     src_root = (ar / "allure-results").resolve()
     if not src_root.is_dir():
-        return 0
-
-    # Select which framework folders to include.
+        return []
     include_dirs: list[Path] = []
     if str(test_kind).strip().lower() == "audit":
         for fw in ("pytest", "behavex", "behave_native"):
@@ -471,9 +466,85 @@ def _upload_allure_results_to_s3(*, run_id: str, artifacts_root: Path, test_kind
         p = (src_root / str(test_kind)).resolve()
         if p.is_dir():
             include_dirs.append(p)
+    return include_dirs
 
+
+def _upload_allure_html_report_to_s3(*, run_id: str, artifacts_root: Path, test_kind: str) -> int:
+    """Generate Allure 3 HTML locally and upload to ``reports/<run_id>/`` in MinIO."""
+    try:
+        storage = get_artifact_s3()
+    except Exception as exc:
+        logger.warning("Allure HTML upload skipped (MinIO not configured): %s", exc)
+        return 0
+
+    include_dirs = _collect_allure_input_dirs(artifacts_root=artifacts_root, test_kind=test_kind)
     if not include_dirs:
         return 0
+
+    try:
+        from testo_core.reporting.allure_cli import AllureCLINotFoundError, report_has_index, run_generate
+    except ImportError:
+        return 0
+
+    prefix = f"reports/{run_id}"
+    uploaded = 0
+    try:
+        with tempfile.TemporaryDirectory(prefix="testo-allure-html-") as td:
+            out_dir = Path(td) / "report"
+            try:
+                completed = run_generate(result_dirs=include_dirs, out_dir=out_dir, clean=True, single_file=False)
+            except AllureCLINotFoundError as exc:
+                logger.warning("Allure HTML generation skipped: %s", exc)
+                return 0
+            if completed.returncode != 0 or not report_has_index(out_dir):
+                logger.warning(
+                    "Allure HTML generation failed (exit %s): %s",
+                    completed.returncode,
+                    (completed.stderr or completed.stdout or "").strip()[:500],
+                )
+                return 0
+            for path in out_dir.rglob("*"):
+                if not path.is_file():
+                    continue
+                rel = path.relative_to(out_dir).as_posix()
+                key = f"{prefix}/{rel}"
+                storage.upload_file(path, key)
+                uploaded += 1
+    except OSError as exc:
+        logger.warning("Allure HTML upload failed: %s", exc)
+        return 0
+
+    if uploaded:
+        logger.info(
+            "Uploaded %s Allure HTML file(s) to s3://%s/%s",
+            uploaded,
+            storage.bucket_name,
+            prefix,
+        )
+    return int(uploaded)
+
+
+def _upload_allure_results_to_s3(*, run_id: str, artifacts_root: Path, test_kind: str) -> int:
+    """
+    Upload raw Allure JSON (optional, for debugging) and generated HTML to MinIO.
+
+    HTML bundles are served by ``allure-static`` nginx at ``/reports/<run_id>/index.html``.
+    """
+    try:
+        storage = get_artifact_s3()
+    except Exception as exc:
+        logger.warning("Raw Allure results upload skipped (MinIO not configured): %s", exc)
+        return 0
+
+    include_dirs = _collect_allure_input_dirs(artifacts_root=artifacts_root, test_kind=test_kind)
+    if not include_dirs:
+        return 0
+
+    html_count = _upload_allure_html_report_to_s3(
+        run_id=run_id,
+        artifacts_root=artifacts_root,
+        test_kind=test_kind,
+    )
 
     prefix = f"projects/{run_id}/results"
 
@@ -501,7 +572,7 @@ def _upload_allure_results_to_s3(*, run_id: str, artifacts_root: Path, test_kind
 
     if uploaded:
         logger.info("Uploaded %s Allure result file(s) to s3://%s/%s", uploaded, storage.bucket_name, prefix)
-    return int(uploaded)
+    return int(uploaded) + int(html_count)
 
 
 def init_schema(db_path: Path | None = None) -> None:

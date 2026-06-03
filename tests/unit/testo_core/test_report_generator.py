@@ -38,12 +38,10 @@ def test_generate_allure_html_success(tmp_path: Path, fake_ok_subprocess: MagicM
     )
     assert ok is True
     fake_ok_subprocess.assert_called_once()
-    call_cmd = fake_ok_subprocess.call_args[0][0]
-    assert call_cmd[0:2] == ["allure", "generate"]
-    assert str(res / "pytest") in call_cmd
-    call_kwargs = fake_ok_subprocess.call_args.kwargs
-    assert call_kwargs["env"]["ALLURE_NO_ANALYTICS"] == "1"
-    assert call_kwargs["env"]["ALLURE_ANALYTICS_DISABLED"] == "1"
+    call_argv = fake_ok_subprocess.call_args[0][0]
+    assert "awesome" in call_argv
+    assert "--single-file" in call_argv
+    assert str(res / "pytest") in call_argv
     assert isinstance(health, float) and health == 100.0
 
 
@@ -54,14 +52,14 @@ def test_generate_allure_html_missing_results(tmp_path: Path) -> None:
 
 
 def test_invoke_allure_generate_file_not_found(tmp_path: Path) -> None:
-    def boom(cmd: list[str], **_kwargs: object) -> None:
+    def boom(*_args: object, **_kwargs: object) -> None:
         raise FileNotFoundError()
 
     res = tmp_path / "allure-results"
     res.mkdir()
     ok, msg, _ = generate_allure_html(results_dir=res, report_dir=tmp_path / "rep", subprocess_run=boom)
     assert ok is False
-    assert "Allure CLI not found" in msg
+    assert "Allure Report 3" in msg or "not found" in msg.lower()
 
 
 def test_generate_allure_reports_individual_builds_per_framework_commands(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -72,15 +70,14 @@ def test_generate_allure_reports_individual_builds_per_framework_commands(tmp_pa
 
     calls: list[list[str]] = []
 
-    def fake_run(cmd: list[str], **_kwargs: object):
-        calls.append(cmd)
+    def fake_run(argv: list[str], **_kwargs: object):
+        calls.append(list(argv))
         p = MagicMock()
         p.returncode = 0
         p.stderr = ""
         p.stdout = "ok"
         return p
 
-    # Avoid chmod/mirroring noise in this unit test
     monkeypatch.setattr(rg, "publish_allure_index_to_static", lambda **_: None)
 
     out = generate_allure_reports(
@@ -92,7 +89,7 @@ def test_generate_allure_reports_individual_builds_per_framework_commands(tmp_pa
     assert len(calls) == 2
     assert any(str(res / "pytest") in c for c in calls)
     assert any(str(res / "behavex") in c for c in calls)
-    assert any("-o" in c and "static" in c[c.index("-o") + 1] and "allure_reports" in c[c.index("-o") + 1] for c in calls)
+    assert any("--output" in c for c in calls)
 
 
 def test_generate_allure_reports_defaults_to_three_allure_frameworks(
@@ -104,8 +101,8 @@ def test_generate_allure_reports_defaults_to_three_allure_frameworks(
 
     calls: list[list[str]] = []
 
-    def fake_run(cmd: list[str], **_kwargs: object):
-        calls.append(cmd)
+    def fake_run(argv: list[str], **_kwargs: object):
+        calls.append(list(argv))
         p = MagicMock()
         p.returncode = 0
         p.stderr = ""
@@ -127,4 +124,3 @@ def test_flatten_behavex_nested_results_moves_to_root(tmp_path: Path) -> None:
     moved = rg._flatten_allure_result_json(root=behave)
     assert moved == 1
     assert (behave / "x-result.json").is_file()
-
