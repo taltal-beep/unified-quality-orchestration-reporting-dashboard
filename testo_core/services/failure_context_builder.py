@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from typing import Any
 
 from testo_core.run_history import CompletedRunView
-from testo_core.security.redaction import redact_text
+from testo_core.security.redaction import redact_text, redact_value
 
 
 @dataclass(frozen=True)
@@ -32,6 +33,18 @@ def _truncate(value: str, *, limit: int, label: str) -> tuple[str, bool]:
     return f"{value[:keep]}{suffix}", True
 
 
+def _redacted_context_text(value: Any) -> str:
+    if value is None:
+        return ""
+    redacted = redact_value(value)
+    if isinstance(redacted, str):
+        return redacted
+    try:
+        return json.dumps(redacted, sort_keys=True, default=str)
+    except TypeError:
+        return redact_text(str(redacted))
+
+
 def build_failure_context(
     *,
     run: CompletedRunView,
@@ -47,13 +60,15 @@ def build_failure_context(
         f"broken={run.broken}\n"
         f"health_pct={run.health_pct}\n"
     )
-    raw_log = str(metadata.get("error_message") or metadata.get("error") or "")
-    raw_trace = str(metadata.get("traceback") or metadata.get("stack_trace") or metadata.get("audit_json") or "")
-    raw_meta = str(metadata.get("sync") or "")
+    raw_log = _redacted_context_text(metadata.get("error_message") or metadata.get("error"))
+    raw_trace = _redacted_context_text(
+        metadata.get("traceback") or metadata.get("stack_trace") or metadata.get("audit_json")
+    )
+    raw_meta = _redacted_context_text(metadata.get("sync"))
 
-    log_section, log_truncated = _truncate(redact_text(raw_log), limit=budget.max_log_chars, label="log")
-    trace_section, trace_truncated = _truncate(redact_text(raw_trace), limit=budget.max_trace_chars, label="trace")
-    meta_section, meta_truncated = _truncate(redact_text(raw_meta), limit=budget.max_metadata_chars, label="metadata")
+    log_section, log_truncated = _truncate(raw_log, limit=budget.max_log_chars, label="log")
+    trace_section, trace_truncated = _truncate(raw_trace, limit=budget.max_trace_chars, label="trace")
+    meta_section, meta_truncated = _truncate(raw_meta, limit=budget.max_metadata_chars, label="metadata")
 
     prompt = (
         "You are an assistant that explains CI/test failures in concise operational language.\n"

@@ -81,3 +81,28 @@ def test_failure_context_uses_error_and_audit_fallbacks() -> None:
 
     assert "generic error" in context.prompt
     assert "audit fallback trace" in context.prompt
+
+
+def test_failure_context_redacts_structured_secret_metadata() -> None:
+    context = build_failure_context(
+        run=_run(),
+        metadata={
+            "error_message": "request failed with api_key=LOGSECRET123456",
+            "traceback": "Authorization: Bearer trace-secret-123456",
+            "sync": {
+                "api_key": "SYNCSECRET123456",
+                "nested": {
+                    "authorization": "Bearer nested-secret-123456",
+                    "safe": "retained diagnostic context",
+                },
+            },
+        },
+        budget=FailureContextBudget(),
+    )
+
+    assert "LOGSECRET123456" not in context.prompt
+    assert "trace-secret-123456" not in context.prompt
+    assert "SYNCSECRET123456" not in context.prompt
+    assert "nested-secret-123456" not in context.prompt
+    assert "retained diagnostic context" in context.prompt
+    assert "***REDACTED***" in context.prompt
