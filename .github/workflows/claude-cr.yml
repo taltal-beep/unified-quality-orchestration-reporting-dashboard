@@ -1,34 +1,53 @@
 name: Claude AI Code Review
 
-# Only trigger when a PR is opened or new code is pushed to it
-
+# Automatically review every pull request when it is opened or updated.
+# No "@claude" mention is required — the absence of a trigger_phrase means
+# the action runs on all matching PR events.
 on:
   pull_request:
     types: [opened, synchronize]
 
-# CRITICAL SECURITY STEP: Strictly limit what this workflow can do
+# Least-privilege: Claude can read the code and post review comments, nothing else.
 permissions:
-  contents: read          # Can only read the code, cannot push changes
-  pull-requests: write    # Can only post comments on the PR
+  contents: read          # read the repository contents / diff
+  pull-requests: write    # post the review as PR comments
+
+# Avoid stacking reviews if a PR is pushed to several times in quick succession.
+concurrency:
+  group: claude-cr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   claude-review:
     runs-on: ubuntu-latest
-
+    # Skip drafts and bot-authored PRs (e.g. dependabot) to save API spend.
+    if: github.event.pull_request.draft == false && github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetches the history so the AI can see the diffs
-          
-      # Replace this with the specific Claude action/script you decide to use
+          fetch-depth: 0  # full history so Claude can diff against the base branch
 
-      - name: Run Claude Code Reviewer
-        uses: broadinstitute/action-setup-claude@v1 # Example placeholder !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-
+      - name: Run Claude Code Review
+        uses: anthropics/claude-code-action@v1
         with:
-          # Tell Claude to focus on logic, not stylistic nitpicks
-          system_prompt: "You are an expert code reviewer. Focus on logic errors, security flaws, and performance bottlenecks. Do not comment on stylistic formatting."
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            You are an expert code reviewer for this Python project (pytest test
+            orchestration + Streamlit dashboard, packaged as "testo").
+
+            Review the changes in this pull request and post your findings as PR
+            comments. Focus on, in priority order:
+              1. Correctness / logic errors and edge cases.
+              2. Security flaws (injection, unsafe subprocess/shell use, secrets
+                 in code, unsafe deserialization, path traversal, SSRF).
+              3. Performance bottlenecks and resource leaks.
+              4. Missing or weak test coverage for the changed behavior, given the
+                 repo's tier_fast / tier_heavy / tier_external pytest markers.
+
+            Do NOT comment on pure stylistic formatting. Be concise and concrete:
+            reference specific files and line numbers, and prefer a suggested fix
+            over a vague concern. If the PR looks good, say so briefly.
+          claude_args: |
+            --max-turns 8
