@@ -21,6 +21,8 @@ This vault is the map of content for the project. Start here, then drill into th
 | Topic | Note |
 |-------|------|
 | Phased delivery (WHY) | [[Product Roadmap]] |
+| V1 release task breakdown | [[V1 Release Roadmap]] |
+| Project audit (2026-06-24) | [[Project Audit - 2026-06-24]] |
 | Engineering hub | [[UQO Engineering Hub]] |
 | ADRs & deep specs | [[Specs & ADRs/README]] |
 

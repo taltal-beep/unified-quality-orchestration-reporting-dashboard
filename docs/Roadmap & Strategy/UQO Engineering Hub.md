@@ -9,6 +9,8 @@ Canonical hub for the **Unified Quality Orchestration** repo (`unified-quality-o
 | Section | Vault note |
 |---------|------------|
 | Phased delivery (WHY) | [[Product Roadmap]] |
+| V1 release task breakdown | [[V1 Release Roadmap]] |
+| Project audit (2026-06-24) | [[Project Audit - 2026-06-24]] |
 | Specs & ADRs | [[Specs & ADRs/README]] |
 | Operational guides | [[CI-CD Pipeline Setup]], [[Streamlit to React Migration Guide]] |
 | Release gates | [[Release Management/README]] |
