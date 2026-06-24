@@ -5,12 +5,14 @@ name: Claude AI Code Review
 # the action runs on all matching PR events.
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, reopened, ready_for_review]
 
-# Least-privilege: Claude can read the code and post review comments, nothing else.
+# Least-privilege: read the code, post review comments. id-token is required
+# by the action for its progress-tracking / OIDC flow.
 permissions:
-  contents: read          # read the repository contents / diff
-  pull-requests: write    # post the review as PR comments
+  contents: read
+  pull-requests: write
+  id-token: write
 
 # Avoid stacking reviews if a PR is pushed to several times in quick succession.
 concurrency:
@@ -20,7 +22,7 @@ concurrency:
 jobs:
   claude-review:
     runs-on: ubuntu-latest
-    # Skip drafts and bot-authored PRs (e.g. dependabot) to save API spend.
+    # Skip drafts and bot-authored PRs (e.g. dependabot) to save usage.
     if: github.event.pull_request.draft == false && github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout repository
@@ -31,15 +33,21 @@ jobs:
       - name: Run Claude Code Review
         uses: anthropics/claude-code-action@v1
         with:
+          # Authenticate with the Claude Pro/Max subscription (no API credits).
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          show_full_output: true  # TEMP: surface the full error for debugging
+
+          # Agent review mode: posts a tracking comment and updates progress.
+          track_progress: true
+
           prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
             You are an expert code reviewer for this Python project (pytest test
             orchestration + Streamlit dashboard, packaged as "testo").
 
-            Review the changes in this pull request and post your findings as PR
-            comments. Focus on, in priority order:
+            Review the changes in this pull request. Focus, in priority order:
               1. Correctness / logic errors and edge cases.
               2. Security flaws (injection, unsafe subprocess/shell use, secrets
                  in code, unsafe deserialization, path traversal, SSRF).
@@ -47,8 +55,12 @@ jobs:
               4. Missing or weak test coverage for the changed behavior, given the
                  repo's tier_fast / tier_heavy / tier_external pytest markers.
 
-            Do NOT comment on pure stylistic formatting. Be concise and concrete:
-            reference specific files and line numbers, and prefer a suggested fix
-            over a vague concern. If the PR looks good, say so briefly.
+            Do NOT comment on pure stylistic formatting. Leave inline comments on
+            specific lines for concrete issues, and prefer a suggested fix over a
+            vague concern. Use a single top-level comment for general observations
+            or to say the PR looks good if you find nothing significant.
+
+          # Grant the tools Claude needs to read the diff and post review comments.
           claude_args: |
-            --max-turns 8
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+            --max-turns 25
