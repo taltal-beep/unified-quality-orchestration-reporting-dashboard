@@ -25,9 +25,9 @@ def test_relpath_for_display_relative(tmp_path: Path, monkeypatch: pytest.Monkey
 
 def test_plan_artifacts_dir_rejects_paths_outside_artifacts_root(tmp_path: Path) -> None:
     root = tmp_path / "artifacts"
-    with pytest.raises(ValueError, match="escapes artifacts root"):
+    with pytest.raises(ValueError, match="plan name escapes root"):
         plan_artifacts_dir(root, "../outside")
-    with pytest.raises(ValueError, match="escapes artifacts root"):
+    with pytest.raises(ValueError, match="plan name escapes root"):
         plan_artifacts_dir(root, str(tmp_path / "outside"))
 
 

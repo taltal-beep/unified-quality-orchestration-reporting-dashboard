@@ -24,6 +24,7 @@ from testo_core.engine.events import (
 from testo_core.engine.executor import run_stage
 from testo_core.engine.exit_codes import EngineExitCode, classify_exit_code
 from testo_core.engine.result import PlanResult, StageResult
+from testo_core.reporting.paths import plan_artifacts_dir
 
 
 class _EventSink(Protocol):
@@ -48,7 +49,7 @@ def run_plan(
     history layer; failure to import or write the DB never fails the run.
     """
     artifacts_root = (artifacts_root or Path("artifacts")).expanduser().resolve()
-    plan_artifacts = (artifacts_root / plan.name).resolve()
+    plan_artifacts = plan_artifacts_dir(artifacts_root, plan.name)
     plan_artifacts.mkdir(parents=True, exist_ok=True)
     events_path = plan_artifacts / "events.ndjson"
     parent_env = parent_env if parent_env is not None else dict(os.environ)
@@ -211,7 +212,7 @@ def _try_persist(result: PlanResult, *, artifacts_root: Path) -> None:
     file so external dashboards have something to consume.
     """
     try:
-        target = artifacts_root / result.plan_name / "plan_result.json"
+        target = plan_artifacts_dir(artifacts_root, result.plan_name) / "plan_result.json"
         target.parent.mkdir(parents=True, exist_ok=True)
         payload = {
             "plan": result.plan_name,
