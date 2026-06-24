@@ -61,3 +61,48 @@ def test_execution_manager_generates_ai_summary_for_failed_run() -> None:
     manager._run_execution(state, req)
 
     assert service.calls == ["run-1:False"]
+
+
+def test_execution_manager_skips_ai_summary_for_passing_run() -> None:
+    service = _RecordingFailureService()
+    manager = ExecutionManager(failure_analysis_service=service)  # type: ignore[arg-type]
+    state = ExecutionState(execution_id="exec-1")
+    req = CreateExecutionRequest(
+        runs=[RunSpecRequest(test_type="pytest", target_repo=".")],
+        persist=True,
+        trigger_source="ui",
+        ci_mode=False,
+    )
+    run_result = RunResult(
+        returncode=0,
+        started_at=1.0,
+        finished_at=2.0,
+        command=BuiltCommand(
+            argv=["pytest"],
+            cwd=Path("."),
+            env={"UQO_RUN_ID": "run-1", "UQO_LAST_TEST_TYPE": "pytest"},
+        ),
+    )
+
+    def _stream(_request):  # noqa: ANN001, ANN202
+        yield EngineEvent(kind="run_result", payload=run_result)
+        return EngineSummary(
+            schema_version="1",
+            trigger_source="ui",
+            ci_mode=False,
+            persist=True,
+            exit_code=0,
+            aggregate_returncode=0,
+            started_at=1.0,
+            finished_at=2.0,
+            runs=(),
+            error=None,
+            execution_mode="headless",
+            failure_type=None,
+            sync={"status": "success", "runs": []},
+        )
+
+    manager._engine.stream = _stream  # type: ignore[assignment]
+    manager._run_execution(state, req)
+
+    assert service.calls == []
