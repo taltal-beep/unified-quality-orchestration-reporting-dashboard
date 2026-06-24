@@ -77,7 +77,9 @@ def get_run_reports(run_id: str) -> RunReportsResponse:
     allure_base = os.getenv("ALLURE_SERVER_URL", "").rstrip("/")
     allure_url = None
     if allure_base:
-        allure_url = f"{allure_base}/allure-docker-service/projects/{run_id}/reports/latest/index.html"
+        from testo_core.run_history import allure_report_url_for_run
+
+        allure_url = allure_report_url_for_run(run_id)
     return RunReportsResponse(
         allure_server_url=allure_url,
         static_links=session.links_under_static,

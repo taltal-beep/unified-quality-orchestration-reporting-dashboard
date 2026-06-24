@@ -1,0 +1,11 @@
+{
+  "name": "testo-allure-reporting",
+  "private": true,
+  "description": "Allure Report 3 CLI for Testo HTML report generation",
+  "devDependencies": {
+    "allure": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
