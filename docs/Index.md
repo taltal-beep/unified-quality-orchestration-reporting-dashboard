@@ -46,6 +46,8 @@ This vault is the map of content for the project. Start here, then drill into th
 | E2E harness | [[E2E Harness Operations Guide]] |
 | ReportPortal local | [[ReportPortal Local Setup Guide]] |
 | Allure 2 → 3 migration | [[Allure 3 Migration Plan]] |
+| PyPI publishing | [[Publishing to PyPI]] |
+| Docker image publishing | [[Publishing Docker Images]] |
 | Prompts | [[AI Prompt Engineering Lab]] |
 
 ## Quick links

@@ -1,0 +1,75 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test-pypi:
+    name: Publish to Test PyPI (dry run)
+    runs-on: ubuntu-latest
+    environment: test-pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build tools
+        run: python -m pip install --upgrade pip build twine
+
+      - name: Build package
+        run: python -m build
+
+      - name: Check distribution metadata
+        run: twine check dist/*
+
+      - name: Publish to Test PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+      - name: Verify install from Test PyPI
+        run: |
+          sleep 30
+          python -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ testo-core==${{ github.event.release.tag_name }}
+          testo --version
+
+  pypi:
+    name: Publish to PyPI
+    needs: test-pypi
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build tools
+        run: python -m pip install --upgrade pip build twine
+
+      - name: Build package
+        run: python -m build
+
+      - name: Check distribution metadata
+        run: twine check dist/*
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Verify install from PyPI
+        run: |
+          sleep 30
+          python -m pip install testo-core==${{ github.event.release.tag_name }}
+          testo --version
