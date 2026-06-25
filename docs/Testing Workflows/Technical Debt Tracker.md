@@ -56,6 +56,8 @@ Normalize in `run_stage` / `classify_exit_code`: emit **124** on timeout, map in
 
 ### 2. Dual execution stacks
 
+- [x] **Partially resolved 2026-06-25** — `EngineExitCode` and `classify_exit_code` are now single-sourced in `engine/exit_codes.py`; headless engine imports and re-exports. Remaining: `RunBackend` protocol extraction (P3, post-v1.0).
+
 **Evidence**
 
 | Modern | Legacy |
@@ -64,15 +66,13 @@ Normalize in `run_stage` / `classify_exit_code`: emit **124** on timeout, map in
 | `testo_core/engine/executor.py` | `testo_core/runners.py` (Docker streaming) |
 | `testo run` | `uqo run` |
 
-Duplicate `EngineExitCode` and `_classify_exit_code` logic in `engine/exit_codes.py` and `services/headless_engine.py`.
+**Risk** (mitigated)
 
-**Risk**
-
-Behavioral drift between Streamlit/API Docker runs and host `testo run`; duplicate bug fixes.
+Exit code drift is eliminated. Behavioral drift between run backends remains but is bounded by contract tests (`test_exit_code_consolidation.py`).
 
 **Recommendation**
 
-Document the boundary (done in vault notes); long-term extract a shared `RunBackend` protocol with host and Docker implementations, and re-export a single `EngineExitCode` from `testo_core.engine`.
+Long-term: extract a shared `RunBackend` protocol with host and Docker implementations.
 
 ---
 
@@ -97,18 +97,15 @@ Default to synchronous archive in CI (`--ci` implies no `--async-report-db`), or
 
 ### 4. Persistence stub (Phase 4)
 
-**Evidence**
+- [x] **Fixed 2026-06-25** — `testo_core/persistence/` module implemented with `PersistenceBackend` protocol, `JsonBackend`, `DbBackend`, and `composite_backend()` factory. `orchestrator.run_plan()` now uses the composite backend; `_try_persist` removed. `--no-persist` disables all persistence (JSON + DB).
 
-- `orchestrator._try_persist` docstring: full DB persistence “wired up in Phase 4 (`testo_core.persistence`)”
-- Current behavior: writes `plan_result.json` only; swallows `OSError`
+**Evidence** (resolved)
 
-**Risk**
-
-Operators expect `--no-persist` to control DB history while JSON files still appear; naming confusion.
-
-**Recommendation**
-
-Either implement `testo_core.persistence` hook from `run_plan`, or rename flags/docs to distinguish “run history DB” vs “artifact JSON snapshot.”
+- `testo_core/persistence/__init__.py` — public API
+- `testo_core/persistence/json_backend.py` — JSON file writer
+- `testo_core/persistence/db_backend.py` — DB writer via `RunRepository`
+- `testo_core/persistence/composite.py` — fans out to both, swallows individual failures
+- `tests/unit/testo_core/test_persistence_backends.py` — unit tests
 
 ---
 
@@ -135,18 +132,11 @@ Catch specific exceptions (`OSError`, `ClientError`, `SQLAlchemyError`); log wit
 
 ### 6. Inconsistent exit code constants in CLI
 
-**Evidence**
+- [x] **Fixed 2026-06-25** — All `raise typer.Exit(code=2)` in `config.py` and `plans.py` replaced with `raise typer.Exit(code=int(EngineExitCode.INVALID_INPUT))`.
 
-- `testo_core/cli/commands/config.py`, `plans.py` — `raise typer.Exit(code=2)` literal
-- Other commands use `int(EngineExitCode.INVALID_INPUT)` (same value, different style)
+**Evidence** (resolved)
 
-**Risk**
-
-Future enum reorder breaks hidden assumptions; harder to grep.
-
-**Recommendation**
-
-Replace literals with `EngineExitCode.INVALID_INPUT` everywhere for consistency.
+All CLI commands now use `EngineExitCode` enum for exit codes. Contract test `test_exit_code_consolidation.py` verifies the imports are the canonical class.
 
 ---
 
@@ -233,14 +223,7 @@ Design opt-in parallel stages with isolated `artifacts/<cycle>/<stage>/` trees a
 
 ### 12. Duplicate `EngineExitCode` definitions
 
-**Evidence**
-
-- `testo_core/engine/exit_codes.py`
-- `testo_core/services/headless_engine.py` (`EngineExitCode` class)
-
-**Recommendation**
-
-Single source in `engine/exit_codes.py`; headless service imports and re-exports for backward compatibility.
+- [x] **Fixed 2026-06-25** — `headless_engine.py` now imports `EngineExitCode` and `classify_exit_code` from `engine/exit_codes.py`; duplicate class and function removed. Contract test `test_exit_code_consolidation.py` asserts identity (`is`, not just equality).
 
 ---
 

@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from enum import IntEnum
 from pathlib import Path
 from typing import Any, Callable, Generator, Iterable, Literal, Sequence
 
 from testo_core.command_builders import RunConfig, TestType
+from testo_core.engine.exit_codes import EngineExitCode, classify_exit_code
 from testo_core.repository.models import RunStatus
 from testo_core.run_history import RunSyncStatus, create_run, record_completed_run, update_run_status
 from testo_core.runners import LogEvent, RunResult, run_streaming
@@ -15,14 +15,6 @@ from testo_core.services.multi_run import stream_multi_run
 
 SCHEMA_VERSION = "1"
 TriggerSource = Literal["cli", "ui", "ci"]
-
-
-class EngineExitCode(IntEnum):
-    SUCCESS = 0
-    DOMAIN_FAILURE = 1
-    INVALID_INPUT = 2
-    INFRA_FAILURE = 3
-    INTERNAL_ERROR = 4
 
 
 class HeadlessEngineError(Exception):
@@ -156,18 +148,6 @@ def _build_run_config(spec: EngineRunSpec, *, db_run_id: str | None) -> RunConfi
     )
 
 
-def _classify_exit_code(returncodes: list[int], *, infra_error: Exception | None) -> EngineExitCode:
-    if infra_error is not None:
-        return EngineExitCode.INFRA_FAILURE
-    if not returncodes:
-        return EngineExitCode.INTERNAL_ERROR
-    if any(int(rc) in (124, 127) for rc in returncodes):
-        return EngineExitCode.INFRA_FAILURE
-    if any(int(rc) != 0 for rc in returncodes):
-        return EngineExitCode.DOMAIN_FAILURE
-    return EngineExitCode.SUCCESS
-
-
 class HeadlessEngineService:
     def __init__(
         self,
@@ -296,7 +276,7 @@ class HeadlessEngineService:
             sr.db_finalize.status != "success" or sr.artifact_upload.status == "failed"
             for sr in sync_results
         )
-        exit_code = _classify_exit_code(returncodes, infra_error=infra_error)
+        exit_code = classify_exit_code(returncodes, infra_error=infra_error)
         if infra_error is None and has_sync_failure:
             exit_code = EngineExitCode.INFRA_FAILURE
         aggregate_returncode = 0 if returncodes and all(rc == 0 for rc in returncodes) else 1

@@ -1,0 +1,20 @@
+"""PersistenceBackend protocol — the contract every backend must satisfy."""
+
+from __future__ import annotations
+
+from typing import Protocol, runtime_checkable
+
+from testo_core.engine.result import PlanResult
+
+
+@runtime_checkable
+class PersistenceBackend(Protocol):
+    """Storage backend for engine plan results."""
+
+    def persist(self, result: PlanResult) -> None:
+        """Best-effort write of *result* to the backing store.
+
+        Implementations MUST NOT raise — persistence failures are logged
+        but never propagate to the caller.
+        """
+        ...
