@@ -418,6 +418,21 @@ def record_completed_run(
     }
     if metadata_context:
         payload.update({str(k): v for k, v in metadata_context.items()})
+    if int(rr.returncode) != 0:
+        failure_context, trace_excerpt = _extract_failure_context_from_allure(results_dir=results_dir)
+        if failure_context:
+            payload.setdefault("failure_context", failure_context)
+            failed_cases = failure_context.get("failed_cases")
+            if isinstance(failed_cases, list) and failed_cases:
+                first_message = failed_cases[0].get("message") if isinstance(failed_cases[0], dict) else None
+                if first_message:
+                    payload.setdefault("error_message", str(first_message))
+        if trace_excerpt:
+            payload.setdefault("traceback", trace_excerpt)
+        log_tail = _read_run_log_tail(run_id=str(run_id))
+        if log_tail:
+            payload.setdefault("log_tail", log_tail)
+            payload.setdefault("error_message", log_tail)
     if int(rr.returncode) == 124:
         payload.setdefault("error", "timeout")
         payload.setdefault("error_message", "Container exceeded timeout and was force-killed.")
