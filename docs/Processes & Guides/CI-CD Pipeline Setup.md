@@ -19,6 +19,8 @@ CI wrappers and direct `uqo run` invocations resolve ghost mode using:
 
 When ghost mode is active, stdout remains machine-readable (summary JSON, or NDJSON + summary with `--stream-json`), persistence defaults to on unless `--no-persist` is passed, and final summary includes sync status details.
 
+**Design intent:** In CI, Testo acts as a "ghost" — run tests, push metadata and artifacts to the configured DB/object store, exit without starting Streamlit or React. Provider detection and `execution_mode=ghost` metadata stay in the service layer (`testo_core/services/ghost_policy.py`, `ci_provenance.py`), not in repository adapters. Details: [[QA Strategies#CI and streaming output]], [[Deep Dive - Execution Logic]], [[Troubleshooting and Error Codes#Ghost / CI output]].
+
 ## Canonical CI provenance fields
 
 When running in ghost mode, persisted metadata may include:
@@ -105,3 +107,16 @@ All tier jobs upload diagnostics artifacts (`logs`, summary JSON, API responses,
   - immutable: `v1.x.y`, `sha-<commit>`
   - moving: `v1`, `latest`
 - Compatibility rule: `uqo-runner:v1.x.y` must embed a `testo-core` `1.x.y` compatible CLI contract (`uqo run` summary/NDJSON/exit semantics).
+
+## Official documentation
+
+| Topic | Reference |
+|-------|-----------|
+| Docker Engine | https://docs.docker.com/engine/ |
+| Docker Compose | https://docs.docker.com/compose/ |
+| Compose file spec | https://docs.docker.com/compose/compose-file/ |
+
+---
+**Context & Links:**
+- [[QA Strategies#CI and streaming output]], [[Command Reference]], [[Architecture Overview]], [[Deep Dive - Execution Logic]]
+- Gates: [[Release Checklist - Phase 2 CI Integrations]], [[Release Checklist - Phase 2 Ghost Mode]]

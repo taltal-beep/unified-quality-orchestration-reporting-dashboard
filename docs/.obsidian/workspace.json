@@ -1,0 +1,220 @@
+{
+  "main": {
+    "id": "44139c7db6b4187d",
+    "type": "split",
+    "children": [
+      {
+        "id": "dc311b38de496dba",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "39e520578665ca74",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Roadmap & Strategy/V1 Release Roadmap.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "V1 Release Roadmap"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "79ad5eddfff43bd7",
+    "type": "split",
+    "children": [
+      {
+        "id": "1221d5afae4adfcc",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "32f6803fe17cca7b",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "2ceca06848287c46",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "3e228f4e0f0b3f44",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 325.5
+  },
+  "right": {
+    "id": "bc7b39c739378435",
+    "type": "split",
+    "children": [
+      {
+        "id": "96db99569e17a57e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ebcc7d3985b87569",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "695f0bc207721cfb",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "8f7fc52279ebf194",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "588f1fadfb9d2092",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "86899c9fd2a8057a",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "39e520578665ca74",
+  "lastOpenFiles": [
+    "Specs & ADRs/Allure 3 Migration Plan.md",
+    "Testing Workflows/QA Strategies.md",
+    "CLI Commands/Command Reference.md",
+    "Architecture/Architecture Overview.md",
+    "Index.md",
+    "Release Management/Release Checklist - Phase 2 CI Integrations.md",
+    "Processes & Guides/Phase 3 UI Migration Milestones.md",
+    "Architecture/Deep Dive - Execution Logic.md",
+    "Processes & Guides/CI-CD Pipeline Setup.md",
+    "Testing Workflows/Technical Debt Tracker.md",
+    "Untitled.md",
+    "Roadmap & Strategy/Product Roadmap.md",
+    "Untitled.canvas",
+    "Untitled.base",
+    "2026-06-01.md",
+    "Specs & ADRs/Repository Pattern - Database-Agnostic Refactor.md",
+    "Processes & Guides/ReportPortal Local Setup Guide.md",
+    "Processes & Guides/E2E Harness Operations Guide.md",
+    "Processes & Guides/Streamlit to React Migration Guide.md",
+    "Prompts & Snippets/AI Prompt Engineering Lab.md",
+    "Prompts & Snippets/Agent Context Guide.md",
+    "Specs & ADRs/Phase 3 Unified Dashboard Plan.md",
+    "Release Management/Delta Comparison Policy.md",
+    "Release Management/README.md",
+    "Release Management/Release Checklist - Phase 4 AI and Failure Analysis.md",
+    "Release Management/Release Checklist - Phase 3 Unified Dashboard.md",
+    "Release Management/Release Checklist - Phase 3 Frontend Migration.md",
+    "Release Management/Release Checklist - Phase 3 Delta Engine.md",
+    "Archive",
+    "Prompts & Snippets",
+    "Processes & Guides",
+    "Release Management",
+    "Specs & ADRs",
+    "Roadmap & Strategy"
+  ]
+}

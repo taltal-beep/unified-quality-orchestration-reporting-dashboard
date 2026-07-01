@@ -1,0 +1,144 @@
+"""Unit tests for testo_core.persistence backends (Sprint 3 — Task 3.1.7)."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from testo_core.engine.exit_codes import EngineExitCode
+from testo_core.engine.result import PlanResult, StageResult
+from testo_core.persistence.backend import PersistenceBackend
+from testo_core.persistence.json_backend import JsonBackend
+from testo_core.persistence.db_backend import DbBackend
+from testo_core.persistence.composite import composite_backend
+
+
+def _make_plan_result(
+    plan_name: str = "smoke",
+    exit_code: EngineExitCode = EngineExitCode.SUCCESS,
+) -> PlanResult:
+    stage = StageResult(
+        stage_name="api",
+        framework="pytest",
+        returncode=0 if exit_code == EngineExitCode.SUCCESS else 1,
+        started_at=1000.0,
+        finished_at=1002.5,
+        duration_s=2.5,
+        log_path=Path("artifacts/smoke/api.log"),
+        artifacts_dir=Path("artifacts/smoke"),
+        command=("pytest", "-q"),
+        output_tail="1 passed",
+        timed_out=False,
+    )
+    return PlanResult(
+        plan_name=plan_name,
+        started_at=1000.0,
+        finished_at=1002.5,
+        duration_s=2.5,
+        stages=(stage,),
+        aggregate_returncode=stage.returncode,
+        exit_code=exit_code,
+    )
+
+
+class TestJsonBackend:
+    def test_satisfies_protocol(self) -> None:
+        backend = JsonBackend(Path("/tmp"))
+        assert isinstance(backend, PersistenceBackend)
+
+    def test_writes_plan_result_json(self, tmp_path: Path) -> None:
+        backend = JsonBackend(tmp_path)
+        result = _make_plan_result()
+        backend.persist(result)
+
+        out = tmp_path / "smoke" / "plan_result.json"
+        assert out.exists()
+        data = json.loads(out.read_text())
+        assert data["plan"] == "smoke"
+        assert data["exit_code"] == 0
+        assert len(data["stages"]) == 1
+        assert data["stages"][0]["name"] == "api"
+
+    def test_writes_failure_exit_code(self, tmp_path: Path) -> None:
+        backend = JsonBackend(tmp_path)
+        result = _make_plan_result(exit_code=EngineExitCode.DOMAIN_FAILURE)
+        backend.persist(result)
+
+        data = json.loads((tmp_path / "smoke" / "plan_result.json").read_text())
+        assert data["exit_code"] == 1
+        assert data["stages"][0]["returncode"] == 1
+
+    def test_silently_handles_write_error(self, tmp_path: Path) -> None:
+        backend = JsonBackend(Path("/nonexistent/deeply/nested/path"))
+        result = _make_plan_result()
+        backend.persist(result)
+
+
+class TestDbBackend:
+    def test_satisfies_protocol(self) -> None:
+        backend = DbBackend()
+        assert isinstance(backend, PersistenceBackend)
+
+    @patch("testo_core.db.get_repository")
+    def test_persists_successful_run(self, mock_get_repo: MagicMock) -> None:
+        mock_repo = MagicMock()
+        mock_get_repo.return_value = mock_repo
+
+        backend = DbBackend()
+        result = _make_plan_result()
+        backend.persist(result)
+
+        mock_repo.create_run.assert_called_once()
+        call_kwargs = mock_repo.create_run.call_args[1]
+        assert call_kwargs["status"].value == "COMPLETED"
+        assert call_kwargs["metadata"]["plan"] == "smoke"
+        assert call_kwargs["metadata"]["source"] == "engine"
+
+    @patch("testo_core.db.get_repository")
+    def test_persists_failed_run(self, mock_get_repo: MagicMock) -> None:
+        mock_repo = MagicMock()
+        mock_get_repo.return_value = mock_repo
+
+        backend = DbBackend()
+        result = _make_plan_result(exit_code=EngineExitCode.DOMAIN_FAILURE)
+        backend.persist(result)
+
+        call_kwargs = mock_repo.create_run.call_args[1]
+        assert call_kwargs["status"].value == "FAILED"
+
+    @patch("testo_core.db.get_repository", side_effect=Exception("no db"))
+    def test_silently_handles_db_error(self, _mock: MagicMock) -> None:
+        backend = DbBackend()
+        result = _make_plan_result()
+        backend.persist(result)
+
+
+class TestCompositeBackend:
+    def test_fans_out_to_all_backends(self, tmp_path: Path) -> None:
+        with patch("testo_core.db.get_repository") as mock_get_repo:
+            mock_repo = MagicMock()
+            mock_get_repo.return_value = mock_repo
+
+            backend = composite_backend(artifacts_root=tmp_path, db=True)
+            result = _make_plan_result()
+            backend.persist(result)
+
+            assert (tmp_path / "smoke" / "plan_result.json").exists()
+            mock_repo.create_run.assert_called_once()
+
+    def test_json_only_when_db_disabled(self, tmp_path: Path) -> None:
+        backend = composite_backend(artifacts_root=tmp_path, db=False)
+        result = _make_plan_result()
+        backend.persist(result)
+
+        assert (tmp_path / "smoke" / "plan_result.json").exists()
+
+    def test_continues_on_backend_failure(self, tmp_path: Path) -> None:
+        with patch("testo_core.db.get_repository", side_effect=RuntimeError):
+            backend = composite_backend(artifacts_root=tmp_path, db=True)
+            result = _make_plan_result()
+            backend.persist(result)
+            assert (tmp_path / "smoke" / "plan_result.json").exists()

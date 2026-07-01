@@ -1,11 +1,7 @@
-"""Engine exit-code taxonomy (kept compatible with the legacy headless engine).
+"""Engine exit-code taxonomy — the single source of truth for process outcomes.
 
 The CLI must propagate these unchanged so existing CI consumers continue to
-react to specific codes.
-
-The mapping is intentionally identical to
-:class:`testo_core.services.headless_engine.EngineExitCode` so a future
-internal cleanup can simply re-export this class.
+react to specific codes.  The legacy headless engine re-exports this class.
 """
 
 from __future__ import annotations
@@ -28,11 +24,7 @@ def classify_exit_code(
     *,
     infra_error: Exception | None,
 ) -> EngineExitCode:
-    """Bucket a list of stage returncodes into an :class:`EngineExitCode`.
-
-    Mirrors :func:`testo_core.services.headless_engine._classify_exit_code`
-    so contract tests keep passing while the engine internals are migrated.
-    """
+    """Bucket a list of stage returncodes into an :class:`EngineExitCode`."""
     if infra_error is not None:
         return EngineExitCode.INFRA_FAILURE
     if not returncodes:

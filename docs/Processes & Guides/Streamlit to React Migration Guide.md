@@ -4,6 +4,19 @@
 
 Move dashboard UX from Streamlit to React while keeping `testo_core` as the only orchestration engine and preserving CLI/CI contracts.
 
+### Official documentation
+
+| Framework | Reference |
+|-----------|-----------|
+| Streamlit | https://docs.streamlit.io/ |
+| React | https://react.dev/ |
+| FastAPI (`testo_api`) | https://fastapi.tiangolo.com/ |
+| Docker Compose (local stack) | https://docs.docker.com/compose/ |
+
+## Why (product)
+
+Streamlit was ideal for prototyping; production QA teams need a snappy, navigable React UI with explicit API contracts (JSON + SSE), independent scaling of frontend/backend, and a clear rollback path. See [[Product Roadmap#Phase 3: Enterprise UI & Analytics]] and [[Phase 3 Unified Dashboard Plan]].
+
 ## Transitional topology
 
 - Streamlit remains available as rollback UI.
@@ -44,3 +57,7 @@ React must support the same baseline user journeys as Streamlit before enhanceme
 - Rollback action:
   - switch to `UQO_UI_MODE=streamlit`
   - keep backend online for debugging and replay
+
+---
+**Context & Links:**
+- [[Architecture Overview]], [[QA Strategies]], [[Release Checklist - Phase 3 Frontend Migration]], [[Release Checklist - Phase 3 Unified Dashboard]], [[Product Roadmap#Phase 3: Enterprise UI & Analytics]]

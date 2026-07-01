@@ -6,6 +6,8 @@ from pathlib import Path
 
 import typer
 
+from testo_core.engine.exit_codes import EngineExitCode
+
 
 app = typer.Typer(help="Inspect cycles defined in the config.", no_args_is_help=True)
 
@@ -30,7 +32,7 @@ def list_plans(
         cfg = discover_and_load(config_path=config)
     except ConfigError as exc:
         console.print(f"[fail]config error:[/] {exc}")
-        raise typer.Exit(code=2) from exc
+        raise typer.Exit(code=int(EngineExitCode.INVALID_INPUT)) from exc
 
     table = Table(title="Cycles", show_lines=False, title_justify="left")
     table.add_column("Name", style="title")
@@ -64,10 +66,10 @@ def show_plan(
         plan = resolve_plan(cfg, plan_name=name)
     except PlanNotFoundError as exc:
         console.print(f"[fail]{exc}[/]")
-        raise typer.Exit(code=2) from exc
+        raise typer.Exit(code=int(EngineExitCode.INVALID_INPUT)) from exc
     except ConfigError as exc:
         console.print(f"[fail]config error:[/] {exc}")
-        raise typer.Exit(code=2) from exc
+        raise typer.Exit(code=int(EngineExitCode.INVALID_INPUT)) from exc
 
     console.print(f"[title]{plan.name}[/]: {plan.description or ''}")
     table = Table(show_lines=False)

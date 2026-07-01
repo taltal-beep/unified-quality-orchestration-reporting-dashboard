@@ -54,7 +54,7 @@ def run(
     no_persist: bool = typer.Option(
         False,
         "--no-persist",
-        help="Skip writing run records to the optional history database.",
+        help="Skip all post-run persistence (plan_result.json and history database).",
     ),
     no_report_db: bool = typer.Option(
         False,

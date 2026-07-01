@@ -45,8 +45,9 @@ def run_plan(
 ) -> PlanResult:
     """Execute every stage in ``plan`` sequentially.
 
-    ``persist`` is honoured by trying to record the run into the optional
-    history layer; failure to import or write the DB never fails the run.
+    When *persist* is ``True``, the :mod:`testo_core.persistence` composite
+    backend writes ``plan_result.json`` and (when the DB layer is available)
+    upserts a :class:`~testo_core.repository.models.RunRecord`.
     """
     artifacts_root = (artifacts_root or Path("artifacts")).expanduser().resolve()
     plan_artifacts = plan_artifacts_dir(artifacts_root, plan.name)
@@ -129,7 +130,10 @@ def run_plan(
     renderer.handle(PlanFinished(result=plan_result))
 
     if persist:
-        _try_persist(plan_result, artifacts_root=artifacts_root)
+        from testo_core.persistence import composite_backend
+
+        backend = composite_backend(artifacts_root=artifacts_root)
+        backend.persist(plan_result)
 
     return plan_result
 
@@ -204,36 +208,3 @@ def _internal_failure_result(*, stage, exc: Exception) -> StageResult:  # type: 
     )
 
 
-def _try_persist(result: PlanResult, *, artifacts_root: Path) -> None:
-    """Best-effort write to the optional history layer.
-
-    Persistence is wired up in Phase 4 (``testo_core.persistence``).  Until
-    then we only emit a structured ``plan_result.json`` next to the events
-    file so external dashboards have something to consume.
-    """
-    try:
-        target = plan_artifacts_dir(artifacts_root, result.plan_name) / "plan_result.json"
-        target.parent.mkdir(parents=True, exist_ok=True)
-        payload = {
-            "plan": result.plan_name,
-            "started_at": result.started_at,
-            "finished_at": result.finished_at,
-            "duration_s": result.duration_s,
-            "aggregate_returncode": result.aggregate_returncode,
-            "exit_code": int(result.exit_code),
-            "stages": [
-                {
-                    "name": s.stage_name,
-                    "framework": s.framework,
-                    "returncode": int(s.returncode),
-                    "duration_s": s.duration_s,
-                    "log_path": str(s.log_path) if s.log_path else None,
-                    "timed_out": s.timed_out,
-                    "error": s.error,
-                }
-                for s in result.stages
-            ],
-        }
-        target.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
-    except OSError:
-        pass
