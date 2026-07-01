@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PrePush": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "claude -p 'Run /code-review on the current branch diff against main. Focus on logic errors, security flaws, and performance bottlenecks. Do not comment on stylistic formatting. If you find critical issues, exit with code 1 and explain them. If the code looks good, exit with code 0.' --allowedTools 'Bash(git diff:*),Bash(git log:*),Read'",
+            "timeout": 120000
+          }
+        ]
+      }
+    ]
+  }
+}

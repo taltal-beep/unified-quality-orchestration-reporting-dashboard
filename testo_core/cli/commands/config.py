@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import typer
 import shutil
+
+import typer
+
+from testo_core.engine.exit_codes import EngineExitCode
 
 
 app = typer.Typer(help="Validate or scaffold a testosterone.yaml.", no_args_is_help=True)
@@ -65,7 +68,7 @@ def validate(
         cfg = discover_and_load(config_path=config)
     except ConfigError as exc:
         console.print(f"[fail]config error:[/] {exc}")
-        raise typer.Exit(code=2) from exc
+        raise typer.Exit(code=int(EngineExitCode.INVALID_INPUT)) from exc
 
     if check_executables:
         missing = _missing_executables(cfg)
@@ -76,7 +79,7 @@ def validate(
             console.print(
                 "[muted]hint:[/] install dependencies (e.g. `pip install -e .`) or ensure the active environment's bin/ is on PATH."
             )
-            raise typer.Exit(code=2)
+            raise typer.Exit(code=int(EngineExitCode.INVALID_INPUT))
     console.print(
         f"[ok]ok[/] — version={cfg.version} cycles={len(cfg.cycles)} defaults_target={cfg.defaults.target_repo}"
     )
@@ -121,6 +124,6 @@ def init(
     console = default_console()
     if path.exists() and not force:
         console.print(f"[fail]refusing to overwrite[/] {path} (use --force).")
-        raise typer.Exit(code=2)
+        raise typer.Exit(code=int(EngineExitCode.INVALID_INPUT))
     path.write_text(_STARTER_YAML, encoding="utf-8")
     console.print(f"[ok]wrote starter config to[/] {path}")

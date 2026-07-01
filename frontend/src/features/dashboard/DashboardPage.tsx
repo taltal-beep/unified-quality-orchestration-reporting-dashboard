@@ -17,15 +17,18 @@ export function DashboardPage() {
   }
 
   const data = overviewQuery.data;
-  const recentRuns = data.recent_runs;
-  const latestRunId = data.headline_kpis.latest_run_id;
+  if (!data) {
+    return <p>No dashboard data available.</p>;
+  }
+  const recentRuns = data.recent_runs ?? [];
+  const latestRunId = data.headline_kpis?.latest_run_id;
 
   return (
     <section>
       <h2>Dashboard Overview</h2>
       <p>Health, reliability, and performance at a glance with direct drill-down paths.</p>
-      {data.data_freshness.degraded ? (
-        <p role="status">Some metrics are degraded: {data.data_freshness.notes.join(", ") || "unknown source issue"}.</p>
+      {data.data_freshness?.degraded ? (
+        <p role="status">Some metrics are degraded: {data.data_freshness.notes?.join(", ") || "unknown source issue"}.</p>
       ) : null}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "0.75rem" }}>
@@ -75,9 +78,9 @@ export function DashboardPage() {
         ) : (
           <li>Compare view unavailable</li>
         )}
-        <li>{reportLink("Allure report", data.report_links.allure)}</li>
-        <li>{reportLink("Locust report", data.report_links.locust)}</li>
-        <li>{reportLink("Behave report", data.report_links.behave)}</li>
+        <li>{reportLink("Allure report", data.report_links?.allure ?? { url: null, state: "unknown" })}</li>
+        <li>{reportLink("Locust report", data.report_links?.locust ?? { url: null, state: "unknown" })}</li>
+        <li>{reportLink("Behave report", data.report_links?.behave ?? { url: null, state: "unknown" })}</li>
       </ul>
 
       <h3>Recent Runs</h3>

@@ -38,7 +38,3 @@ This document defines deterministic semantics for Phase 3 delta analytics.
 - `zero_baseline_for_relative`: absolute delta can be computed, relative percent cannot.
 - `incompatible_test_kind`: run pair has different `test_kind`.
 
-
----
-**Context & Links:**
-- [[Command Reference#`testo diff` / `testo summary`]], [[Architecture Overview]], [[Release Checklist - Phase 3 Delta Engine]], [[Phase 3 Delta Comparison Engine Plan]]

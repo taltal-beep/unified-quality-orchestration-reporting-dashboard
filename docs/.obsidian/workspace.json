@@ -11,10 +11,14 @@
             "id": "39e520578665ca74",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "markdown",
+              "state": {
+                "file": "Roadmap & Strategy/V1 Release Roadmap.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "V1 Release Roadmap"
             }
           }
         ]

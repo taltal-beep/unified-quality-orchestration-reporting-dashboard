@@ -20,6 +20,8 @@ testo_core/engine/
   orchestrator.run_plan  sequential stages
   executor.run_stage     subprocess per stage
        │
+       ├──▶ testo_core/persistence/   JsonBackend + DbBackend (best-effort)
+       │
        ▼
 testo_core/frameworks/  pytest | behave | behavex adapters → argv + Allure dirs
        │
@@ -57,8 +59,10 @@ Cycles are defined under `cycles:` in YAML (legacy key `plans:` is still accepte
 |--------|------|
 | `orchestrator.py` | `run_plan()` — iterates stages, emits events, writes `events.ndjson` |
 | `executor.py` | `run_stage()` — spawns subprocess, timeouts, `run.log` tee |
-| `exit_codes.py` | `EngineExitCode` taxonomy (0–4) |
+| `exit_codes.py` | `EngineExitCode` taxonomy (0–4) — single source for both engine and headless stacks |
 | `result.py` | `StageResult`, `PlanResult` aggregates |
+
+`testo_core/persistence/` provides the `PersistenceBackend` protocol used by the orchestrator (JSON + DB backends, composite fanout). See **Persistence** below.
 
 Execution is **sequential by design**; parallelization today is framework-internal (e.g. BehaveX `--workers`).
 
@@ -151,9 +155,18 @@ Details and examples: [[Command Reference#Exit codes]].
 
 `testosterone.yaml` drives cycles, defaults (`artifacts_root`, `timeout_s`, `workers`), optional `database.url`, `reporters:`, and per-cycle `tags`, `trigger`, and `stages`. The interactive wizard is `testo init`; non-interactive scaffold is `testo config init`.
 
-### Persistence (repository pattern)
+### Persistence
 
-Run history and report archives go through `testo_core/repository/` — dialect-agnostic adapters selected by `DATABASE_URL` / `database.url` (SQLite default, PostgreSQL/MySQL for teams with existing infra). Rationale: [[Repository Pattern - Database-Agnostic Refactor]]. Factory: `testo_core/db.py` → `get_repository()`.
+Two persistence layers exist, each at a different abstraction level:
+
+**Engine-level** (`testo_core/persistence/`): Called by `orchestrator.run_plan()` after a cycle completes. Uses a `PersistenceBackend` protocol with two built-in backends:
+
+- `JsonBackend` — writes `plan_result.json` to the artifacts tree (always active).
+- `DbBackend` — upserts a `RunRecord` via the repository layer (active when DB extras are installed).
+
+A `composite_backend()` factory fans out to both; individual backend failures never fail the run. Controlled by `--no-persist`.
+
+**Service-level** (`testo_core/repository/`): Dialect-agnostic adapters selected by `DATABASE_URL` / `database.url` (SQLite default, PostgreSQL/MySQL for teams with existing infra). Used by the headless engine, API layer, and report archive system. Rationale: [[Repository Pattern - Database-Agnostic Refactor]]. Factory: `testo_core/db.py` → `get_repository()`.
 
 ## Related operational docs
 
