@@ -228,6 +228,10 @@ testo init
 ```bash
 testo version
 # testo 0.1.0
+
+# Equivalent top-level eager flag (works before/instead of a subcommand):
+testo --version
+testo -v
 ```
 
 ---
