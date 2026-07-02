@@ -10,8 +10,9 @@ from __future__ import annotations
 import json
 import os
 import time
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Mapping, Protocol
+from typing import Protocol
 
 from testo_core.config.schema import Plan
 from testo_core.engine.events import (
@@ -22,7 +23,7 @@ from testo_core.engine.events import (
     StageStarted,
 )
 from testo_core.engine.executor import run_stage
-from testo_core.engine.exit_codes import EngineExitCode, classify_exit_code
+from testo_core.engine.exit_codes import classify_exit_code
 from testo_core.engine.result import PlanResult, StageResult
 from testo_core.reporting.paths import plan_artifacts_dir
 
