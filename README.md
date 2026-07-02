@@ -342,7 +342,12 @@ Metrics pushes are best-effort. They do not change the run result.
 
 ## CI/CD (recommended)
 
-- **Lint + unit tests**: run Python linters/tests on PRs.
+- **Lint + unit tests**: `.github/workflows/ci.yml`'s `format` job runs on every PR — `ruff check .` (blocking), `ruff format --check` (advisory), `mypy testo_core` (advisory, see `docs/Testing Workflows/Technical Debt Tracker.md`) — followed by the `test` job's fast pytest tier. Run locally before pushing:
+  ```bash
+  pip install -e ".[dev]"
+  ruff check .
+  mypy testo_core
+  ```
 - **Docker smoke**: `docker compose up -d` + run a sandbox test + verify:
   - orphan cleanup works (force-kill Streamlit mid-run; restart; run is `FAILED`)
   - timeout works (plugin that sleeps forever; container killed; run is `FAILED`)
