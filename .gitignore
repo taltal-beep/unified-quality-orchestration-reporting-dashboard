@@ -53,3 +53,14 @@ logs/
 frontend/node_modules/
 frontend/dist/
 
+# Root Node tooling (Allure CLI, commitlint)
+node_modules/
+
+# Local sample-cycle run output (testo run --cycle sample-*)
+artifacts/sample-behave/
+artifacts/sample-pytests/
+.testo/
+
+# Local ReportPortal Postgres data volume
+data/
+
