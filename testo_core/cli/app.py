@@ -35,23 +35,46 @@ def _register_commands() -> None:
     from testo_core.cli.commands import run as run_cmd
     from testo_core.cli.commands import version as version_cmd
 
-    app.command(name="run", help="Execute a cycle defined in testosterone.yaml.")(run_cmd.run)
+    app.command(
+        name="run",
+        help="Execute a cycle defined in testosterone.yaml.",
+        rich_help_panel="Run and report",
+    )(run_cmd.run)
     app.command(
         name="config-db",
         help="Set database.url in testosterone.yaml (or pyproject [tool.testosterone]).",
+        rich_help_panel="Config",
     )(config_db_cmd.config_db)
     app.command(
         name="diff",
         help="Compare two archived report runs (UUIDs from ``testo report list``).",
+        rich_help_panel="Diagnostics",
     )(diff_cli_mod.diff_reports)
     app.command(
         name="summary",
         help="Rich diff of the two most recent archived runs (optional ``--cycle``).",
+        rich_help_panel="Diagnostics",
     )(diff_cli_mod.summary_reports)
-    app.add_typer(cycles_cmd.app, name="cycles", help="Inspect cycles defined in the config.")
+    app.add_typer(
+        cycles_cmd.app,
+        name="cycles",
+        help="Inspect cycles defined in the config.",
+        rich_help_panel="Diagnostics",
+    )
     # Backward-compatible alias for muscle memory.
-    app.add_typer(cycles_cmd.app, name="plans", help="Deprecated alias for `testo cycles`.", hidden=True)
-    app.add_typer(config_cmd.app, name="config", help="Validate or scaffold a testosterone.yaml.")
+    app.add_typer(
+        cycles_cmd.app,
+        name="plans",
+        help="Deprecated alias for `testo cycles`.",
+        hidden=True,
+        rich_help_panel="Diagnostics",
+    )
+    app.add_typer(
+        config_cmd.app,
+        name="config",
+        help="Validate or scaffold a testosterone.yaml.",
+        rich_help_panel="Config",
+    )
     app.add_typer(
         report_cmd.report_app,
         name="report",
@@ -59,8 +82,13 @@ def _register_commands() -> None:
             "Unified Allure reports from the latest cycle, or raw framework-native reports "
             "(e.g. BehaveX HTML) via ``testo report native``."
         ),
+        rich_help_panel="Run and report",
     )
-    app.command(name="version", help="Print testo-core version.")(version_cmd.version)
+    app.command(
+        name="version",
+        help="Print testo-core version.",
+        rich_help_panel="About",
+    )(version_cmd.version)
 
 
 _register_commands()
