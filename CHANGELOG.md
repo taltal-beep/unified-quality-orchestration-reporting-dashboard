@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [Unreleased]
 
 ### Added
+- `CONTRIBUTING.md`, `.github/PULL_REQUEST_TEMPLATE.md`, `.github/ISSUE_TEMPLATE/` (bug report, feature request), and `CODEOWNERS`
 - Persistence module with `PersistenceBackend` protocol, JSON and DB backends
 - Single-sourced `EngineExitCode` across modern and legacy execution stacks
 - Contract tests asserting exit code consistency between stacks
